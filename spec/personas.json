@@ -1,0 +1,22 @@
+[
+  {
+    "id": "frontend",
+    "label": "Frontend Expert",
+    "role": "Refines prompts for React, TypeScript, browser APIs, and client-side architecture."
+  },
+  {
+    "id": "backend",
+    "label": "Backend Expert",
+    "role": "Refines prompts for APIs, databases, distributed systems, and server-side design."
+  },
+  {
+    "id": "uiux",
+    "label": "UI/UX Expert",
+    "role": "Refines prompts for interaction design, accessibility, visual hierarchy, and product UX."
+  },
+  {
+    "id": "general",
+    "label": "General",
+    "role": "Refines prompts without a specialized engineering or design lens."
+  }
+]

@@ -1,0 +1,50 @@
+{
+  "name": "ai-prompt-studio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Desktop app for refining prompts with personas and provider adapters.",
+  "main": "dist-electron/src/main/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k \"npm:dev:ui\" \"npm:dev:main\" \"npm:dev:electron\"",
+    "dev:ui": "vite",
+    "copy:personas": "node scripts/copy-personas-spec.mjs",
+    "dev:main": "npm run copy:personas && tsc -p tsconfig.electron.json --watch --preserveWatchOutput",
+    "dev:electron": "wait-on tcp:5173 file:dist-electron/src/main/index.js && electron .",
+    "build": "npm run build:ui && npm run build:main",
+    "build:ui": "vite build",
+    "build:main": "tsc -p tsconfig.electron.json && npm run copy:personas",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\""
+  },
+  "dependencies": {
+    "@ai-sdk/google": "^3.0.64",
+    "@ai-sdk/openai": "^3.0.53",
+    "ai": "^6.0.168",
+    "dotenv": "^17.4.2",
+    "lucide-react": "^1.14.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "zod": "^3.24.1",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "@types/node": "^24.0.10",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "@vitejs/plugin-react": "^4.4.1",
+    "concurrently": "^9.1.2",
+    "electron": "^35.2.0",
+    "jsdom": "^26.0.0",
+    "prettier": "^3.8.3",
+    "typescript": "^5.8.3",
+    "vite": "^6.2.4",
+    "vitest": "^3.1.1",
+    "wait-on": "^8.0.3"
+  }
+}
