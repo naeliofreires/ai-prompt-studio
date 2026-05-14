@@ -19,4 +19,8 @@ contextBridge.exposeInMainWorld("aiPromptStudio", {
     ipcRenderer.invoke(ipcChannels.createCustomPersona, payload),
   deleteCustomPersona: (payload: DeleteCustomPersonaInput): Promise<DeleteCustomPersonaResult> =>
     ipcRenderer.invoke(ipcChannels.deleteCustomPersona, payload),
+  setApiKeys: (keys: Record<string, string>): Promise<void> =>
+    ipcRenderer.invoke(ipcChannels.setApiKeys, keys),
+  clearAllApiKeys: (): Promise<void> =>
+    ipcRenderer.invoke(ipcChannels.clearAllApiKeys),
 });

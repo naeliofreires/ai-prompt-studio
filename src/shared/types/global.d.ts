@@ -15,6 +15,8 @@ declare global {
       listCustomPersonas: () => Promise<ListCustomPersonasResult>;
       createCustomPersona: (payload: CreateCustomPersonaInput) => Promise<CreateCustomPersonaResult>;
       deleteCustomPersona: (payload: DeleteCustomPersonaInput) => Promise<DeleteCustomPersonaResult>;
+      setApiKeys: (keys: Record<string, string>) => Promise<void>;
+      clearAllApiKeys: () => Promise<void>;
     };
   }
 }

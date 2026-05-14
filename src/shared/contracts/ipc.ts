@@ -23,6 +23,8 @@ export const ipcChannels = {
   listCustomPersonas: "persona:list-custom",
   createCustomPersona: "persona:create-custom",
   deleteCustomPersona: "persona:delete-custom",
+  setApiKeys: "apiKeys:set",
+  clearAllApiKeys: "apiKeys:clearAll",
 } as const;
 
 export const listCustomPersonasResultSchema = z.object({

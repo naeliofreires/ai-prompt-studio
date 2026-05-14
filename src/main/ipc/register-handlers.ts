@@ -13,6 +13,7 @@ import {
 } from "../../shared/index.js";
 import { logger } from "../../shared/utils/logger.js";
 import { LLMAdapter } from "../services/LLMAdapter.js";
+import { setApiKeys, clearAllApiKeys } from "../services/api-key-manager.js";
 import {
   createCustomPersona,
   deleteCustomPersona,
@@ -46,6 +47,16 @@ export function registerIpcHandlers(): void {
     return deleteCustomPersonaResultSchema.parse({
       deleted: deleteCustomPersona(parsed.id),
     });
+  });
+
+  ipcMain.handle(ipcChannels.setApiKeys, (_event, keys: Record<string, string>) => {
+    logger.debug("setApiKeys", { providers: Object.keys(keys) });
+    setApiKeys(keys);
+  });
+
+  ipcMain.handle(ipcChannels.clearAllApiKeys, () => {
+    logger.debug("clearAllApiKeys");
+    clearAllApiKeys();
   });
 
   ipcMain.handle(ipcChannels.generatePrompt, async (_event, payload) => {

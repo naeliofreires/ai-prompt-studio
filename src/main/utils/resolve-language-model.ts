@@ -2,12 +2,23 @@ import type { LanguageModelV3 } from "@ai-sdk/provider";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { PROVIDER_IDS, type ProviderId } from "../../shared/domain/provider.js";
+import { getApiKey } from "../services/api-key-manager.js";
 
 const DEFAULT_GLM_BASE_URL = "https://api.z.ai/api/paas/v4/";
 const DEFAULT_DEEPSEEK_BASE_URL = "https://api.deepseek.com/v1";
 
 function isProviderId(id: string): id is ProviderId {
   return (PROVIDER_IDS as readonly string[]).includes(id);
+}
+
+function resolveApiKey(providerId: string, envKeys: string[]): string | undefined {
+  const runtimeKey = getApiKey(providerId)?.trim();
+  if (runtimeKey) return runtimeKey;
+  for (const envKey of envKeys) {
+    const val = process.env[envKey]?.trim();
+    if (val) return val;
+  }
+  return undefined;
 }
 
 export function resolveLanguageModel(providerId: string, model: string): LanguageModelV3 {
@@ -17,10 +28,10 @@ export function resolveLanguageModel(providerId: string, model: string): Languag
 
   switch (providerId) {
     case "gemini": {
-      const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY?.trim();
+      const apiKey = resolveApiKey(providerId, ["GOOGLE_GENERATIVE_AI_API_KEY"]);
       if (!apiKey) {
         throw new Error(
-          "Missing GOOGLE_GENERATIVE_AI_API_KEY. Set it in the environment or in a .env file for local development.",
+          "Missing GOOGLE_GENERATIVE_AI_API_KEY. Add your API key in Settings or set the environment variable.",
         );
       }
       const google = createGoogleGenerativeAI({ apiKey });
@@ -32,10 +43,10 @@ export function resolveLanguageModel(providerId: string, model: string): Languag
     }
 
     case "glm": {
-      const apiKey = process.env.GLM_API_KEY?.trim() ?? process.env.ZHIPU_API_KEY?.trim();
+      const apiKey = resolveApiKey(providerId, ["GLM_API_KEY", "ZHIPU_API_KEY"]);
       if (!apiKey) {
         throw new Error(
-          "Missing GLM_API_KEY or ZHIPU_API_KEY. Set a Z.ai API key (https://z.ai/manage-apikey/apikey-list) or Zhipu/BigModel credentials in the environment or .env.",
+          "Missing GLM_API_KEY or ZHIPU_API_KEY. Add your API key in Settings or set the environment variable.",
         );
       }
       const baseURL = process.env.GLM_BASE_URL?.trim() || DEFAULT_GLM_BASE_URL;
@@ -52,10 +63,10 @@ export function resolveLanguageModel(providerId: string, model: string): Languag
     }
 
     case "deepseek": {
-      const apiKey = process.env.DEEPSEEK_API_KEY?.trim();
+      const apiKey = resolveApiKey(providerId, ["DEEPSEEK_API_KEY"]);
       if (!apiKey) {
         throw new Error(
-          "Missing DEEPSEEK_API_KEY. Create a key at https://platform.deepseek.com and set it in the environment or in a .env file for local development.",
+          "Missing DEEPSEEK_API_KEY. Add your API key in Settings or set the environment variable.",
         );
       }
       const baseURL = process.env.DEEPSEEK_BASE_URL?.trim() || DEFAULT_DEEPSEEK_BASE_URL;
