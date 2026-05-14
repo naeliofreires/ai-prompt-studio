@@ -28,26 +28,45 @@ export function useStreamedMarkdown() {
       setIsStreaming(true);
 
       try {
-        if (Symbol.asyncIterator in Object(source)) {
+        if (typeof (source as ReadableStream<string>).getReader === "function") {
+          const reader = (source as ReadableStream<string>).getReader();
+          const cancelReader = () => {
+            void reader.cancel().catch(() => undefined);
+          };
+
+          try {
+            controller.signal.addEventListener("abort", cancelReader, { once: true });
+            signal?.addEventListener("abort", cancelReader, { once: true });
+
+            if (controller.signal.aborted || signal?.aborted) {
+              cancelReader();
+            }
+
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done || controller.signal.aborted || signal?.aborted) break;
+              if (value) append(value);
+            }
+          } finally {
+            controller.signal.removeEventListener("abort", cancelReader);
+            signal?.removeEventListener("abort", cancelReader);
+            reader.releaseLock();
+          }
+        } else {
           for await (const chunk of source as AsyncIterable<string>) {
             if (controller.signal.aborted || signal?.aborted) break;
             append(chunk);
           }
-        } else {
-          const reader = (source as ReadableStream<string>).getReader();
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done || controller.signal.aborted || signal?.aborted) break;
-            if (value) append(value);
-          }
         }
       } catch (err) {
-        if (!controller.signal.aborted) {
+        if (!controller.signal.aborted && !signal?.aborted) {
           setError(err instanceof Error ? err.message : "Stream failed.");
         }
       } finally {
-        if (abortRef.current === controller) abortRef.current = null;
-        setIsStreaming(false);
+        if (abortRef.current === controller) {
+          abortRef.current = null;
+          setIsStreaming(false);
+        }
       }
     },
     [append, reset],
