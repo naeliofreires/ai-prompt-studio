@@ -15,6 +15,7 @@
     "build:ui": "vite build",
     "build:main": "tsc -p tsconfig.electron.json && npm run copy:personas",
     "preview": "vite preview",
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,scss,json}\"",
@@ -36,6 +37,7 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
     "@types/node": "^24.0.10",
@@ -44,10 +46,13 @@
     "@vitejs/plugin-react": "^4.4.1",
     "concurrently": "^9.1.2",
     "electron": "^35.2.0",
+    "eslint": "^10.3.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "jsdom": "^26.0.0",
     "prettier": "^3.8.3",
     "sass": "^1.99.0",
     "typescript": "^5.8.3",
+    "typescript-eslint": "^8.59.3",
     "vite": "^6.2.4",
     "vitest": "^3.1.1",
     "wait-on": "^8.0.3"

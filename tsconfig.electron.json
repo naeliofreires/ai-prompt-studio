@@ -11,7 +11,9 @@
     "outDir": "dist-electron",
     "types": ["node"],
     "declaration": false,
-    "sourceMap": true
+    "sourceMap": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
   },
   "include": ["src/main/**/*.ts", "src/shared/**/*.ts", "spec/personas.json", "spec/providers.json"]
 }
