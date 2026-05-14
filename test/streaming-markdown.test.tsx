@@ -32,6 +32,43 @@ describe("StreamingMarkdown", () => {
     expect(screen.getByText("click me")).toBeInTheDocument();
   });
 
+  it.each([
+    ["javascript", "[unsafe](javascript:alert(1))"],
+    ["data", "[unsafe](data:text/html;base64,PGgxPkhlbGxvPC9oMT4=)"],
+    ["vbscript", "[unsafe](vbscript:msgbox(1))"],
+    ["malformed", "[unsafe](http://[::1)"],
+  ])("does not render %s hrefs as anchors", (_protocol, content) => {
+    render(<StreamingMarkdown content={content} />);
+
+    expect(screen.queryByRole("link", { name: "unsafe" })).toBeNull();
+    expect(screen.getByText("unsafe")).toBeInTheDocument();
+  });
+
+  it.each([
+    ["https", "[safe](https://example.com/docs)"],
+    ["http", "[safe](http://example.com/docs)"],
+    ["mailto", "[safe](mailto:hello@example.com)"],
+    ["tel", "[safe](tel:+15555550100)"],
+  ])("renders %s hrefs as anchors", (_protocol, content) => {
+    render(<StreamingMarkdown content={content} />);
+
+    expect(screen.getByRole("link", { name: "safe" })).toBeInTheDocument();
+  });
+
+  it("does not allow custom components to override safe link rendering", () => {
+    render(
+      <StreamingMarkdown
+        content="[safe](https://example.com)"
+        components={{
+          a: ({ children }) => <button type="button">{children}</button>,
+        }}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: "safe" })).toBeNull();
+    expect(screen.getByRole("link", { name: "safe" })).toBeInTheDocument();
+  });
+
   it("repairs an open fence only while streaming", () => {
     const source = "```ts\nconst value = 1";
 
