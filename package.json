@@ -17,14 +17,15 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\""
+    "format": "prettier --write \"src/**/*.{ts,tsx,css,scss,json}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css,scss,json}\""
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.64",
     "@ai-sdk/openai": "^3.0.53",
     "ai": "^6.0.168",
     "dotenv": "^17.4.2",
+    "electron-store": "^10.1.0",
     "lucide-react": "^1.14.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
@@ -42,6 +43,7 @@
     "electron": "^35.2.0",
     "jsdom": "^26.0.0",
     "prettier": "^3.8.3",
+    "sass": "^1.99.0",
     "typescript": "^5.8.3",
     "vite": "^6.2.4",
     "vitest": "^3.1.1",

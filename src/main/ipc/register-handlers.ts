@@ -2,12 +2,23 @@ import { ipcMain } from "electron";
 import { generateText } from "ai";
 import { ZodError } from "zod";
 import {
+  createCustomPersonaInputSchema,
+  createCustomPersonaResultSchema,
+  deleteCustomPersonaInputSchema,
+  deleteCustomPersonaResultSchema,
   generatePromptIpcResultSchema,
   generatePromptPayloadSchema,
   ipcChannels,
+  listCustomPersonasResultSchema,
 } from "../../shared/index.js";
-import { PERSONAS } from "../../shared/domain/persona.js";
+import { logger } from "../../shared/utils/logger.js";
 import { LLMAdapter } from "../services/LLMAdapter.js";
+import {
+  createCustomPersona,
+  deleteCustomPersona,
+  listCustomPersonas,
+} from "../store/custom-personas-store.js";
+import { resolvePersonaContext } from "../utils/resolve-persona-context.js";
 
 const llmAdapter = LLMAdapter({ generateText });
 
@@ -16,11 +27,35 @@ function zodIssuesToMessage(err: ZodError): string {
 }
 
 export function registerIpcHandlers(): void {
+  ipcMain.handle(ipcChannels.listCustomPersonas, () => {
+    logger.debug("listCustomPersonas");
+    return listCustomPersonasResultSchema.parse({
+      personas: listCustomPersonas(),
+    });
+  });
+
+  ipcMain.handle(ipcChannels.createCustomPersona, (_event, payload) => {
+    logger.info("createCustomPersona", payload);
+    const parsed = createCustomPersonaInputSchema.parse(payload);
+    return createCustomPersonaResultSchema.parse(createCustomPersona(parsed));
+  });
+
+  ipcMain.handle(ipcChannels.deleteCustomPersona, (_event, payload) => {
+    logger.info("deleteCustomPersona", payload);
+    const parsed = deleteCustomPersonaInputSchema.parse(payload);
+    return deleteCustomPersonaResultSchema.parse({
+      deleted: deleteCustomPersona(parsed.id),
+    });
+  });
+
   ipcMain.handle(ipcChannels.generatePrompt, async (_event, payload) => {
+    logger.info("generatePrompt received", { personaId: payload.personaId, providerId: payload.providerId });
+
     let parsed;
     try {
       parsed = generatePromptPayloadSchema.parse(payload);
     } catch (err) {
+      logger.warn("generatePrompt validation failed", err);
       if (err instanceof ZodError) {
         return generatePromptIpcResultSchema.parse({
           ok: false,
@@ -30,15 +65,16 @@ export function registerIpcHandlers(): void {
       throw err;
     }
 
-    const persona = PERSONAS.find((p) => p.id === parsed.personaId);
-    if (!persona) {
+    const personaContext = resolvePersonaContext(parsed.personaId);
+    if (!personaContext) {
+      logger.warn("generatePrompt unknown persona", parsed.personaId);
       return generatePromptIpcResultSchema.parse({
         ok: false,
-        message: "Unknown persona. This should not happen with a valid client.",
+        message: "Unknown persona. Select a built-in persona or create a custom one.",
       });
     }
 
-    const personaContext = `${persona.label}\n${persona.role}`;
+    logger.debug("generatePrompt resolved persona", { personaContext: personaContext.slice(0, 100) });
 
     try {
       const out = await llmAdapter.generatePrompt({
@@ -47,6 +83,7 @@ export function registerIpcHandlers(): void {
         providerId: parsed.providerId,
         model: parsed.model,
       });
+      logger.info("generatePrompt success", { tokensUsed: out.tokensUsed });
       return generatePromptIpcResultSchema.parse({
         ok: true,
         prompt: out.prompt,
@@ -54,6 +91,7 @@ export function registerIpcHandlers(): void {
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Prompt generation failed.";
+      logger.error("generatePrompt failed", message);
       return generatePromptIpcResultSchema.parse({ ok: false, message });
     }
   });
