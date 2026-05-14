@@ -1,0 +1,253 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(5, 7, 13, 0.72);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.modal {
+  width: min(32rem, 100%);
+  max-height: min(92vh, 720px);
+  overflow: auto;
+  padding: 1.25rem;
+  border: 1px solid rgba(34, 211, 238, 0.2);
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 30px rgba(34, 211, 238, 0.08);
+  backdrop-filter: blur(4px);
+  color: #cffafe;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(34, 211, 238, 0.15);
+}
+
+.titleGroup {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.eyebrow {
+  margin: 0;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.28em;
+  color: rgba(103, 232, 249, 0.6);
+}
+
+.title {
+  margin: 0;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #fff;
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid rgba(34, 211, 238, 0.2);
+  background: rgba(0, 0, 0, 0.35);
+  color: rgba(165, 243, 252, 0.8);
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.iconButton:hover {
+  border-color: rgba(103, 232, 249, 0.45);
+  background: rgba(34, 211, 238, 0.08);
+  color: #cffafe;
+}
+
+.iconButton:focus-visible {
+  outline: none;
+  border-color: rgba(103, 232, 249, 0.6);
+  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.2);
+}
+
+.body {
+  display: grid;
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.fieldLabel {
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: rgba(165, 243, 252, 0.75);
+}
+
+.fieldInput,
+.fieldTextarea {
+  width: 100%;
+  border: 1px solid rgba(34, 211, 238, 0.2);
+  background: #090b12;
+  color: #ecfeff;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
+  font-size: 0.875rem;
+  line-height: 1.625;
+  outline: none;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.fieldInput {
+  padding: 0.75rem 1rem;
+}
+
+.fieldTextarea {
+  resize: vertical;
+  min-height: 6.5rem;
+  padding: 1rem;
+}
+
+.fieldInput::placeholder,
+.fieldTextarea::placeholder {
+  color: rgba(165, 243, 252, 0.35);
+}
+
+.fieldInput:focus,
+.fieldTextarea:focus {
+  border-color: rgba(103, 232, 249, 0.6);
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.18);
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(34, 211, 238, 0.15);
+}
+
+.cancelButton,
+.primaryButton,
+.deleteButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border: 0;
+  cursor: pointer;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    box-shadow 150ms ease,
+    color 150ms ease,
+    opacity 150ms ease;
+}
+
+.cancelButton {
+  border: 1px solid rgba(103, 232, 249, 0.5);
+  background: rgba(34, 211, 238, 0.05);
+  padding: 0.5rem 0.75rem;
+  color: #cffafe;
+}
+
+.cancelButton:hover {
+  background: rgba(34, 211, 238, 0.1);
+}
+
+.primaryButton {
+  border: 1px solid rgba(34, 211, 238, 0.25);
+  background: rgba(34, 211, 238, 0.08);
+  padding: 0.4rem 0.65rem;
+  color: #a5f3fc;
+}
+
+.primaryButton:hover:not(:disabled) {
+  border-color: rgba(103, 232, 249, 0.45);
+  background: rgba(34, 211, 238, 0.14);
+}
+
+.primaryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.deleteButton {
+  margin-right: auto;
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  background: rgba(69, 10, 10, 0.2);
+  padding: 0.5rem 0.75rem;
+  color: #fca5a5;
+  box-shadow: 0 0 18px rgba(248, 113, 113, 0.12);
+}
+
+.deleteButton:hover {
+  border-color: rgba(248, 113, 113, 0.55);
+  background: rgba(69, 10, 10, 0.32);
+}
+
+.cancelButton:focus-visible,
+.primaryButton:focus-visible,
+.deleteButton:focus-visible,
+.iconButton:focus-visible {
+  outline: none;
+}
+
+.cancelButton:focus-visible,
+.primaryButton:focus-visible,
+.deleteButton:focus-visible {
+  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.2);
+}
+
+.deleteButton:focus-visible {
+  box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .iconButton,
+  .cancelButton,
+  .primaryButton,
+  .deleteButton,
+  .fieldInput,
+  .fieldTextarea {
+    transition: none;
+  }
+}

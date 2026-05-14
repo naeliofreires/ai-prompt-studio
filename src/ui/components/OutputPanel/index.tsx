@@ -54,9 +54,7 @@ export function OutputPanel({
         <footer className={styles.evaluation}>
           <div>
             <span>API response</span>
-            <strong>
-              {evaluation.tokensUsed === undefined ? "OK" : evaluation.tokensUsed}
-            </strong>
+            <strong>{evaluation.tokensUsed === undefined ? "OK" : evaluation.tokensUsed}</strong>
           </div>
           <p>
             {evaluation.tokensUsed === undefined

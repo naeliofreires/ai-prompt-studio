@@ -27,6 +27,17 @@ describe("shared IPC contracts", () => {
     ).toThrow();
   });
 
+  it("accepts a custom persona id", () => {
+    const result = generatePromptPayloadSchema.parse({
+      rawInput: "Refine this idea",
+      personaId: "550e8400-e29b-41d4-a716-446655440000",
+      providerId: "gemini",
+      model: "gemini-2.5-pro",
+    });
+
+    expect(result.personaId).toBe("550e8400-e29b-41d4-a716-446655440000");
+  });
+
   it("rejects invalid personaId", () => {
     expect(() =>
       generatePromptPayloadSchema.parse({

@@ -1,4 +1,4 @@
-import { Activity, Settings, Sparkles } from "lucide-react";
+import { Settings, Sparkles } from "lucide-react";
 import styles from "./Header.module.css";
 
 interface HeaderProps {
@@ -10,26 +10,16 @@ export function Header({ onOpenSettings }: HeaderProps) {
     <header className={styles.header}>
       <div className={styles.brand}>
         <div className={styles.logo}>
-          <Sparkles size={24} />
+          <Sparkles size={20} />
         </div>
-        <div>
+        <div className={styles.titleGroup}>
           <h1 className={styles.title}>AI Prompt Studio</h1>
         </div>
       </div>
-      <div className={styles.headerActions}>
-        <button
-          type="button"
-          className={styles.settingsButton}
-          onClick={onOpenSettings}
-        >
-          <Settings size={16} />
-          Settings
-        </button>
-        <div className={styles.badge}>
-          <Activity size={16} />
-          <span>Foundation Ready (Phase 1)</span>
-        </div>
-      </div>
+      <button type="button" className={styles.settingsButton} onClick={onOpenSettings}>
+        <Settings size={14} />
+        Settings
+      </button>
     </header>
   );
 }

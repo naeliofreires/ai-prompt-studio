@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Eye, EyeOff, KeyRound, Save, Settings, X } from "lucide-react";
+import { Eye, EyeOff, Save, X } from "lucide-react";
 import type { Provider } from "../../../shared";
+import shared from "../RoleModal/roleModalShared.module.css";
 import styles from "./SettingsModal.module.css";
 
 interface SettingsModalProps {
@@ -41,50 +42,50 @@ export default function SettingsModal({ open, providers, onClose, onSave }: Sett
   }
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
+    <div className={shared.overlay} onClick={onClose}>
       <section
         aria-labelledby="settings-modal-title"
-        className={styles.modal}
+        className={`${shared.modal} ${styles.modalWide}`}
         role="dialog"
         aria-modal="true"
         onClick={(event) => event.stopPropagation()}
       >
-        <header className={styles.header}>
-          <div className={styles.titleGroup}>
-            <Settings size={28} />
-            <h2 id="settings-modal-title">System Settings</h2>
+        <header className={shared.header}>
+          <div className={shared.titleGroup}>
+            <p className={shared.eyebrow}>System Config</p>
+            <h2 className={shared.title} id="settings-modal-title">
+              Settings
+            </h2>
           </div>
           <button
             aria-label="Close settings"
-            className={styles.iconButton}
+            className={shared.iconButton}
             type="button"
             onClick={onClose}
           >
-            <X size={24} />
+            <X size={16} />
           </button>
         </header>
 
-        <section className={styles.section}>
+        <div className={shared.body}>
           <div className={styles.sectionHeader}>
-            <div className={styles.sectionTitle}>
-              <KeyRound size={22} />
-              <h3>API Keys (Providers)</h3>
-            </div>
+            <p className={shared.fieldLabel}>API Keys (Providers)</p>
             <button
-              className={styles.showButton}
+              className={shared.cancelButton}
               type="button"
               onClick={() => setShowApiKeys((current) => !current)}
             >
-              {showApiKeys ? <EyeOff size={18} /> : <Eye size={18} />}
+              {showApiKeys ? <EyeOff size={14} /> : <Eye size={14} />}
               {showApiKeys ? "Hide" : "Show"}
             </button>
           </div>
 
           <div className={styles.keysPanel}>
             {activeKeyProviders.map((provider) => (
-              <label className={styles.field} key={provider.id}>
-                <span>{apiKeyLabels[provider.id]}</span>
+              <label className={shared.field} key={provider.id}>
+                <span className={shared.fieldLabel}>{apiKeyLabels[provider.id]}</span>
                 <input
+                  className={shared.fieldInput}
                   type={showApiKeys ? "text" : "password"}
                   defaultValue=""
                   placeholder={apiKeyPlaceholders[provider.id] ?? "sk-..."}
@@ -93,14 +94,14 @@ export default function SettingsModal({ open, providers, onClose, onSave }: Sett
               </label>
             ))}
           </div>
-        </section>
+        </div>
 
-        <footer className={styles.footer}>
-          <button className={styles.cancelButton} type="button" onClick={onClose}>
+        <footer className={shared.footer}>
+          <button className={shared.cancelButton} type="button" onClick={onClose}>
             Cancel
           </button>
-          <button className={styles.saveButton} type="button" onClick={onSave}>
-            <Save size={20} />
+          <button className={shared.primaryButton} type="button" onClick={onSave}>
+            <Save size={14} />
             Save Changes
           </button>
         </footer>

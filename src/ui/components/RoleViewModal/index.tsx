@@ -1,4 +1,6 @@
+import { X } from "lucide-react";
 import type { Role } from "../../hooks/useRoles";
+import shared from "../RoleModal/roleModalShared.module.css";
 import styles from "./RoleViewModal.module.css";
 
 interface RoleViewModalProps {
@@ -12,19 +14,44 @@ export default function RoleViewModal({ open, role, onClose, onDelete }: RoleVie
   if (!open || !role) return null;
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.card} onClick={(e) => e.stopPropagation()}>
-        <h2 className={styles.heading}>{role.title}</h2>
-        <p className={styles.description}>{role.description}</p>
-        <div className={styles.actions}>
-          <button className={styles.deleteButton} onClick={onDelete}>
+    <div className={shared.overlay} onClick={onClose}>
+      <section
+        aria-labelledby="role-view-modal-title"
+        aria-modal="true"
+        className={shared.modal}
+        role="dialog"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <header className={shared.header}>
+          <div className={shared.titleGroup}>
+            <p className={shared.eyebrow}>Persona Matrix</p>
+            <h2 className={shared.title} id="role-view-modal-title">
+              {role.title}
+            </h2>
+          </div>
+          <button
+            aria-label="Close persona details"
+            className={shared.iconButton}
+            type="button"
+            onClick={onClose}
+          >
+            <X size={16} />
+          </button>
+        </header>
+
+        <div className={shared.body}>
+          <p className={styles.description}>{role.description}</p>
+        </div>
+
+        <footer className={shared.footer}>
+          <button className={shared.deleteButton} type="button" onClick={onDelete}>
             Delete
           </button>
-          <button className={styles.closeButton} onClick={onClose}>
+          <button className={shared.cancelButton} type="button" onClick={onClose}>
             Close
           </button>
-        </div>
-      </div>
+        </footer>
+      </section>
     </div>
   );
 }
