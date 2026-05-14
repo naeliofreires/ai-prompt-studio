@@ -17,6 +17,7 @@ import { Header } from "../components/Header";
 import RoleModal from "../components/RoleModal";
 import RoleViewModal from "../components/RoleViewModal";
 import SettingsModal from "../components/SettingsModal";
+import { StreamingMarkdown } from "../components/StreamingMarkdown";
 import { useRoles, type Role } from "../hooks/useRoles";
 import { promptStudioClient } from "../api/prompt-studio-client";
 import { PERSONA_IDS, PROVIDERS, type PersonaId, type ProviderId } from "../../shared";
@@ -248,6 +249,7 @@ export function App() {
               outputPrompt={outputPrompt}
               outputIsError={outputIsError}
               generationError={generationError}
+              isGenerating={isGenerating}
               isCopied={isCopied}
               evaluation={evaluation}
               onCopy={handleCopy}
@@ -521,6 +523,7 @@ function OutputPanel({
   outputPrompt,
   outputIsError,
   generationError,
+  isGenerating,
   isCopied,
   evaluation,
   onCopy,
@@ -528,6 +531,7 @@ function OutputPanel({
   outputPrompt: string;
   outputIsError: boolean;
   generationError: string;
+  isGenerating: boolean;
   isCopied: boolean;
   evaluation: Evaluation | null;
   onCopy: () => void;
@@ -566,10 +570,10 @@ function OutputPanel({
             <p className={styles.preWrap}>{generationError}</p>
           </div>
         ) : outputPrompt ? (
-          <pre className={styles.preWrap}>
-            {outputPrompt}
-            <span className={styles.pulseCursor} />
-          </pre>
+          <>
+            <StreamingMarkdown content={outputPrompt} isStreaming={isGenerating} />
+            {isGenerating ? <span className={styles.pulseCursor} /> : null}
+          </>
         ) : (
           <div className={styles.emptyState}>
             <Terminal size={40} className={styles.emptyIcon} />
