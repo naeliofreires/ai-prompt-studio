@@ -1,5 +1,7 @@
 export * from "./contracts/ipc.js";
 export * from "./contracts/llm.js";
+export * from "./domain/api-key-errors.js";
+export * from "./domain/api-keys.js";
 export * from "./domain/custom-persona.js";
 export * from "./domain/persona.js";
 export * from "./domain/prompt-session.js";
