@@ -12,7 +12,7 @@ import {
   Wand2,
   type LucideIcon,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Header } from "../components/Header";
 import RoleModal from "../components/RoleModal";
 import RoleViewModal from "../components/RoleViewModal";
@@ -20,6 +20,7 @@ import SettingsModal from "../components/SettingsModal";
 import { useRoles, type Role } from "../hooks/useRoles";
 import { promptStudioClient } from "../api/prompt-studio-client";
 import { PERSONA_IDS, PROVIDERS, type PersonaId, type ProviderId } from "../../shared";
+import { useApiKeyStore, isProviderConfigured } from "../store/api-key-store";
 import styles from "./App.module.scss";
 
 type Evaluation = {
@@ -54,7 +55,25 @@ function modelForProvider(providerId: ProviderId): string | undefined {
 
 export function App() {
   const { roles, addRole, deleteRole, isLoading, error: rolesError } = useRoles();
+  const hydrateFromSession = useApiKeyStore((s) => s.hydrateFromSession);
+  const hydrated = useApiKeyStore((s) => s.hydrated);
+  const storeKeys = useApiKeyStore((s) => s.keys);
   const [activeRole, setActiveRole] = useState<string>(PERSONA_IDS[0]);
+
+  useEffect(() => {
+    hydrateFromSession();
+  }, [hydrateFromSession]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    function onVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        hydrateFromSession();
+      }
+    }
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", onVisibilityChange);
+  }, [hydrated, hydrateFromSession]);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const [managedRole, setManagedRole] = useState<Role | null>(null);
   const [personaActionError, setPersonaActionError] = useState("");
@@ -95,6 +114,11 @@ export function App() {
 
     if (!model.trim()) {
       setGenerationError("Select a model before refining the prompt.");
+      return;
+    }
+
+    if (keyMissing) {
+      setGenerationError(`Add your ${selectedProvider.provider} API key in Settings to generate prompts.`);
       return;
     }
 
@@ -177,6 +201,8 @@ export function App() {
     }
   }
 
+  const keyMissing = !isProviderConfigured(storeKeys, provider);
+
   const outputIsError = Boolean(generationError && !outputPrompt);
 
   return (
@@ -209,9 +235,11 @@ export function App() {
               model={model}
               selectedProvider={selectedProvider}
               isGenerating={isGenerating}
+              keyMissing={keyMissing}
               onProviderChange={handleProviderChange}
               onModelChange={setModel}
               onGenerate={handleGenerate}
+              onOpenSettings={() => setIsSettingsModalOpen(true)}
             />
           </section>
 
@@ -339,9 +367,11 @@ function ComposerPanel({
   model,
   selectedProvider,
   isGenerating,
+  keyMissing,
   onProviderChange,
   onModelChange,
   onGenerate,
+  onOpenSettings,
 }: {
   inputIdea: string;
   onInputChange: (value: string) => void;
@@ -349,9 +379,11 @@ function ComposerPanel({
   model: string;
   selectedProvider: (typeof providersConfig)[number];
   isGenerating: boolean;
+  keyMissing: boolean;
   onProviderChange: (providerId: ProviderId) => void;
   onModelChange: (model: string) => void;
   onGenerate: () => void;
+  onOpenSettings: () => void;
 }) {
   return (
     <>
@@ -361,6 +393,17 @@ function ComposerPanel({
           <h2 className={styles.moduleTitle}>Raw Signal</h2>
         </div>
       </div>
+
+      {keyMissing && (
+        <div className={styles.keyWarning}>
+          <span>
+            No API key configured for <strong>{selectedProvider.provider}</strong>.
+          </span>
+          <button type="button" className={styles.keyWarningCta} onClick={onOpenSettings}>
+            Open Settings
+          </button>
+        </div>
+      )}
 
       <div className={styles.composerFieldWrap}>
         <textarea

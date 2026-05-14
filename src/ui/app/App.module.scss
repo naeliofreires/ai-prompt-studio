@@ -271,6 +271,44 @@ $font-monospace-stack:
   color: rgba(207, 250, 254, 0.65);
 }
 
+.keyWarning {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  background: rgba(251, 191, 36, 0.06);
+  padding: 0.5rem 0.75rem;
+  font-family: $font-monospace-stack;
+  font-size: 11px;
+  color: #fde68a;
+}
+
+.keyWarningCta {
+  flex-shrink: 0;
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  background: rgba(251, 191, 36, 0.1);
+  padding: 0.35rem 0.6rem;
+  font-family: $font-monospace-stack;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #fde68a;
+  cursor: pointer;
+  transition: border-color 150ms ease, background-color 150ms ease;
+
+  &:hover {
+    border-color: rgba(251, 191, 36, 0.6);
+    background: rgba(251, 191, 36, 0.16);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.4);
+  }
+}
+
 .composerFieldWrap {
   position: relative;
 }
