@@ -4,13 +4,7 @@ import {
   promptStudioClient,
 } from "../api/prompt-studio-client";
 import { PERSONAS } from "../../shared";
-
-export interface Role {
-  id: string;
-  title: string;
-  description: string;
-  source: "builtin" | "custom";
-}
+import type { Role } from "../types/role";
 
 const BUILTIN_ROLES: Role[] = PERSONAS.map((persona) => ({
   id: persona.id,

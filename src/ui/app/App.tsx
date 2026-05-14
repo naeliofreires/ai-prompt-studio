@@ -12,13 +12,14 @@ import {
   Wand2,
   type LucideIcon,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Header } from "../components/Header";
 import RoleModal from "../components/RoleModal";
 import RoleViewModal from "../components/RoleViewModal";
 import SettingsModal from "../components/SettingsModal";
 import { StreamingMarkdown } from "../components/StreamingMarkdown";
-import { useRoles, type Role } from "../hooks/useRoles";
+import { useRoles } from "../hooks/useRoles";
+import type { Role } from "../types/role";
 import { promptStudioClient } from "../api/prompt-studio-client";
 import { PERSONA_IDS, PROVIDERS, type PersonaId, type ProviderId } from "../../shared";
 import { useApiKeyStore, isProviderConfigured } from "../store/api-key-store";
@@ -86,7 +87,16 @@ export function App() {
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [generationError, setGenerationError] = useState("");
   const [isCopied, setIsCopied] = useState(false);
+  const copyFeedbackTimeoutRef = useRef<number | null>(null);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      if (copyFeedbackTimeoutRef.current !== null) {
+        window.clearTimeout(copyFeedbackTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const selectedRole = useMemo(
     () => roles.find((role) => role.id === activeRole) ?? roles[0],
@@ -161,8 +171,14 @@ export function App() {
   async function handleCopy() {
     if (!outputPrompt) return;
     await navigator.clipboard.writeText(outputPrompt);
+    if (copyFeedbackTimeoutRef.current !== null) {
+      window.clearTimeout(copyFeedbackTimeoutRef.current);
+    }
     setIsCopied(true);
-    window.setTimeout(() => setIsCopied(false), 2000);
+    copyFeedbackTimeoutRef.current = window.setTimeout(() => {
+      setIsCopied(false);
+      copyFeedbackTimeoutRef.current = null;
+    }, 2000);
   }
 
   async function handleCreateRole(title: string, description: string) {
