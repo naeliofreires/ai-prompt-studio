@@ -12,8 +12,10 @@ function getEffectiveLevel(): LogLevel {
     const lvl = process.env.LOG_LEVEL as LogLevel;
     if (LOG_LEVELS[lvl] !== undefined) return lvl;
   }
-  if (typeof (import.meta as any)?.env?.VITE_LOG_LEVEL !== "undefined") {
-    const lvl = (import.meta as any).env.VITE_LOG_LEVEL as LogLevel;
+  const viteLogLevel = (import.meta as ImportMeta & { env?: { VITE_LOG_LEVEL?: string } }).env
+    ?.VITE_LOG_LEVEL;
+  if (viteLogLevel !== undefined) {
+    const lvl = viteLogLevel as LogLevel;
     if (LOG_LEVELS[lvl] !== undefined) return lvl;
   }
   return "info";
