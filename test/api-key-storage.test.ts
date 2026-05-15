@@ -8,7 +8,7 @@ import {
 
 describe("api-key-storage", () => {
   beforeEach(() => {
-    window.sessionStorage.clear();
+    window.localStorage.clear();
   });
 
   it("returns empty object when nothing stored", () => {
@@ -56,15 +56,15 @@ describe("api-key-storage", () => {
   });
 
   it("handles corrupt JSON gracefully", () => {
-    window.sessionStorage.setItem(STORAGE_KEY, "not-json");
+    window.localStorage.setItem(STORAGE_KEY, "not-json");
     expect(readApiKeys()).toEqual({});
-    expect(window.sessionStorage.getItem(STORAGE_KEY)).toBeNull();
+    expect(window.localStorage.getItem(STORAGE_KEY)).toBeNull();
   });
 
   it("handles invalid schema gracefully", () => {
-    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ gemini: 123 }));
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ gemini: 123 }));
     expect(readApiKeys()).toEqual({});
-    expect(window.sessionStorage.getItem(STORAGE_KEY)).toBeNull();
+    expect(window.localStorage.getItem(STORAGE_KEY)).toBeNull();
   });
 
   it("writeApiKeys skips providers not in the schema", () => {

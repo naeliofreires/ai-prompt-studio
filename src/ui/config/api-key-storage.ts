@@ -4,7 +4,7 @@ export const STORAGE_KEY = "promptizer:apiKeys:v1";
 
 function getStorage(): Storage | null {
   if (typeof window === "undefined") return null;
-  return window.sessionStorage;
+  return window.localStorage;
 }
 
 export function readApiKeys(): Partial<Record<ProviderId, string>> {
@@ -18,7 +18,7 @@ export function readApiKeys(): Partial<Record<ProviderId, string>> {
     const parsed = JSON.parse(raw);
     return apiKeyMapSchema.parse(parsed);
   } catch {
-    console.warn("Corrupt sessionStorage entry cleared:", STORAGE_KEY);
+    console.warn("Corrupt localStorage entry cleared:", STORAGE_KEY);
     storage.removeItem(STORAGE_KEY);
     return {};
   }

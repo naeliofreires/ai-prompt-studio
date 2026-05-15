@@ -32,7 +32,7 @@ function syncClearToMain(): void {
   }
 }
 
-export const useApiKeyStore = create<ApiKeyStore>((set, get) => ({
+export const useApiKeyStore = create<ApiKeyStore>((set) => ({
   keys: {},
   hydrated: false,
   lastUpdatedAt: null,
