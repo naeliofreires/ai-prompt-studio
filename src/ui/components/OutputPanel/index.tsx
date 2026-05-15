@@ -1,10 +1,7 @@
 import { Check, Clipboard, Terminal } from "lucide-react";
+import type { GenerationEvaluation } from "../../types/generation";
 import { StreamingMarkdown } from "../StreamingMarkdown";
 import styles from "./OutputPanel.module.scss";
-
-export type Evaluation = {
-  tokensUsed?: number;
-};
 
 export interface OutputPanelProps {
   outputPrompt: string;
@@ -12,7 +9,7 @@ export interface OutputPanelProps {
   generationError: string;
   isGenerating: boolean;
   isCopied: boolean;
-  evaluation: Evaluation | null;
+  evaluation: GenerationEvaluation | null;
   onCopy: () => void;
 }
 

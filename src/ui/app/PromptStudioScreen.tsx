@@ -1,11 +1,11 @@
 import { ComposerPanel } from "../components/ComposerPanel";
 import { Header } from "../components/Header";
-import type { Evaluation } from "../components/OutputPanel";
 import { OutputPanel } from "../components/OutputPanel";
 import { PersonaPanel } from "../components/PersonaPanel";
 import RoleModal from "../components/RoleModal";
 import RoleViewModal from "../components/RoleViewModal";
 import SettingsModal from "../components/SettingsModal";
+import type { GenerationEvaluation } from "../types/generation";
 import type { Role } from "../types/role";
 import type { Provider, ProviderId } from "../../shared";
 import styles from "./App.module.scss";
@@ -36,7 +36,7 @@ export interface PromptStudioScreenProps {
   outputIsError: boolean;
   generationError: string;
   isCopied: boolean;
-  evaluation: Evaluation | null;
+  evaluation: GenerationEvaluation | null;
   onCopyOutput: () => void;
 
   isRoleModalOpen: boolean;

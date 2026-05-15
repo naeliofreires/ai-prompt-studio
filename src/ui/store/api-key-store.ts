@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { ProviderId } from "../../shared/index.js";
+import { apiKeySyncClient } from "../api/api-key-sync-client.js";
 import { readApiKeys, writeApiKeys, clearApiKeys } from "../config/api-key-storage.js";
 import { hasKey } from "../../shared/domain/api-keys.js";
 
@@ -19,17 +20,11 @@ export interface ApiKeyActions {
 export type ApiKeyStore = ApiKeyState & ApiKeyActions;
 
 function syncKeysToMain(keys: Partial<Record<ProviderId, string>>): void {
-  const bridge = window.aiPromptStudio;
-  if (bridge?.setApiKeys) {
-    bridge.setApiKeys(keys as Record<string, string>).catch(() => {});
-  }
+  apiKeySyncClient.syncKeys(keys).catch(() => {});
 }
 
 function syncClearToMain(): void {
-  const bridge = window.aiPromptStudio;
-  if (bridge?.clearAllApiKeys) {
-    bridge.clearAllApiKeys().catch(() => {});
-  }
+  apiKeySyncClient.clearAll().catch(() => {});
 }
 
 export const useApiKeyStore = create<ApiKeyStore>((set) => ({

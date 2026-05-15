@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import type { GeneratePromptIpcResult, GeneratePromptPayload, ProviderId } from "../../shared";
 import type { Provider } from "../../shared/domain/provider";
 import { promptStudioClient } from "../api/prompt-studio-client";
-import type { Evaluation } from "../components/OutputPanel";
+import type { GenerationEvaluation } from "../types/generation";
 import type { Role } from "../types/role";
 
 export type GeneratePromptFn = (payload: GeneratePromptPayload) => Promise<GeneratePromptIpcResult>;
@@ -30,7 +30,7 @@ export function usePromptGeneration({
   const [inputIdea, setInputIdea] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [outputPrompt, setOutputPrompt] = useState("");
-  const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
+  const [evaluation, setEvaluation] = useState<GenerationEvaluation | null>(null);
   const [generationError, setGenerationError] = useState("");
 
   const handleGenerate = useCallback(async () => {

@@ -1,8 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  isCustomPersonaBridgeUnavailable,
-  promptStudioClient,
-} from "../api/prompt-studio-client";
+import { personaClient } from "../api/persona-client";
 import { PERSONAS } from "../../shared";
 import type { Role } from "../types/role";
 
@@ -23,15 +20,7 @@ export function useRoles() {
 
     async function loadCustomPersonas() {
       try {
-        if (isCustomPersonaBridgeUnavailable()) {
-          if (!cancelled) {
-            setError("Restart the desktop app to load custom personas.");
-            setIsLoading(false);
-          }
-          return;
-        }
-
-        const result = await promptStudioClient.listCustomPersonas();
+        const result = await personaClient.listCustomPersonas();
         if (cancelled) return;
 
         const customRoles: Role[] = result.personas.map((persona) => ({
@@ -62,7 +51,7 @@ export function useRoles() {
   }, []);
 
   const addRole = useCallback(async (title: string, description: string) => {
-    const persona = await promptStudioClient.createCustomPersona({
+    const persona = await personaClient.createCustomPersona({
       label: title.trim(),
       role: description.trim(),
     });
@@ -79,7 +68,7 @@ export function useRoles() {
   }, []);
 
   const deleteRole = useCallback(async (id: string) => {
-    const result = await promptStudioClient.deleteCustomPersona({ id });
+    const result = await personaClient.deleteCustomPersona({ id });
     if (!result.deleted) {
       return false;
     }
