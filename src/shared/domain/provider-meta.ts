@@ -9,10 +9,8 @@ function keyPlaceholderFor(id: ProviderId): string {
       return "glm-...";
     case "deepseek":
       return "sk-...";
-    default: {
-      const _exhaustive: never = id;
+    default:
       throw new Error(`No placeholder for provider: ${id}`);
-    }
   }
 }
 
