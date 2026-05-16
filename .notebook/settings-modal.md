@@ -1,14 +1,14 @@
 # Settings Modal
-> Renderer settings UI; secrets stay out of React state
+> Renderer settings UI; visual modal stays decoupled from the API key store
 
-Entry: `src/renderer/components/SettingsModal.tsx`
+Entry: `src/ui/components/SettingsModal/index.tsx`
 
-Flow: `src/renderer/app/App.tsx` opens modal -> modal displays provider API key fields -> save closes modal.
+Flow: `src/ui/app/App.tsx` opens modal -> `src/ui/hooks/useApiKeySettings.ts` reads/writes the API key store -> `SettingsModal` receives `keys` and callbacks by props -> save closes modal.
 
-Security:
-- API key inputs are display-only for now; no persistence and no React state storage.
-- Spec source: `docs/tech-spec-ai-prompt-studio.md` (L189-196) says secrets must be read by main-process secure config or `.env`.
+Boundary:
+- `src/ui/components` should not import `src/ui/store/api-key-store.ts` directly.
+- The modal may keep local draft/display state, but persistence and sync stay in hooks/store.
 
 Provider source: `src/shared/domain/provider.ts` -> `spec/providers.json`
 
-Updated: 2026-05-12
+Updated: 2026-05-16

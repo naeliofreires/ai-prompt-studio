@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Eye, EyeOff, Save, Trash2 } from "lucide-react";
 import { PROVIDER_META, type Provider, type ProviderId } from "../../../shared";
-import { useApiKeyStore } from "../../store/api-key-store";
 import ModalShell from "../shared/ModalShell";
 import modalStyles from "../shared/ModalShell.module.css";
 import styles from "./SettingsModal.module.css";
@@ -9,19 +8,27 @@ import styles from "./SettingsModal.module.css";
 interface SettingsModalProps {
   open: boolean;
   providers: Provider[];
+  keys: Partial<Record<ProviderId, string>>;
   onClose: () => void;
   onSave: () => void;
+  onSaveKeys: (patch: Partial<Record<ProviderId, string>>) => void;
+  onClearProvider: (id: ProviderId) => void;
+  onClearAll: () => void;
 }
 
-export default function SettingsModal({ open, providers, onClose, onSave }: SettingsModalProps) {
+export default function SettingsModal({
+  open,
+  providers,
+  keys,
+  onClose,
+  onSave,
+  onSaveKeys,
+  onClearProvider,
+  onClearAll,
+}: SettingsModalProps) {
   const [showApiKeys, setShowApiKeys] = useState(false);
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [clearAllConfirm, setClearAllConfirm] = useState(false);
-
-  const storeKeys = useApiKeyStore((s) => s.keys);
-  const setKeys = useApiKeyStore((s) => s.setKeys);
-  const clearProvider = useApiKeyStore((s) => s.clearProvider);
-  const clearAll = useApiKeyStore((s) => s.clearAll);
 
   useEffect(() => {
     if (!open) return;
@@ -31,7 +38,7 @@ export default function SettingsModal({ open, providers, onClose, onSave }: Sett
   }, [open]);
 
   function hasKeyConfigured(id: ProviderId): boolean {
-    const val = storeKeys[id];
+    const val = keys[id];
     return typeof val === "string" && val.trim().length > 0;
   }
 
@@ -40,7 +47,7 @@ export default function SettingsModal({ open, providers, onClose, onSave }: Sett
   }
 
   function handleRemove(id: string) {
-    clearProvider(id as ProviderId);
+    onClearProvider(id as ProviderId);
     setDraft((prev) => {
       const next = { ...prev };
       delete next[id];
@@ -53,7 +60,7 @@ export default function SettingsModal({ open, providers, onClose, onSave }: Sett
       setClearAllConfirm(true);
       return;
     }
-    clearAll();
+    onClearAll();
     setDraft({});
     setClearAllConfirm(false);
   }
@@ -67,7 +74,7 @@ export default function SettingsModal({ open, providers, onClose, onSave }: Sett
       }
     }
     if (Object.keys(patch).length > 0) {
-      setKeys(patch);
+      onSaveKeys(patch);
     }
     onSave();
   }

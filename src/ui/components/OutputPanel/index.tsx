@@ -1,5 +1,6 @@
 import { Check, Clipboard, Terminal } from "lucide-react";
 import type { GenerationEvaluation } from "../../types/generation";
+import { PanelHeader } from "../shared/PanelHeader";
 import { StreamingMarkdown } from "../StreamingMarkdown";
 import styles from "./OutputPanel.module.scss";
 
@@ -33,21 +34,21 @@ export function OutputPanel({
 }: OutputPanelProps) {
   return (
     <>
-      <div className={styles.outputHeader}>
-        <div>
-          <p className={styles.moduleLabel}>Module 03</p>
-          <h2 className={styles.moduleTitle}>Refined Stream</h2>
-        </div>
-        <button
-          type="button"
-          onClick={onCopy}
-          disabled={!outputPrompt}
-          className={[styles.copyButton, isCopied ? styles.copyButtonCopied : ""].join(" ")}
-        >
-          {isCopied ? <Check size={14} /> : <Clipboard size={14} />}
-          {isCopied ? "Copied" : "Copy"}
-        </button>
-      </div>
+      <PanelHeader
+        label="Module 03"
+        title="Refined Stream"
+        action={
+          <button
+            type="button"
+            onClick={onCopy}
+            disabled={!outputPrompt}
+            className={[styles.copyButton, isCopied ? styles.copyButtonCopied : ""].join(" ")}
+          >
+            {isCopied ? <Check size={14} /> : <Clipboard size={14} />}
+            {isCopied ? "Copied" : "Copy"}
+          </button>
+        }
+      />
 
       <div
         className={[

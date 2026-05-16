@@ -10,88 +10,80 @@ import type { Role } from "../types/role";
 import type { Provider, ProviderId } from "../../shared";
 import styles from "./App.module.scss";
 
-export interface PromptStudioScreenProps {
+interface PersonaPanelGroup {
   roles: Role[];
   activeRole: string;
-  isRolesLoading: boolean;
-  rolesLoadError: string;
-  personaActionError: string;
-  onSelectRole: (id: string) => void;
-  onCreatePersona: () => void;
-  onManagePersona: (role: Role) => void;
+  isLoading: boolean;
+  loadError: string;
+  actionError: string;
+  onSelect: (id: string) => void;
+  onCreate: () => void;
+  onManage: (role: Role) => void;
+}
 
+interface ComposerPanelGroup {
   inputIdea: string;
-  onInputIdeaChange: (value: string) => void;
+  onInputChange: (value: string) => void;
   provider: ProviderId;
   model: string;
   providers: Provider[];
   selectedProvider: Provider;
   isGenerating: boolean;
   keyMissing: boolean;
-  onProviderChange: (id: ProviderId) => void;
+  onProviderChange: (providerId: ProviderId) => void;
   onModelChange: (model: string) => void;
   onGenerate: () => void;
+  onOpenSettings: () => void;
+}
 
+interface OutputPanelGroup {
   outputPrompt: string;
   outputIsError: boolean;
   generationError: string;
   isCopied: boolean;
   evaluation: GenerationEvaluation | null;
-  onCopyOutput: () => void;
+  onCopy: () => void;
+}
 
-  isRoleModalOpen: boolean;
-  onCloseRoleModal: () => void;
-  onCreateRole: (title: string, description: string) => void | Promise<void>;
+interface RoleModalGroup {
+  open: boolean;
+  onClose: () => void;
+  onCreate: (title: string, description: string) => void | Promise<void>;
+}
 
-  managedRole: Role | null;
-  onCloseRoleView: () => void;
-  onDeleteManagedRole: () => void | Promise<void>;
+interface RoleViewModalGroup {
+  role: Role | null;
+  onClose: () => void;
+  onDelete: () => void | Promise<void>;
+}
 
-  isSettingsModalOpen: boolean;
-  providersForSettings: Provider[];
-  onCloseSettings: () => void;
-  onSaveSettings: () => void;
+interface SettingsModalGroup {
+  open: boolean;
+  providers: Provider[];
+  keys: Partial<Record<ProviderId, string>>;
+  onClose: () => void;
+  onSave: () => void;
+  onSaveKeys: (patch: Partial<Record<ProviderId, string>>) => void;
+  onClearProvider: (id: ProviderId) => void;
+  onClearAll: () => void;
+}
 
-  onOpenSettings: () => void;
+export interface PromptStudioScreenProps {
+  persona: PersonaPanelGroup;
+  composer: ComposerPanelGroup;
+  output: OutputPanelGroup;
+  roleModal: RoleModalGroup;
+  roleViewModal: RoleViewModalGroup;
+  settingsModal: SettingsModalGroup;
 }
 
 export function PromptStudioScreen({
-  roles,
-  activeRole,
-  isRolesLoading,
-  rolesLoadError,
-  personaActionError,
-  onSelectRole,
-  onCreatePersona,
-  onManagePersona,
-  inputIdea,
-  onInputIdeaChange,
-  provider,
-  model,
-  providers,
-  selectedProvider,
-  isGenerating,
-  keyMissing,
-  onProviderChange,
-  onModelChange,
-  onGenerate,
-  outputPrompt,
-  outputIsError,
-  generationError,
-  isCopied,
-  evaluation,
-  onCopyOutput,
-  isRoleModalOpen,
-  onCloseRoleModal,
-  onCreateRole,
-  managedRole,
-  onCloseRoleView,
-  onDeleteManagedRole,
-  isSettingsModalOpen,
-  providersForSettings,
-  onCloseSettings,
-  onSaveSettings,
-  onOpenSettings,
+  persona,
+  composer,
+  output,
+  roleModal,
+  roleViewModal,
+  settingsModal,
 }: PromptStudioScreenProps) {
   return (
     <main className={styles.main}>
@@ -99,65 +91,73 @@ export function PromptStudioScreen({
       <div className={styles.radialOverlay} aria-hidden="true" />
 
       <StudioShell>
-        <Header onOpenSettings={onOpenSettings} />
+        <Header onOpenSettings={composer.onOpenSettings} />
 
         <section className={styles.workspaceGrid}>
           <section className={styles.panelCyan}>
             <PersonaPanel
-              roles={roles}
-              activeRole={activeRole}
-              isLoading={isRolesLoading}
-              loadError={rolesLoadError}
-              actionError={personaActionError}
-              onSelect={onSelectRole}
-              onCreate={onCreatePersona}
-              onManage={onManagePersona}
+              roles={persona.roles}
+              activeRole={persona.activeRole}
+              isLoading={persona.isLoading}
+              loadError={persona.loadError}
+              actionError={persona.actionError}
+              onSelect={persona.onSelect}
+              onCreate={persona.onCreate}
+              onManage={persona.onManage}
             />
           </section>
 
           <section className={styles.panelFuchsia}>
             <ComposerPanel
-              inputIdea={inputIdea}
-              onInputChange={onInputIdeaChange}
-              provider={provider}
-              model={model}
-              providers={providers}
-              selectedProvider={selectedProvider}
-              isGenerating={isGenerating}
-              keyMissing={keyMissing}
-              onProviderChange={onProviderChange}
-              onModelChange={onModelChange}
-              onGenerate={onGenerate}
-              onOpenSettings={onOpenSettings}
+              inputIdea={composer.inputIdea}
+              onInputChange={composer.onInputChange}
+              provider={composer.provider}
+              model={composer.model}
+              providers={composer.providers}
+              selectedProvider={composer.selectedProvider}
+              isGenerating={composer.isGenerating}
+              keyMissing={composer.keyMissing}
+              onProviderChange={composer.onProviderChange}
+              onModelChange={composer.onModelChange}
+              onGenerate={composer.onGenerate}
+              onOpenSettings={composer.onOpenSettings}
             />
           </section>
 
           <section className={styles.panelCyan}>
             <OutputPanel
-              outputPrompt={outputPrompt}
-              outputIsError={outputIsError}
-              generationError={generationError}
-              isGenerating={isGenerating}
-              isCopied={isCopied}
-              evaluation={evaluation}
-              onCopy={onCopyOutput}
+              outputPrompt={output.outputPrompt}
+              outputIsError={output.outputIsError}
+              generationError={output.generationError}
+              isGenerating={output.isGenerating}
+              isCopied={output.isCopied}
+              evaluation={output.evaluation}
+              onCopy={output.onCopy}
             />
           </section>
         </section>
       </StudioShell>
 
-      <RoleModal open={isRoleModalOpen} onClose={onCloseRoleModal} onCreate={onCreateRole} />
+      <RoleModal
+        open={roleModal.open}
+        onClose={roleModal.onClose}
+        onCreate={roleModal.onCreate}
+      />
       <RoleViewModal
-        open={managedRole !== null}
-        role={managedRole}
-        onClose={onCloseRoleView}
-        onDelete={onDeleteManagedRole}
+        open={roleViewModal.role !== null}
+        role={roleViewModal.role}
+        onClose={roleViewModal.onClose}
+        onDelete={roleViewModal.onDelete}
       />
       <SettingsModal
-        open={isSettingsModalOpen}
-        providers={providersForSettings}
-        onClose={onCloseSettings}
-        onSave={onSaveSettings}
+        open={settingsModal.open}
+        providers={settingsModal.providers}
+        keys={settingsModal.keys}
+        onClose={settingsModal.onClose}
+        onSave={settingsModal.onSave}
+        onSaveKeys={settingsModal.onSaveKeys}
+        onClearProvider={settingsModal.onClearProvider}
+        onClearAll={settingsModal.onClearAll}
       />
     </main>
   );

@@ -1,5 +1,7 @@
+import { useRef } from "react";
 import { Loader2, Trash2, Wand2 } from "lucide-react";
 import type { Provider, ProviderId } from "../../../shared";
+import { PanelHeader } from "../shared/PanelHeader";
 import styles from "./ComposerPanel.module.scss";
 
 export interface ComposerPanelProps {
@@ -100,14 +102,11 @@ export function ComposerPanel({
   onGenerate,
   onOpenSettings,
 }: ComposerPanelProps) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   return (
     <>
-      <div className={`${styles.moduleHeader} ${styles.moduleHeaderFuchsia}`}>
-        <div>
-          <p className={`${styles.moduleLabel} ${styles.moduleLabelFuchsia}`}>Module 02</p>
-          <h2 className={styles.moduleTitle}>Raw Signal</h2>
-        </div>
-      </div>
+      <PanelHeader label="Module 02" title="Raw Signal" tone="fuchsia" />
 
       {keyMissing && (
         <div className={styles.keyWarning}>
@@ -122,6 +121,7 @@ export function ComposerPanel({
 
       <div className={styles.composerFieldWrap}>
         <textarea
+          ref={textareaRef}
           id="raw-idea"
           aria-label="Raw idea"
           rows={10}
@@ -137,7 +137,7 @@ export function ComposerPanel({
             aria-label="Clear raw signal"
             onClick={() => {
               onInputChange("");
-              document.getElementById("raw-idea")?.focus();
+              textareaRef.current?.focus();
             }}
           >
             <Trash2 size={16} aria-hidden="true" />

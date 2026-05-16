@@ -1,5 +1,6 @@
 import { Plus } from "lucide-react";
 import type { Role } from "../../types/role";
+import { PanelHeader } from "../shared/PanelHeader";
 import { iconForRole } from "./roleIcons";
 import styles from "./PersonaPanel.module.scss";
 
@@ -26,16 +27,16 @@ export function PersonaPanel({
 }: PersonaPanelProps) {
   return (
     <>
-      <div className={styles.moduleHeader}>
-        <div>
-          <p className={styles.moduleLabel}>Module 01</p>
-          <h2 className={styles.moduleTitle}>Persona Matrix</h2>
-        </div>
-        <button type="button" className={styles.personaCreateButton} onClick={onCreate}>
-          <Plus size={14} />
-          <span>New persona</span>
-        </button>
-      </div>
+      <PanelHeader
+        label="Module 01"
+        title="Persona Matrix"
+        action={
+          <button type="button" className={styles.personaCreateButton} onClick={onCreate}>
+            <Plus size={14} />
+            <span>New persona</span>
+          </button>
+        }
+      />
 
       {(loadError || actionError) && (
         <p className={styles.personaFeedback}>{loadError || actionError}</p>

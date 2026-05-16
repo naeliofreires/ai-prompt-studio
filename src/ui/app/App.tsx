@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react";
 import { PromptStudioScreen } from "./PromptStudioScreen";
 import { useApiKeySessionSync } from "../hooks/useApiKeySessionSync";
+import { useApiKeySettings } from "../hooks/useApiKeySettings";
 import { useCopyWithFeedback } from "../hooks/useCopyWithFeedback";
 import { usePromptGeneration } from "../hooks/usePromptGeneration";
 import { useRoles } from "../hooks/useRoles";
 import type { Role } from "../types/role";
 import { PERSONA_IDS, PROVIDERS, type ProviderId } from "../../shared";
-import { useApiKeyStore, isProviderConfigured } from "../store/api-key-store";
 
 const providersConfig = PROVIDERS;
 
@@ -24,7 +24,7 @@ export function App() {
 
   useApiKeySessionSync();
 
-  const storeKeys = useApiKeyStore((s) => s.keys);
+  const apiKeySettings = useApiKeySettings();
   const [activeRole, setActiveRole] = useState<string>(PERSONA_IDS[0]);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const [managedRole, setManagedRole] = useState<Role | null>(null);
@@ -45,7 +45,7 @@ export function App() {
     [provider],
   );
 
-  const keyMissing = !isProviderConfigured(storeKeys, provider);
+  const keyMissing = !apiKeySettings.isConfigured(provider);
 
   const {
     inputIdea,
@@ -114,42 +114,59 @@ export function App() {
 
   return (
     <PromptStudioScreen
-      roles={roles}
-      activeRole={activeRole}
-      isRolesLoading={isLoading}
-      rolesLoadError={rolesError}
-      personaActionError={personaActionError}
-      onSelectRole={setActiveRole}
-      onCreatePersona={() => setIsRoleModalOpen(true)}
-      onManagePersona={setManagedRole}
-      inputIdea={inputIdea}
-      onInputIdeaChange={setInputIdea}
-      provider={provider}
-      model={model}
-      providers={providersConfig}
-      selectedProvider={selectedProvider}
-      isGenerating={isGenerating}
-      keyMissing={keyMissing}
-      onProviderChange={handleProviderChange}
-      onModelChange={setModel}
-      onGenerate={handleGenerate}
-      outputPrompt={outputPrompt}
-      outputIsError={outputIsError}
-      generationError={generationError}
-      isCopied={isCopied}
-      evaluation={evaluation}
-      onCopyOutput={handleCopyOutput}
-      isRoleModalOpen={isRoleModalOpen}
-      onCloseRoleModal={() => setIsRoleModalOpen(false)}
-      onCreateRole={handleCreateRole}
-      managedRole={managedRole}
-      onCloseRoleView={() => setManagedRole(null)}
-      onDeleteManagedRole={handleDeleteManagedRole}
-      isSettingsModalOpen={isSettingsModalOpen}
-      providersForSettings={providersConfig}
-      onCloseSettings={() => setIsSettingsModalOpen(false)}
-      onSaveSettings={() => setIsSettingsModalOpen(false)}
-      onOpenSettings={() => setIsSettingsModalOpen(true)}
+      persona={{
+        roles,
+        activeRole,
+        isLoading,
+        loadError: rolesError,
+        actionError: personaActionError,
+        onSelect: setActiveRole,
+        onCreate: () => setIsRoleModalOpen(true),
+        onManage: setManagedRole,
+      }}
+      composer={{
+        inputIdea,
+        onInputChange: setInputIdea,
+        provider,
+        model,
+        providers: providersConfig,
+        selectedProvider,
+        isGenerating,
+        keyMissing,
+        onProviderChange: handleProviderChange,
+        onModelChange: setModel,
+        onGenerate: handleGenerate,
+        onOpenSettings: () => setIsSettingsModalOpen(true),
+      }}
+      output={{
+        outputPrompt,
+        outputIsError,
+        generationError,
+        isGenerating,
+        isCopied,
+        evaluation,
+        onCopy: handleCopyOutput,
+      }}
+      roleModal={{
+        open: isRoleModalOpen,
+        onClose: () => setIsRoleModalOpen(false),
+        onCreate: handleCreateRole,
+      }}
+      roleViewModal={{
+        role: managedRole,
+        onClose: () => setManagedRole(null),
+        onDelete: handleDeleteManagedRole,
+      }}
+      settingsModal={{
+        open: isSettingsModalOpen,
+        providers: providersConfig,
+        keys: apiKeySettings.keys,
+        onClose: () => setIsSettingsModalOpen(false),
+        onSave: () => setIsSettingsModalOpen(false),
+        onSaveKeys: apiKeySettings.saveKeys,
+        onClearProvider: apiKeySettings.clearProvider,
+        onClearAll: apiKeySettings.clearAll,
+      }}
     />
   );
 }
