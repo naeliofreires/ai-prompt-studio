@@ -40,6 +40,7 @@ interface OutputPanelGroup {
   outputPrompt: string;
   outputIsError: boolean;
   generationError: string;
+  isGenerating: boolean;
   isCopied: boolean;
   evaluation: GenerationEvaluation | null;
   onCopy: () => void;

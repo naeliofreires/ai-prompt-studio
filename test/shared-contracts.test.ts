@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   generatePromptIpcResultSchema,
   generatePromptPayloadSchema,
+  listConfiguredApiKeysResultSchema,
 } from "../src/shared";
 
 describe("shared IPC contracts", () => {
@@ -102,5 +103,13 @@ describe("shared IPC contracts", () => {
         message: "wrong shape",
       }),
     ).toThrow();
+  });
+
+  it("parses configured API key provider status without secret values", () => {
+    const result = listConfiguredApiKeysResultSchema.parse({
+      providerIds: ["gemini", "glm"],
+    });
+
+    expect(result.providerIds).toEqual(["gemini", "glm"]);
   });
 });

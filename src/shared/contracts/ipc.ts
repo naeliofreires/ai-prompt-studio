@@ -23,6 +23,7 @@ export const ipcChannels = {
   listCustomPersonas: "persona:list-custom",
   createCustomPersona: "persona:create-custom",
   deleteCustomPersona: "persona:delete-custom",
+  listConfiguredApiKeys: "apiKeys:listConfigured",
   setApiKeys: "apiKeys:set",
   clearAllApiKeys: "apiKeys:clearAll",
 } as const;
@@ -37,10 +38,15 @@ export const deleteCustomPersonaResultSchema = z.object({
   deleted: z.boolean(),
 });
 
+export const listConfiguredApiKeysResultSchema = z.object({
+  providerIds: z.array(z.enum(PROVIDER_IDS)),
+});
+
 export type GeneratePromptPayload = z.infer<typeof generatePromptPayloadSchema>;
 export type ListCustomPersonasResult = z.infer<typeof listCustomPersonasResultSchema>;
 export type CreateCustomPersonaResult = z.infer<typeof createCustomPersonaResultSchema>;
 export type DeleteCustomPersonaResult = z.infer<typeof deleteCustomPersonaResultSchema>;
+export type ListConfiguredApiKeysResult = z.infer<typeof listConfiguredApiKeysResultSchema>;
 export type { CreateCustomPersonaInput, DeleteCustomPersonaInput } from "../domain/custom-persona.js";
 export { createCustomPersonaInputSchema, deleteCustomPersonaInputSchema };
 

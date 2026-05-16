@@ -1,4 +1,4 @@
-import { ipcMain } from "electron";
+import { app, ipcMain } from "electron";
 import { generateText } from "ai";
 import { ZodError } from "zod";
 import {
@@ -9,11 +9,16 @@ import {
   generatePromptIpcResultSchema,
   generatePromptPayloadSchema,
   ipcChannels,
+  listConfiguredApiKeysResultSchema,
   listCustomPersonasResultSchema,
 } from "../../shared/index.js";
 import { logger } from "../../shared/utils/logger.js";
 import { LLMAdapter } from "../services/LLMAdapter.js";
-import { setApiKeys, clearAllApiKeys } from "../services/api-key-manager.js";
+import {
+  clearAllApiKeys,
+  listConfiguredApiKeyProviders,
+  setApiKeys,
+} from "../services/api-key-manager.js";
 import {
   createCustomPersona,
   deleteCustomPersona,
@@ -47,6 +52,14 @@ export function registerIpcHandlers(): void {
     return deleteCustomPersonaResultSchema.parse({
       deleted: deleteCustomPersona(parsed.id),
     });
+  });
+
+  ipcMain.handle(ipcChannels.listConfiguredApiKeys, () => {
+    const providerIds = listConfiguredApiKeyProviders({
+      includeEnvironment: !app.isPackaged,
+    });
+    logger.debug("listConfiguredApiKeys", { providerIds });
+    return listConfiguredApiKeysResultSchema.parse({ providerIds });
   });
 
   ipcMain.handle(ipcChannels.setApiKeys, (_event, keys: Record<string, string>) => {

@@ -11,16 +11,6 @@ function isProviderId(id: string): id is ProviderId {
   return (PROVIDER_IDS as readonly string[]).includes(id);
 }
 
-function resolveApiKey(providerId: string, envKeys: string[]): string | undefined {
-  const runtimeKey = getApiKey(providerId)?.trim();
-  if (runtimeKey) return runtimeKey;
-  for (const envKey of envKeys) {
-    const val = process.env[envKey]?.trim();
-    if (val) return val;
-  }
-  return undefined;
-}
-
 export function resolveLanguageModel(providerId: string, model: string): LanguageModelV3 {
   if (!isProviderId(providerId)) {
     throw new Error(`Unknown provider: ${providerId}`);
@@ -28,7 +18,7 @@ export function resolveLanguageModel(providerId: string, model: string): Languag
 
   switch (providerId) {
     case "gemini": {
-      const apiKey = resolveApiKey(providerId, ["GOOGLE_GENERATIVE_AI_API_KEY"]);
+      const apiKey = getApiKey(providerId);
       if (!apiKey) {
         throw new Error(
           "Missing GOOGLE_GENERATIVE_AI_API_KEY. Add your API key in Settings or set the environment variable.",
@@ -43,7 +33,7 @@ export function resolveLanguageModel(providerId: string, model: string): Languag
     }
 
     case "glm": {
-      const apiKey = resolveApiKey(providerId, ["GLM_API_KEY", "ZHIPU_API_KEY"]);
+      const apiKey = getApiKey(providerId);
       if (!apiKey) {
         throw new Error(
           "Missing GLM_API_KEY or ZHIPU_API_KEY. Add your API key in Settings or set the environment variable.",
@@ -63,7 +53,7 @@ export function resolveLanguageModel(providerId: string, model: string): Languag
     }
 
     case "deepseek": {
-      const apiKey = resolveApiKey(providerId, ["DEEPSEEK_API_KEY"]);
+      const apiKey = getApiKey(providerId);
       if (!apiKey) {
         throw new Error(
           "Missing DEEPSEEK_API_KEY. Add your API key in Settings or set the environment variable.",

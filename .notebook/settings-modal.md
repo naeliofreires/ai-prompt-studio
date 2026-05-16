@@ -8,6 +8,7 @@ Flow: `src/ui/app/usePromptStudioController.ts` opens modal -> `src/ui/hooks/use
 Boundary:
 - `src/ui/components` should not import `src/ui/store/api-key-store.ts` directly.
 - The modal may keep local draft/display state, but persistence and sync stay in hooks/store.
+- The renderer may receive configured-provider status from the main process, but never API key values from `.env`.
 
 Provider source: `src/shared/domain/provider.ts` -> `spec/providers.json`
 
