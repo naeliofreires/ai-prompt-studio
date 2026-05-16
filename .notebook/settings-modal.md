@@ -3,7 +3,7 @@
 
 Entry: `src/ui/components/SettingsModal/index.tsx`
 
-Flow: `src/ui/app/App.tsx` opens modal -> `src/ui/hooks/useApiKeySettings.ts` reads/writes the API key store -> `SettingsModal` receives `keys` and callbacks by props -> save closes modal.
+Flow: `src/ui/app/usePromptStudioController.ts` opens modal -> `src/ui/hooks/useApiKeySettings.ts` reads/writes the API key store -> `SettingsModal` receives `keys` and callbacks by props -> save closes modal.
 
 Boundary:
 - `src/ui/components` should not import `src/ui/store/api-key-store.ts` directly.
