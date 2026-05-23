@@ -25,12 +25,33 @@ export interface LLMAdapterOptions {
   generateText: GenerateTextFn;
 }
 
+function buildPrompt(input: GeneratePromptInput): string {
+  if (!input.attachments?.length) {
+    return input.rawInput;
+  }
+
+  const attachmentsContext = input.attachments
+    .map((attachment, index) =>
+      [
+        `[Attachment ${index + 1}: ${attachment.name}]`,
+        `MIME type: ${attachment.mimeType}`,
+        `Size bytes: ${attachment.sizeBytes}`,
+        "Content:",
+        attachment.content,
+      ].join("\n")
+    )
+    .join("\n\n");
+
+  return `${input.rawInput}\n\nAttachments:\n${attachmentsContext}`;
+}
+
 export function LLMAdapter(options: LLMAdapterOptions): LlmAdapter {
   const { generateText } = options;
 
   return {
     generatePrompt: async (input: GeneratePromptInput): Promise<GeneratePromptOutput> => {
       const personaContext = input.personaContext;
+      const prompt = buildPrompt(input);
 
       const system = buildRefinementSystemPrompt({ personaContext });
       const model = resolveLanguageModel(input.providerId, input.model);
@@ -41,7 +62,7 @@ export function LLMAdapter(options: LLMAdapterOptions): LlmAdapter {
         rawInput: input.rawInput,
       });
       logger.debug("system prompt", system);
-      const result = await generateText({ model, system, prompt: input.rawInput });
+      const result = await generateText({ model, system, prompt });
 
       const tokensUsed = result.usage.totalTokens;
 

@@ -6,6 +6,7 @@ import type { GenerationEvaluation } from "../types/generation";
 import type { Role } from "../types/role";
 
 export type GeneratePromptFn = (payload: GeneratePromptPayload) => Promise<GeneratePromptIpcResult>;
+type PromptAttachments = NonNullable<GeneratePromptPayload["attachments"]>;
 
 export interface UsePromptGenerationArgs {
   selectedRole: Role | undefined;
@@ -32,6 +33,7 @@ export function usePromptGeneration({
   const [outputPrompt, setOutputPrompt] = useState("");
   const [evaluation, setEvaluation] = useState<GenerationEvaluation | null>(null);
   const [generationError, setGenerationError] = useState("");
+  const [promptAttachments, setPromptAttachments] = useState<PromptAttachments>([]);
 
   const handleGenerate = useCallback(async () => {
     const rawInput = inputIdea.trim();
@@ -67,12 +69,18 @@ export function usePromptGeneration({
     setGenerationError("");
 
     try {
-      const result = await generatePrompt({
+      const payload: GeneratePromptPayload = {
         rawInput,
         personaId: selectedRole.id,
         providerId: provider,
         model,
-      });
+      };
+
+      if (promptAttachments.length > 0) {
+        payload.attachments = promptAttachments;
+      }
+
+      const result = await generatePrompt(payload);
 
       if (!result.ok) {
         setGenerationError(result.message);
@@ -94,6 +102,7 @@ export function usePromptGeneration({
     keyMissing,
     model,
     onGenerateStart,
+    promptAttachments,
     provider,
     selectedProvider.provider,
     selectedRole,
@@ -102,6 +111,8 @@ export function usePromptGeneration({
   return {
     inputIdea,
     setInputIdea,
+    promptAttachments,
+    setPromptAttachments,
     isGenerating,
     outputPrompt,
     evaluation,

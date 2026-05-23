@@ -178,6 +178,209 @@ describe("usePromptGeneration", () => {
     expect(result.current.generationError).toBe("");
   });
 
+  it('6. sends selected attachments when prompt generation runs ', () => {
+    const attachments = [
+      {
+        name: "notes.txt",
+        mimeType: "text/plain",
+        sizeBytes: 42,
+        content: "Use this as context.",
+      },
+    ];
+    const generatePrompt = vi.fn().mockResolvedValue({
+      ok: true,
+      prompt: "You are…",
+      tokensUsed: 42,
+    });
+
+    const { result } = renderHook(() =>
+      usePromptGeneration(
+        baseArgs({
+          generatePrompt,
+        }),
+      ),
+    );
+
+    act(() => {
+      result.current.setInputIdea("Build a todo app");
+      result.current.setPromptAttachments(attachments);
+    });
+
+    return act(async () => {
+      await result.current.handleGenerate();
+    }).then(() => {
+      expect(generatePrompt).toHaveBeenCalledWith(
+        expect.objectContaining({
+          rawInput: "Build a todo app",
+          personaId: "architect",
+          providerId: "gemini",
+          model: "gemini-2.5-pro",
+          attachments,
+        }),
+      );
+    });
+  });
+
+  it('7. sends the full visible attachment list when prompt generation runs ', () => {
+    const visibleAttachments = [
+      {
+        name: "brief.txt",
+        mimeType: "text/plain",
+        sizeBytes: 23,
+        content: "Use this brief.",
+      },
+      {
+        name: "requirements.md",
+        mimeType: "text/markdown",
+        sizeBytes: 39,
+        content: "# Requirements\n\nKeep these constraints.",
+      },
+      {
+        name: "notes.txt",
+        mimeType: "text/plain",
+        sizeBytes: 31,
+        content: "Additional notes.",
+      },
+    ];
+    const generatePrompt = vi.fn().mockResolvedValue({
+      ok: true,
+      prompt: "You are…",
+      tokensUsed: 42,
+    });
+
+    const { result } = renderHook(() =>
+      usePromptGeneration(
+        baseArgs({
+          generatePrompt,
+        }),
+      ),
+    );
+
+    act(() => {
+      result.current.setInputIdea("Build a todo app");
+      result.current.setPromptAttachments(visibleAttachments);
+    });
+
+    return act(async () => {
+      await result.current.handleGenerate();
+    }).then(() => {
+      expect(generatePrompt).toHaveBeenCalledWith(
+        expect.objectContaining({
+          rawInput: "Build a todo app",
+          attachments: visibleAttachments,
+        }),
+      );
+    });
+  });
+
+  it('7. still requires raw prompt text when attachments are present ', () => {
+    const attachments = [
+      {
+        name: "notes.txt",
+        mimeType: "text/plain",
+        sizeBytes: 42,
+        content: "Use this as context.",
+      },
+    ];
+    const generatePrompt = vi.fn();
+
+    const { result } = renderHook(() =>
+      usePromptGeneration(
+        baseArgs({
+          generatePrompt,
+        }),
+      ),
+    );
+
+    act(() => {
+      result.current.setInputIdea("   ");
+      result.current.setPromptAttachments(attachments);
+    });
+
+    return act(async () => {
+      await result.current.handleGenerate();
+    }).then(() => {
+      expect(generatePrompt).not.toHaveBeenCalled();
+      expect(result.current.generationError).toMatch(/Enter an idea/i);
+    });
+  });
+
+  it('9. sends selected markdown attachments when prompt generation runs ', () => {
+    const attachments = [
+      {
+        name: "notes.md",
+        mimeType: "text/markdown",
+        sizeBytes: 42,
+        content: "# Notes\n\nUse this as context.",
+      },
+    ];
+    const generatePrompt = vi.fn().mockResolvedValue({
+      ok: true,
+      prompt: "You are…",
+      tokensUsed: 42,
+    });
+
+    const { result } = renderHook(() =>
+      usePromptGeneration(
+        baseArgs({
+          generatePrompt,
+        }),
+      ),
+    );
+
+    act(() => {
+      result.current.setInputIdea("Build a todo app");
+      result.current.setPromptAttachments(attachments);
+    });
+
+    return act(async () => {
+      await result.current.handleGenerate();
+    }).then(() => {
+      expect(generatePrompt).toHaveBeenCalledWith(
+        expect.objectContaining({
+          rawInput: "Build a todo app",
+          personaId: "architect",
+          providerId: "gemini",
+          model: "gemini-2.5-pro",
+          attachments,
+        }),
+      );
+    });
+  });
+
+  it('10. still requires raw prompt text when markdown attachments are present ', () => {
+    const attachments = [
+      {
+        name: "notes.md",
+        mimeType: "text/markdown",
+        sizeBytes: 42,
+        content: "# Notes\n\nUse this as context.",
+      },
+    ];
+    const generatePrompt = vi.fn();
+
+    const { result } = renderHook(() =>
+      usePromptGeneration(
+        baseArgs({
+          generatePrompt,
+        }),
+      ),
+    );
+
+    act(() => {
+      result.current.setInputIdea("   ");
+      result.current.setPromptAttachments(attachments);
+    });
+
+    return act(async () => {
+      await result.current.handleGenerate();
+    }).then(() => {
+      expect(generatePrompt).not.toHaveBeenCalled();
+      expect(result.current.isGenerating).toBe(false);
+      expect(result.current.generationError).toMatch(/Enter an idea/i);
+    });
+  });
+
   it("invokes onGenerateStart when generation runs", async () => {
     const generatePrompt = vi.fn().mockResolvedValue({
       ok: true,

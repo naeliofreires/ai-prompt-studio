@@ -1,0 +1,143 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { registerIpcHandlers } from "../src/main/ipc/register-handlers.js";
+import { ipcChannels } from "../src/shared/index.js";
+
+type IpcHandler = (_event: unknown, payload: unknown) => unknown;
+
+const mocks = vi.hoisted(() => {
+  const handlers = new Map<string, IpcHandler>();
+
+  return {
+    app: { isPackaged: false },
+    generateText: vi.fn(),
+    handlers,
+    ipcMain: {
+      handle: vi.fn((channel: string, handler: IpcHandler) => {
+        handlers.set(channel, handler);
+      }),
+    },
+  };
+});
+
+vi.mock("electron", () => ({
+  app: mocks.app,
+  ipcMain: mocks.ipcMain,
+}));
+
+vi.mock("electron-store", () => ({
+  default: class MockStore {
+    private values = new Map<string, unknown>([["customPersonas", []]]);
+
+    get(key: string): unknown {
+      return this.values.get(key);
+    }
+
+    set(key: string, value: unknown): void {
+      this.values.set(key, value);
+    }
+  },
+}));
+
+vi.mock("ai", () => ({
+  generateText: mocks.generateText,
+}));
+
+describe("registerIpcHandlers", () => {
+  const prevGemini = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+
+  beforeEach(() => {
+    mocks.handlers.clear();
+    mocks.app.isPackaged = false;
+    mocks.ipcMain.handle.mockClear();
+    mocks.generateText.mockReset().mockResolvedValue({ text: "refined", usage: {} });
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY = "test-google-key";
+  });
+
+  afterEach(() => {
+    if (prevGemini === undefined) delete process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    else process.env.GOOGLE_GENERATIVE_AI_API_KEY = prevGemini;
+  });
+
+  it('11. forwards markdown attachments from IPC payload to LLM generation ', () => {
+    const attachments = [
+      {
+        name: "notes.md",
+        mimeType: "text/markdown",
+        sizeBytes: 42,
+        content: "# Notes\nUse this as markdown context.",
+      },
+    ];
+    const generatePrompt = vi.fn().mockResolvedValue({ prompt: "refined" });
+
+    vi.resetModules();
+    vi.doMock("../src/main/services/LLMAdapter.js", () => ({
+      LLMAdapter: vi.fn(() => ({ generatePrompt })),
+    }));
+
+    return import("../src/main/ipc/register-handlers.js")
+      .then(({ registerIpcHandlers: registerHandlersWithMockAdapter }) => {
+        registerHandlersWithMockAdapter();
+        const handler = mocks.handlers.get(ipcChannels.generatePrompt);
+
+        expect(handler).toBeDefined();
+        if (!handler) throw new Error("generatePrompt handler was not registered");
+
+        return Promise.resolve(
+          handler(
+            {},
+            {
+              personaId: "frontend",
+              providerId: "gemini",
+              model: "gemini-2.5-pro",
+              rawInput: "Refine this prompt.",
+              attachments,
+            },
+          ),
+        );
+      })
+      .then(() => {
+        expect(generatePrompt).toHaveBeenCalledWith(
+          expect.objectContaining({
+            attachments,
+          }),
+        );
+      })
+      .finally(() => {
+        vi.doUnmock("../src/main/services/LLMAdapter.js");
+      });
+  });
+
+  it('13. forwards prompt attachments from IPC payload to LLM generation ', () => {
+    registerIpcHandlers();
+    const handler = mocks.handlers.get(ipcChannels.generatePrompt);
+
+    expect(handler).toBeDefined();
+    if (!handler) throw new Error("generatePrompt handler was not registered");
+
+    return Promise.resolve(
+      handler(
+        {},
+        {
+          personaId: "frontend",
+          providerId: "gemini",
+          model: "gemini-2.5-pro",
+          rawInput: "Refine this prompt.",
+          attachments: [
+            {
+              name: "notes.txt",
+              mimeType: "text/plain",
+              sizeBytes: 42,
+              content: "Use this as context.",
+            },
+          ],
+        },
+      ),
+    ).then(() => {
+      expect(mocks.generateText).toHaveBeenCalledTimes(1);
+      const prompt = mocks.generateText.mock.calls[0][0].prompt;
+
+      expect(prompt).toContain("notes.txt");
+      expect(prompt).toContain("Use this as context.");
+    });
+  });
+});

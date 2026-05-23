@@ -106,6 +106,7 @@ export function registerIpcHandlers(): void {
         rawInput: parsed.rawInput,
         providerId: parsed.providerId,
         model: parsed.model,
+        attachments: parsed.attachments,
       });
       logger.info("generatePrompt success", { tokensUsed: out.tokensUsed });
       return generatePromptIpcResultSchema.parse({

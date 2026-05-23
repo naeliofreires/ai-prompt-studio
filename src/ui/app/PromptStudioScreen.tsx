@@ -7,7 +7,7 @@ import RoleViewModal from "../components/RoleViewModal";
 import SettingsModal from "../components/SettingsModal";
 import type { GenerationEvaluation } from "../types/generation";
 import type { Role } from "../types/role";
-import type { Provider, ProviderId } from "../../shared";
+import type { GeneratePromptAttachment, Provider, ProviderId } from "../../shared";
 import styles from "./App.module.scss";
 
 interface PersonaPanelGroup {
@@ -34,6 +34,9 @@ interface ComposerPanelGroup {
   onModelChange: (model: string) => void;
   onGenerate: () => void;
   onOpenSettings: () => void;
+  promptAttachments: GeneratePromptAttachment[];
+  onPromptAttachmentsChange: (attachments: GeneratePromptAttachment[]) => void;
+  onRemovePromptAttachment: (index: number) => void;
 }
 
 interface OutputPanelGroup {
@@ -122,6 +125,9 @@ export function PromptStudioScreen({
               onModelChange={composer.onModelChange}
               onGenerate={composer.onGenerate}
               onOpenSettings={composer.onOpenSettings}
+              promptAttachments={composer.promptAttachments}
+              onPromptAttachmentsChange={composer.onPromptAttachmentsChange}
+              onRemovePromptAttachment={composer.onRemovePromptAttachment}
             />
           </section>
 

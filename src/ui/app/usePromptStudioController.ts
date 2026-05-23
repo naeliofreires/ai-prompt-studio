@@ -50,6 +50,8 @@ export function usePromptStudioController(): PromptStudioScreenProps {
     outputPrompt,
     evaluation,
     generationError,
+    promptAttachments,
+    setPromptAttachments,
     handleGenerate,
   } = usePromptGeneration({
     selectedRole,
@@ -69,6 +71,12 @@ export function usePromptStudioController(): PromptStudioScreenProps {
 
   async function handleCopyOutput() {
     await copyText(outputPrompt);
+  }
+
+  function handleRemovePromptAttachment(index: number) {
+    setPromptAttachments((currentAttachments) =>
+      currentAttachments.filter((_, attachmentIndex) => attachmentIndex !== index),
+    );
   }
 
   async function handleCreateRole(title: string, description: string) {
@@ -132,6 +140,9 @@ export function usePromptStudioController(): PromptStudioScreenProps {
       onModelChange: setModel,
       onGenerate: handleGenerate,
       onOpenSettings: () => setIsSettingsModalOpen(true),
+      promptAttachments,
+      onPromptAttachmentsChange: setPromptAttachments,
+      onRemovePromptAttachment: handleRemovePromptAttachment,
     },
     output: {
       outputPrompt,

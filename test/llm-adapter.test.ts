@@ -169,4 +169,133 @@ describe("LLMAdapter", () => {
     expect(out.prompt).toBe("only text");
     expect(out.tokensUsed).toBeUndefined();
   });
+
+  it('11. includes attachment context in the LLM prompt sent to the provider ', () => {
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY = "test-google-key";
+    const rawInput = "Refine this prompt.";
+    const generateText = vi.fn().mockResolvedValue({
+      text: "refined output",
+      usage: { totalTokens: 100 },
+    });
+    const adapter = LLMAdapter({ generateText });
+
+    const input = {
+      personaContext: "p",
+      rawInput,
+      providerId: "gemini",
+      model: "gemini-2.5-pro",
+      attachments: [
+        {
+          name: "notes.txt",
+          mimeType: "text/plain",
+          sizeBytes: 42,
+          content: "Use this as context.",
+        },
+      ],
+    };
+
+    return adapter.generatePrompt(input).then(() => {
+      expect(generateText).toHaveBeenCalledTimes(1);
+      const args = generateText.mock.calls[0][0];
+      expect(args.prompt).toContain(rawInput);
+      expect(args.prompt).not.toBe(rawInput);
+      expect(args.prompt).toContain("notes.txt");
+      expect(args.prompt).toContain("Use this as context.");
+    });
+  });
+
+  it('12. preserves attachment order and filenames in model context ', () => {
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY = "test-google-key";
+    const generateText = vi.fn().mockResolvedValue({
+      text: "refined output",
+      usage: { totalTokens: 100 },
+    });
+    const adapter = LLMAdapter({ generateText });
+
+    return adapter
+      .generatePrompt({
+        personaContext: "p",
+        rawInput: "Refine this prompt.",
+        providerId: "gemini",
+        model: "gemini-2.5-pro",
+        attachments: [
+          {
+            name: "first.txt",
+            mimeType: "text/plain",
+            sizeBytes: 10,
+            content: "First context.",
+          },
+          {
+            name: "second.txt",
+            mimeType: "text/plain",
+            sizeBytes: 20,
+            content: "Second context.",
+          },
+        ],
+      })
+      .then(() => {
+        expect(generateText).toHaveBeenCalledTimes(1);
+        const prompt = generateText.mock.calls[0][0].prompt;
+        const firstHeader = "[Attachment 1: first.txt]";
+        const secondHeader = "[Attachment 2: second.txt]";
+
+        expect(prompt).toContain(firstHeader);
+        expect(prompt).toContain(secondHeader);
+        expect(prompt.indexOf(firstHeader)).toBeLessThan(
+          prompt.indexOf(secondHeader)
+        );
+        expect(prompt).toMatch(
+          /\[Attachment 1: first\.txt\][\s\S]*First context\./
+        );
+        expect(prompt).toMatch(
+          /\[Attachment 2: second\.txt\][\s\S]*Second context\./
+        );
+      });
+  });
+
+  it('12. includes markdown attachment context in provider prompts preserving order and filenames ', () => {
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY = "test-google-key";
+    const generateText = vi.fn().mockResolvedValue({
+      text: "refined output",
+      usage: { totalTokens: 100 },
+    });
+    const adapter = LLMAdapter({ generateText });
+
+    return adapter
+      .generatePrompt({
+        personaContext: "p",
+        rawInput: "Refine this prompt.",
+        providerId: "gemini",
+        model: "gemini-2.5-pro",
+        attachments: [
+          {
+            name: "brief.md",
+            mimeType: "text/markdown",
+            sizeBytes: 24,
+            content: "# Brief\nUse a calm tone.",
+          },
+          {
+            name: "constraints.md",
+            mimeType: "text/markdown",
+            sizeBytes: 31,
+            content: "## Constraints\nKeep it concise.",
+          },
+        ],
+      })
+      .then(() => {
+        expect(generateText).toHaveBeenCalledTimes(1);
+        const prompt = generateText.mock.calls[0][0].prompt;
+        const briefNameIndex = prompt.indexOf("brief.md");
+        const briefContentIndex = prompt.indexOf("# Brief\nUse a calm tone.");
+        const constraintsNameIndex = prompt.indexOf("constraints.md");
+        const constraintsContentIndex = prompt.indexOf(
+          "## Constraints\nKeep it concise."
+        );
+
+        expect(briefNameIndex).toBeGreaterThanOrEqual(0);
+        expect(briefContentIndex).toBeGreaterThan(briefNameIndex);
+        expect(constraintsNameIndex).toBeGreaterThan(briefContentIndex);
+        expect(constraintsContentIndex).toBeGreaterThan(constraintsNameIndex);
+      });
+  });
 });

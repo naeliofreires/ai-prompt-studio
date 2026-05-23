@@ -1,8 +1,15 @@
-import { useRef } from "react";
-import { Loader2, Trash2, Wand2 } from "lucide-react";
+import { useRef, type ChangeEvent } from "react";
+import { Loader2, Paperclip, Trash2, Wand2 } from "lucide-react";
 import type { Provider, ProviderId } from "../../../shared";
 import { PanelHeader } from "../shared/PanelHeader";
 import styles from "./ComposerPanel.module.scss";
+
+type PromptAttachment = {
+  name: string;
+  mimeType: string;
+  sizeBytes: number;
+  content: string;
+};
 
 export interface ComposerPanelProps {
   inputIdea: string;
@@ -17,9 +24,30 @@ export interface ComposerPanelProps {
   onModelChange: (model: string) => void;
   onGenerate: () => void;
   onOpenSettings: () => void;
+  promptAttachments?: PromptAttachment[];
+  onPromptAttachmentsChange?: (attachments: PromptAttachment[]) => void;
+  onRemovePromptAttachment?: (index: number) => void;
 }
 
 const ScanlineOverlay = () => <div aria-hidden="true" className={styles.scanlineOverlay} />;
+
+const formatAttachmentSize = (sizeBytes: number) => `${sizeBytes} B`;
+
+const readFileText = (file: File) => {
+  if (typeof file.text === "function") {
+    return file.text();
+  }
+
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.addEventListener("load", () => {
+      resolve(typeof reader.result === "string" ? reader.result : "");
+    });
+    reader.addEventListener("error", () => reject(reader.error));
+    reader.readAsText(file);
+  });
+};
 
 function ComposerControls({
   provider,
@@ -101,8 +129,31 @@ export function ComposerPanel({
   onModelChange,
   onGenerate,
   onOpenSettings,
+  promptAttachments = [],
+  onPromptAttachmentsChange,
+  onRemovePromptAttachment,
 }: ComposerPanelProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const attachmentLimitReached = promptAttachments.length >= 5;
+  const handleAttachmentChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(event.currentTarget.files ?? []);
+    const filesToAttach = selectedFiles.slice(0, 5 - promptAttachments.length);
+
+    if (!onPromptAttachmentsChange || filesToAttach.length === 0) {
+      return;
+    }
+
+    const attachments = await Promise.all(
+      filesToAttach.map(async (file) => ({
+        name: file.name,
+        mimeType: file.type,
+        sizeBytes: file.size,
+        content: await readFileText(file),
+      })),
+    );
+
+    onPromptAttachmentsChange([...promptAttachments, ...attachments]);
+  };
 
   return (
     <>
@@ -145,6 +196,41 @@ export function ComposerPanel({
         )}
         <ScanlineOverlay />
       </div>
+
+      <label className={styles.attachmentPicker}>
+        <Paperclip size={16} aria-hidden="true" />
+        <span>Attach files</span>
+        <input
+          aria-label="Attach files"
+          type="file"
+          accept=".md"
+          multiple
+          className={styles.attachmentInput}
+          disabled={attachmentLimitReached}
+          onChange={handleAttachmentChange}
+        />
+      </label>
+
+      {promptAttachments.length > 0 && (
+        <ul className={styles.attachmentList}>
+          {promptAttachments.map((attachment, index) => (
+            <li key={attachment.name} className={styles.attachmentItem}>
+              <span>{attachment.name}</span>
+              <span>{formatAttachmentSize(attachment.sizeBytes)}</span>
+              {onRemovePromptAttachment && (
+                <button
+                  type="button"
+                  className={styles.attachmentRemoveButton}
+                  aria-label={`Remove ${attachment.name}`}
+                  onClick={() => onRemovePromptAttachment(index)}
+                >
+                  <Trash2 size={14} aria-hidden="true" />
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
 
       <ComposerControls
         provider={provider}
