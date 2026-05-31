@@ -2,7 +2,7 @@
 
 Promptizer is the working repository for **AI Prompt Studio**, a local Electron desktop app that turns rough ideas into paste-ready LLM prompts. The app lets you choose a persona, pick a provider/model, enter an API key, refine an idea, and copy the generated prompt.
 
-The current implementation is a local-first developer build, not a packaged release.
+The current implementation is a local-first desktop app with Electron packaging scripts for unsigned local releases.
 
 ## Current Features
 
@@ -16,7 +16,7 @@ The current implementation is a local-first developer build, not a packaged rele
 - Markdown output rendering, copy-to-clipboard feedback, and token usage display when the provider returns it.
 - Vitest coverage for adapter behavior, IPC/shared contracts, API key storage, persona client behavior, and streaming markdown helpers.
 
-Planned but not implemented yet: 0-5 AI scoring, qualitative prompt feedback, history, favorites, and distributable app packaging.
+Planned but not implemented yet: 0-5 AI scoring, qualitative prompt feedback, history, favorites, signed releases, notarization, and auto-update.
 
 ## Stack
 
@@ -86,6 +86,10 @@ npm run dev            # Start Vite, Electron main watch, and Electron
 npm run build          # Build renderer and Electron main process
 npm run build:ui       # Build only the Vite renderer
 npm run build:main     # Compile Electron main process and copy spec JSON files
+npm run dist           # Build the app and package for the current platform
+npm run dist:mac       # Build a macOS DMG
+npm run dist:win       # Build a Windows NSIS installer
+npm run dist:linux     # Build a Linux AppImage
 npm run preview        # Preview the renderer build only
 npm run lint           # Run ESLint over src
 npm run test           # Run the Vitest suite once
@@ -95,6 +99,18 @@ npm run format:check   # Check Prettier formatting
 ```
 
 `npm run preview` serves only the renderer build. Prompt generation requires the Electron preload bridge, so use `npm run dev` for the full app.
+
+## Packaging
+
+Generate a local macOS installer:
+
+```bash
+npm run dist:mac
+```
+
+The DMG is written to `release/`. Windows and Linux installers can be generated with `npm run dist:win` and `npm run dist:linux`, preferably on their target operating systems or in CI.
+
+The generated macOS app is ad-hoc signed for local use. Public distribution still needs a developer signing identity, notarization, and release pipeline.
 
 ## Configuration
 

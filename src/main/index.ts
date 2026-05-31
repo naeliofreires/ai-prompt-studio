@@ -12,6 +12,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const isDev = !app.isPackaged;
+const appIconPath = isDev
+  ? path.join(process.cwd(), "public", "icon.png")
+  : path.join(__dirname, "..", "..", "..", "dist", "icon.png");
 
 function createMainWindow(): BrowserWindow {
   const window = new BrowserWindow({
@@ -20,6 +23,7 @@ function createMainWindow(): BrowserWindow {
     minWidth: 960,
     minHeight: 700,
     title: "AI Prompt Studio",
+    icon: appIconPath,
     backgroundColor: "#0b1020",
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
@@ -33,7 +37,7 @@ function createMainWindow(): BrowserWindow {
     void window.loadURL("http://localhost:5173");
     window.webContents.openDevTools({ mode: "detach" });
   } else {
-    void window.loadFile(path.join(process.cwd(), "dist", "index.html"));
+    void window.loadFile(path.join(__dirname, "..", "..", "..", "dist", "index.html"));
   }
 
   return window;

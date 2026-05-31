@@ -1,4 +1,4 @@
-import { Settings, Sparkles } from "lucide-react";
+import { Settings } from "lucide-react";
 import styles from "./Header.module.css";
 
 interface HeaderProps {
@@ -10,7 +10,7 @@ export function Header({ onOpenSettings }: HeaderProps) {
     <header className={styles.header}>
       <div className={styles.brand}>
         <div className={styles.logo}>
-          <Sparkles size={20} />
+          <img src="/icon.svg" alt="" aria-hidden="true" className={styles.logoMark} />
         </div>
         <div className={styles.titleGroup}>
           <h1 className={styles.title}>AI Prompt Studio</h1>

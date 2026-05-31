@@ -2,6 +2,7 @@
   "name": "ai-prompt-studio",
   "version": "0.1.0",
   "private": true,
+  "productName": "Promptizer",
   "description": "Desktop app for refining prompts with personas and provider adapters.",
   "main": "dist-electron/src/main/index.js",
   "type": "module",
@@ -14,6 +15,10 @@
     "build": "npm run build:ui && npm run build:main",
     "build:ui": "vite build",
     "build:main": "tsc -p tsconfig.electron.json && npm run copy:personas",
+    "dist": "npm run build && electron-builder",
+    "dist:mac": "npm run build && electron-builder --mac dmg",
+    "dist:win": "npm run build && electron-builder --win nsis",
+    "dist:linux": "npm run build && electron-builder --linux AppImage",
     "preview": "vite preview",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "test": "vitest run",
@@ -46,6 +51,7 @@
     "@vitejs/plugin-react": "^4.4.1",
     "concurrently": "^9.1.2",
     "electron": "^35.2.0",
+    "electron-builder": "^26.8.1",
     "eslint": "^10.3.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "jsdom": "^26.0.0",
@@ -56,5 +62,34 @@
     "vite": "^6.2.4",
     "vitest": "^3.1.1",
     "wait-on": "^8.0.3"
+  },
+  "build": {
+    "appId": "com.promptizer.app",
+    "productName": "Promptizer",
+    "icon": "public/icon.png",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
+    "asar": true,
+    "mac": {
+      "target": [
+        "dmg"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Utility"
+    }
   }
 }
