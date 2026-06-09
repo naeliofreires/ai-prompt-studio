@@ -3,6 +3,8 @@ import {
   generatePromptIpcResultSchema,
   generatePromptPayloadSchema,
   listConfiguredApiKeysResultSchema,
+  promptEvaluationSchema,
+  promptSessionSchema,
 } from "../src/shared";
 
 describe("shared IPC contracts", () => {
@@ -295,6 +297,96 @@ describe("shared IPC contracts", () => {
     if (ok.ok) {
       expect(ok.tokensUsed).toBeUndefined();
     }
+  });
+
+  it("AC9 parses explicit prompt evaluation in IPC success results", () => {
+    const ok = generatePromptIpcResultSchema.parse({
+      ok: true,
+      prompt: "Refined text",
+      tokensUsed: 42,
+      evaluation: {
+        score: 4,
+        summary: "Clear prompt with a focused role and expected output.",
+        suggestions: ["Add input constraints.", "Specify the desired format."],
+      },
+    });
+
+    expect(ok.ok).toBe(true);
+    if (ok.ok) {
+      expect(ok.evaluation).toEqual({
+        score: 4,
+        summary: "Clear prompt with a focused role and expected output.",
+        suggestions: ["Add input constraints.", "Specify the desired format."],
+      });
+    }
+  });
+
+  it("AC9 rejects prompt evaluation scores outside 0 to 5", () => {
+    expect(() =>
+      promptEvaluationSchema.parse({
+        score: 6,
+        summary: "Too high.",
+        suggestions: ["Use a valid score."],
+      }),
+    ).toThrow();
+  });
+
+  it("AC12 parses a prompt session snapshot with usage and evaluation", () => {
+    const session = promptSessionSchema.parse({
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      rawInput: "Refine this idea",
+      personaId: "frontend",
+      providerId: "gemini",
+      model: "gemini-2.5-pro",
+      generatedPrompt: "Refined text",
+      usage: {
+        tokensUsed: 42,
+      },
+      evaluation: {
+        score: 4,
+        summary: "Clear prompt with a focused role.",
+        suggestions: ["Add output constraints."],
+      },
+      favorite: false,
+      createdAt: "2026-06-09T12:00:00.000Z",
+    });
+
+    expect(session).toMatchObject({
+      rawInput: "Refine this idea",
+      personaId: "frontend",
+      providerId: "gemini",
+      generatedPrompt: "Refined text",
+      usage: { tokensUsed: 42 },
+      evaluation: {
+        score: 4,
+        summary: "Clear prompt with a focused role.",
+        suggestions: ["Add output constraints."],
+      },
+      favorite: false,
+    });
+  });
+
+  it("AC12 rejects invalid prompt session snapshots", () => {
+    expect(() =>
+      promptSessionSchema.parse({
+        id: "550e8400-e29b-41d4-a716-446655440000",
+        rawInput: "Refine this idea",
+        personaId: "frontend",
+        providerId: "gemini",
+        model: "gemini-2.5-pro",
+        generatedPrompt: "Refined text",
+        usage: {
+          tokensUsed: 42,
+        },
+        evaluation: {
+          score: 6,
+          summary: "Invalid score.",
+          suggestions: ["Use a valid score."],
+        },
+        favorite: false,
+        createdAt: "2026-06-09T12:00:00.000Z",
+      }),
+    ).toThrow();
   });
 
   it("parses IPC failure result", () => {

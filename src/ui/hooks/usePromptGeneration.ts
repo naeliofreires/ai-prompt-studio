@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import type { GeneratePromptIpcResult, GeneratePromptPayload, ProviderId } from "../../shared";
 import type { Provider } from "../../shared/domain/provider";
 import { promptStudioClient } from "../api/prompt-studio-client";
-import type { GenerationEvaluation } from "../types/generation";
+import type { GenerationEvaluation, GenerationUsage } from "../types/generation";
 import type { Role } from "../types/role";
 
 export type GeneratePromptFn = (payload: GeneratePromptPayload) => Promise<GeneratePromptIpcResult>;
@@ -31,6 +31,7 @@ export function usePromptGeneration({
   const [inputIdea, setInputIdea] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [outputPrompt, setOutputPrompt] = useState("");
+  const [usage, setUsage] = useState<GenerationUsage | null>(null);
   const [evaluation, setEvaluation] = useState<GenerationEvaluation | null>(null);
   const [generationError, setGenerationError] = useState("");
   const [promptAttachments, setPromptAttachments] = useState<PromptAttachments>([]);
@@ -40,6 +41,7 @@ export function usePromptGeneration({
 
     if (!rawInput) {
       setOutputPrompt("");
+      setUsage(null);
       setEvaluation(null);
       setGenerationError("Enter an idea before refining the prompt.");
       return;
@@ -65,6 +67,7 @@ export function usePromptGeneration({
     onGenerateStart?.();
     setIsGenerating(true);
     setOutputPrompt("");
+    setUsage(null);
     setEvaluation(null);
     setGenerationError("");
 
@@ -88,9 +91,10 @@ export function usePromptGeneration({
       }
 
       setOutputPrompt(result.prompt);
-      setEvaluation({
+      setUsage({
         tokensUsed: result.tokensUsed,
       });
+      setEvaluation(result.evaluation ?? null);
     } catch (err) {
       setGenerationError(err instanceof Error ? err.message : "Could not generate the prompt.");
     } finally {
@@ -115,6 +119,7 @@ export function usePromptGeneration({
     setPromptAttachments,
     isGenerating,
     outputPrompt,
+    usage,
     evaluation,
     generationError,
     handleGenerate,

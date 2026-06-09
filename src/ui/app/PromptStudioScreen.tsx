@@ -5,10 +5,12 @@ import { PersonaPanel } from "../components/PersonaPanel";
 import RoleModal from "../components/RoleModal";
 import RoleViewModal from "../components/RoleViewModal";
 import SettingsModal from "../components/SettingsModal";
-import type { GenerationEvaluation } from "../types/generation";
+import type { GenerationEvaluation, GenerationUsage } from "../types/generation";
 import type { Role } from "../types/role";
-import type { GeneratePromptAttachment, Provider, ProviderId } from "../../shared";
+import type { GeneratePromptPayload, Provider, ProviderId } from "../../shared";
 import styles from "./App.module.scss";
+
+type PromptAttachment = NonNullable<GeneratePromptPayload["attachments"]>[number];
 
 interface PersonaPanelGroup {
   roles: Role[];
@@ -34,8 +36,8 @@ interface ComposerPanelGroup {
   onModelChange: (model: string) => void;
   onGenerate: () => void;
   onOpenSettings: () => void;
-  promptAttachments: GeneratePromptAttachment[];
-  onPromptAttachmentsChange: (attachments: GeneratePromptAttachment[]) => void;
+  promptAttachments: PromptAttachment[];
+  onPromptAttachmentsChange: (attachments: PromptAttachment[]) => void;
   onRemovePromptAttachment: (index: number) => void;
 }
 
@@ -45,6 +47,7 @@ interface OutputPanelGroup {
   generationError: string;
   isGenerating: boolean;
   isCopied: boolean;
+  usage: GenerationUsage | null;
   evaluation: GenerationEvaluation | null;
   onCopy: () => void;
 }
@@ -138,6 +141,7 @@ export function PromptStudioScreen({
               generationError={output.generationError}
               isGenerating={output.isGenerating}
               isCopied={output.isCopied}
+              usage={output.usage}
               evaluation={output.evaluation}
               onCopy={output.onCopy}
             />

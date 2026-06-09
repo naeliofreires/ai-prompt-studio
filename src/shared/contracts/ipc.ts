@@ -5,6 +5,7 @@ import {
   deleteCustomPersonaInputSchema,
 } from "../domain/custom-persona.js";
 import { PERSONA_IDS } from "../domain/persona.js";
+import { promptEvaluationSchema } from "../domain/prompt-evaluation.js";
 import { PROVIDER_IDS } from "../domain/provider.js";
 
 const builtinPersonaIdSchema = z.enum(PERSONA_IDS);
@@ -82,6 +83,7 @@ const generatePromptSuccessIpcSchema = z.object({
   ok: z.literal(true),
   prompt: z.string(),
   tokensUsed: z.number().optional(),
+  evaluation: promptEvaluationSchema.optional(),
 });
 
 const generatePromptFailureIpcSchema = z.object({

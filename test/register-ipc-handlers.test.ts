@@ -108,6 +108,16 @@ describe("registerIpcHandlers", () => {
   });
 
   it('13. forwards prompt attachments from IPC payload to LLM generation ', () => {
+    const evaluation = {
+      score: 4,
+      summary: "Clear prompt with a focused goal.",
+      suggestions: ["Add input constraints."],
+    };
+
+    mocks.generateText
+      .mockResolvedValueOnce({ text: "refined", usage: {} })
+      .mockResolvedValueOnce({ text: JSON.stringify(evaluation), usage: {} });
+
     registerIpcHandlers();
     const handler = mocks.handlers.get(ipcChannels.generatePrompt);
 
@@ -132,12 +142,20 @@ describe("registerIpcHandlers", () => {
           ],
         },
       ),
-    ).then(() => {
-      expect(mocks.generateText).toHaveBeenCalledTimes(1);
+    ).then((result) => {
+      expect(result).toEqual({
+        ok: true,
+        prompt: "refined",
+        evaluation,
+      });
+      expect(mocks.generateText).toHaveBeenCalledTimes(2);
       const prompt = mocks.generateText.mock.calls[0][0].prompt;
+      const evaluationPrompt = mocks.generateText.mock.calls[1][0].prompt;
 
       expect(prompt).toContain("notes.txt");
       expect(prompt).toContain("Use this as context.");
+      expect(evaluationPrompt).toContain("Refined prompt:");
+      expect(evaluationPrompt).toContain("refined");
     });
   });
 });

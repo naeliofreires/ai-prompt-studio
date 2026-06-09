@@ -1,15 +1,10 @@
 import { useRef, type ChangeEvent } from "react";
 import { Loader2, Paperclip, Trash2, Wand2 } from "lucide-react";
-import type { Provider, ProviderId } from "../../../shared";
+import type { GeneratePromptPayload, Provider, ProviderId } from "../../../shared";
 import { PanelHeader } from "../shared/PanelHeader";
 import styles from "./ComposerPanel.module.scss";
 
-type PromptAttachment = {
-  name: string;
-  mimeType: string;
-  sizeBytes: number;
-  content: string;
-};
+type PromptAttachment = NonNullable<GeneratePromptPayload["attachments"]>[number];
 
 export interface ComposerPanelProps {
   inputIdea: string;
@@ -32,6 +27,14 @@ export interface ComposerPanelProps {
 const ScanlineOverlay = () => <div aria-hidden="true" className={styles.scanlineOverlay} />;
 
 const formatAttachmentSize = (sizeBytes: number) => `${sizeBytes} B`;
+
+const toPromptAttachmentMimeType = (mimeType: string): PromptAttachment["mimeType"] => {
+  if (mimeType === "text/plain" || mimeType === "text/markdown") {
+    return mimeType;
+  }
+
+  return "";
+};
 
 const readFileText = (file: File) => {
   if (typeof file.text === "function") {
@@ -146,7 +149,7 @@ export function ComposerPanel({
     const attachments = await Promise.all(
       filesToAttach.map(async (file) => ({
         name: file.name,
-        mimeType: file.type,
+        mimeType: toPromptAttachmentMimeType(file.type),
         sizeBytes: file.size,
         content: await readFileText(file),
       })),

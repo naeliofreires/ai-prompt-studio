@@ -1,5 +1,5 @@
 import { Check, Clipboard, Terminal } from "lucide-react";
-import type { GenerationEvaluation } from "../../types/generation";
+import type { GenerationEvaluation, GenerationUsage } from "../../types/generation";
 import { PanelHeader } from "../shared/PanelHeader";
 import { StreamingMarkdown } from "../StreamingMarkdown";
 import styles from "./OutputPanel.module.scss";
@@ -10,6 +10,7 @@ export interface OutputPanelProps {
   generationError: string;
   isGenerating: boolean;
   isCopied: boolean;
+  usage: GenerationUsage | null;
   evaluation: GenerationEvaluation | null;
   onCopy: () => void;
 }
@@ -29,6 +30,7 @@ export function OutputPanel({
   generationError,
   isGenerating,
   isCopied,
+  usage,
   evaluation,
   onCopy,
 }: OutputPanelProps) {
@@ -81,20 +83,37 @@ export function OutputPanel({
         )}
       </div>
 
-      {evaluation && (
-        <footer className={styles.evalFooter}>
+      {usage && (
+        <footer className={styles.usageFooter}>
           <div>
-            <span className={styles.evalLabel}>API response</span>
-            <p className={styles.evalValue}>
-              {evaluation.tokensUsed === undefined ? "OK" : evaluation.tokensUsed}
+            <span className={styles.usageLabel}>API response</span>
+            <p className={styles.usageValue}>
+              {usage.tokensUsed === undefined ? "OK" : usage.tokensUsed}
             </p>
           </div>
-          <p className={styles.evalCaption}>
-            {evaluation.tokensUsed === undefined
+          <p className={styles.usageCaption}>
+            {usage.tokensUsed === undefined
               ? "Prompt refined by the API."
               : "Tokens used during generation."}
           </p>
         </footer>
+      )}
+
+      {evaluation && (
+        <section className={styles.evaluationPanel} aria-label="Prompt evaluation">
+          <div className={styles.evaluationHeader}>
+            <span className={styles.evaluationLabel}>Prompt score</span>
+            <strong className={styles.evaluationScore}>{evaluation.score}/5</strong>
+          </div>
+          <p className={styles.evaluationSummary}>{evaluation.summary}</p>
+          {evaluation.suggestions.length > 0 && (
+            <ul className={styles.evaluationSuggestions}>
+              {evaluation.suggestions.map((suggestion) => (
+                <li key={suggestion}>{suggestion}</li>
+              ))}
+            </ul>
+          )}
+        </section>
       )}
     </>
   );

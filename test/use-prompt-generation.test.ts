@@ -149,7 +149,7 @@ describe("usePromptGeneration", () => {
     expect(result.current.generationError).toBe("Rate limited");
   });
 
-  it("sets output and evaluation on success", async () => {
+  it("sets output and usage on success", async () => {
     const generatePrompt = vi.fn().mockResolvedValue({
       ok: true,
       prompt: "You are…",
@@ -174,8 +174,70 @@ describe("usePromptGeneration", () => {
 
     expect(result.current.isGenerating).toBe(false);
     expect(result.current.outputPrompt).toBe("You are…");
-    expect(result.current.evaluation).toEqual({ tokensUsed: 42 });
+    expect(result.current.usage).toEqual({ tokensUsed: 42 });
     expect(result.current.generationError).toBe("");
+  });
+
+  it("AC11 sets evaluation when prompt generation returns prompt feedback", async () => {
+    const generatePrompt = vi.fn().mockResolvedValue({
+      ok: true,
+      prompt: "You are…",
+      tokensUsed: 42,
+      evaluation: {
+        score: 4,
+        summary: "Clear prompt with a focused goal.",
+        suggestions: ["Add input constraints."],
+      },
+    });
+
+    const { result } = renderHook(() =>
+      usePromptGeneration(
+        baseArgs({
+          generatePrompt,
+        }),
+      ),
+    );
+
+    act(() => {
+      result.current.setInputIdea("Build a todo app");
+    });
+
+    await act(async () => {
+      await result.current.handleGenerate();
+    });
+
+    expect(result.current.evaluation).toEqual({
+      score: 4,
+      summary: "Clear prompt with a focused goal.",
+      suggestions: ["Add input constraints."],
+    });
+  });
+
+  it("does not set evaluation when the provider only returns token usage", async () => {
+    const generatePrompt = vi.fn().mockResolvedValue({
+      ok: true,
+      prompt: "You are…",
+      tokensUsed: 42,
+    });
+
+    const { result } = renderHook(() =>
+      usePromptGeneration(
+        baseArgs({
+          generatePrompt,
+        }),
+      ),
+    );
+
+    act(() => {
+      result.current.setInputIdea("Build a todo app");
+    });
+
+    await act(async () => {
+      await result.current.handleGenerate();
+    });
+
+    expect(result.current.usage).toEqual({ tokensUsed: 42 });
+    expect(result.current.evaluation).toBeNull();
   });
 
   it('6. sends selected attachments when prompt generation runs ', () => {

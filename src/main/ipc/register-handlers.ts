@@ -14,6 +14,7 @@ import {
 } from "../../shared/index.js";
 import { logger } from "../../shared/utils/logger.js";
 import { LLMAdapter } from "../services/LLMAdapter.js";
+import { PromptEvaluator } from "../services/PromptEvaluator.js";
 import {
   clearAllApiKeys,
   listConfiguredApiKeyProviders,
@@ -24,9 +25,12 @@ import {
   deleteCustomPersona,
   listCustomPersonas,
 } from "../store/custom-personas-store.js";
+import { savePromptSession } from "../store/prompt-sessions-store.js";
+import { generateRefinedPrompt } from "../application/generate-refined-prompt.js";
 import { resolvePersonaContext } from "../utils/resolve-persona-context.js";
 
 const llmAdapter = LLMAdapter({ generateText });
+const promptEvaluator = PromptEvaluator({ generateText });
 
 function zodIssuesToMessage(err: ZodError): string {
   return err.issues.map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`).join("; ");
@@ -89,35 +93,13 @@ export function registerIpcHandlers(): void {
       throw err;
     }
 
-    const personaContext = resolvePersonaContext(parsed.personaId);
-    if (!personaContext) {
-      logger.warn("generatePrompt unknown persona", parsed.personaId);
-      return generatePromptIpcResultSchema.parse({
-        ok: false,
-        message: "Unknown persona. Select a built-in persona or create a custom one.",
-      });
-    }
+    const result = await generateRefinedPrompt(parsed, {
+      resolvePersonaContext,
+      llmAdapter,
+      promptEvaluator,
+      savePromptSession,
+    });
 
-    logger.debug("generatePrompt resolved persona", { personaContext: personaContext.slice(0, 100) });
-
-    try {
-      const out = await llmAdapter.generatePrompt({
-        personaContext,
-        rawInput: parsed.rawInput,
-        providerId: parsed.providerId,
-        model: parsed.model,
-        attachments: parsed.attachments,
-      });
-      logger.info("generatePrompt success", { tokensUsed: out.tokensUsed });
-      return generatePromptIpcResultSchema.parse({
-        ok: true,
-        prompt: out.prompt,
-        ...(out.tokensUsed !== undefined ? { tokensUsed: out.tokensUsed } : {}),
-      });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Prompt generation failed.";
-      logger.error("generatePrompt failed", message);
-      return generatePromptIpcResultSchema.parse({ ok: false, message });
-    }
+    return generatePromptIpcResultSchema.parse(result);
   });
 }

@@ -130,7 +130,7 @@
   color: rgba(207, 250, 254, 0.55);
 }
 
-.evalFooter {
+.usageFooter {
   margin-top: 1rem;
   display: grid;
   gap: 0.75rem;
@@ -144,7 +144,7 @@
   color: rgba(207, 250, 254, 0.75);
 }
 
-.evalCaption {
+.usageCaption {
   margin: 0;
   font-size: 0.75rem;
   line-height: 1.5;
@@ -153,14 +153,58 @@
   color: rgba(207, 250, 254, 0.55);
 }
 
-.evalLabel {
+.usageLabel {
   color: rgba(103, 232, 249, 0.6);
 }
 
-.evalValue {
+.usageValue {
   margin-top: 0.25rem;
   font-size: 0.875rem;
   color: #fff;
+}
+
+.evaluationPanel {
+  margin-top: 0.75rem;
+  display: grid;
+  gap: 0.75rem;
+  border: 1px solid rgba(168, 85, 247, 0.22);
+  background: rgba(168, 85, 247, 0.07);
+  padding: 1rem;
+  color: rgba(245, 243, 255, 0.86);
+}
+
+.evaluationHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  font-family: $font-monospace-stack;
+}
+
+.evaluationLabel {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: rgba(216, 180, 254, 0.72);
+}
+
+.evaluationScore {
+  font-size: 1rem;
+  color: #fff;
+}
+
+.evaluationSummary {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.evaluationSuggestions {
+  margin: 0;
+  padding-left: 1rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: rgba(245, 243, 255, 0.76);
 }
 
 @media (prefers-reduced-motion: reduce) {
