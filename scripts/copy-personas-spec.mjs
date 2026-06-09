@@ -1,4 +1,4 @@
-import { cpSync, mkdirSync, readdirSync } from "node:fs";
+import { mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -8,5 +8,22 @@ const destDir = path.join(root, "dist-electron", "spec");
 mkdirSync(destDir, { recursive: true });
 
 for (const name of readdirSync(specDir).filter((f) => f.endsWith(".json"))) {
-  cpSync(path.join(specDir, name), path.join(destDir, name));
+  const source = path.join(specDir, name);
+  const target = path.join(destDir, name);
+  const tempTarget = path.join(destDir, `.${name}.${process.pid}.tmp`);
+  const contents = readFileSync(source, "utf8");
+
+  try {
+    JSON.parse(contents);
+  } catch (error) {
+    throw new Error(`Invalid JSON in spec/${name}: ${error.message}`);
+  }
+
+  try {
+    writeFileSync(tempTarget, contents);
+    renameSync(tempTarget, target);
+  } catch (error) {
+    rmSync(tempTarget, { force: true });
+    throw error;
+  }
 }
