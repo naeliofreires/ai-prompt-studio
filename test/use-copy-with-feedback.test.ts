@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { useCopyWithFeedback } from "../src/ui/hooks/useCopyWithFeedback";
+import { useCopyWithFeedback } from "../apps/promptizer/ui/hooks/useCopyWithFeedback";
 
 describe("useCopyWithFeedback", () => {
   const writeText = vi.fn();

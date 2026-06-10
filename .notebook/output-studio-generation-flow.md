@@ -1,8 +1,8 @@
 # Output Studio Generation Flow
 > Renderer output calls Electron IPC; main process owns provider API access
 
-Entry: `src/ui/app/usePromptStudioController.ts` delegates generation state to `src/ui/hooks/usePromptGeneration.ts`
-Flow: renderer → `promptStudioClient.generatePrompt()` → `window.aiPromptStudio.generatePrompt()` → `src/main/preload.ts` → `src/main/ipc/register-handlers.ts` → `src/main/application/generate-refined-prompt.ts` → `src/main/services/LLMAdapter.ts` → optional `src/main/services/PromptEvaluator.ts` → optional snapshot save in `src/main/store/prompt-sessions-store.ts`
+Entry: `apps/promptizer/ui/app/usePromptStudioController.ts` delegates generation state to `apps/promptizer/ui/hooks/usePromptGeneration.ts`
+Flow: renderer → `promptStudioClient.generatePrompt()` → `window.aiPromptStudio.generatePrompt()` → `apps/promptizer/main/preload.ts` → `apps/promptizer/main/ipc/register-handlers.ts` → `apps/promptizer/main/application/generate-refined-prompt.ts` → `apps/promptizer/main/services/LLMAdapter.ts` → optional `apps/promptizer/main/services/PromptEvaluator.ts` → optional snapshot save in `apps/promptizer/main/store/prompt-sessions-store.ts`
 
 Renderer:
 - Sends `rawInput`, `personaId`, `providerId`, `model`
@@ -20,6 +20,6 @@ Main:
 - Successful generations are saved best-effort as `PromptSession` snapshots with raw input, persona, provider/model, output, optional usage/evaluation, `favorite`, and `createdAt`; no history/favorites UI consumes this yet
 - API keys resolve in main-process code: runtime keys from Settings take priority, then environment variables loaded from `.env` in dev mode.
 
-Contract: `src/shared/contracts/ipc.ts`
+Contract: `apps/promptizer/shared/contracts/ipc.ts`
 
 Updated: 2026-06-09

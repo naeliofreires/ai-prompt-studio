@@ -4,15 +4,16 @@ Tags: renderer, shared, ipc, personas
 
 ## Summary
 
-The app has one canonical fixed persona registry in `spec/personas.json`, validated by `src/shared/domain/persona.ts`.
+Promptizer has a canonical built-in persona registry in `apps/promptizer/spec/personas.json`, validated by `apps/promptizer/shared/domain/persona.ts`, plus custom personas stored by the main process.
 
 ## Pointers
 
-- `src/shared/domain/persona.ts`: imports and validates `spec/personas.json`, then exports `PERSONAS` and `PERSONA_IDS`.
-- `src/shared/contracts/ipc.ts`: validates `personaId` against `PERSONA_IDS`.
-- `src/main/ipc/register-handlers.ts`: resolves the selected persona from `PERSONAS` and builds the LLM persona context.
-- `src/renderer/app/App.tsx`: maps `PERSONAS` into the renderer role tab shape.
+- `apps/promptizer/shared/domain/persona.ts`: imports and validates `apps/promptizer/spec/personas.json`, then exports `PERSONAS` and `PERSONA_IDS`.
+- `apps/promptizer/shared/contracts/ipc.ts`: accepts built-in persona IDs and UUID custom persona IDs.
+- `apps/promptizer/main/ipc/register-handlers.ts`: validates persona IPC payloads and delegates prompt generation to the application layer.
+- `apps/promptizer/main/utils/resolve-persona-context.ts`: resolves built-in personas from `PERSONAS` first, then custom personas from `custom-personas-store`.
+- `apps/promptizer/ui/hooks/useRoles.ts`: maps `PERSONAS` into the renderer role tab shape and appends custom personas returned by `personaClient`.
 
 ## Gotcha
 
-Locally-created renderer roles with generated IDs are not valid personas for prompt generation unless the IPC contract and main-process persona lookup are extended to accept custom persona definitions.
+Renderer fallback custom personas are only for browser-mode/dev rendering when the Electron bridge is absent. In the desktop app, custom personas should round-trip through IPC so prompt generation and role tabs read from the same main-process store.

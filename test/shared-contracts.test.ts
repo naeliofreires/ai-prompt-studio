@@ -4,8 +4,8 @@ import {
   generatePromptPayloadSchema,
   listConfiguredApiKeysResultSchema,
   promptEvaluationSchema,
-  promptSessionSchema,
-} from "../src/shared";
+} from "../apps/promptizer/shared";
+import { promptSessionSchema } from "../apps/promptizer/shared/domain/prompt-session";
 
 describe("shared IPC contracts", () => {
   it("accepts a valid generate prompt payload", () => {

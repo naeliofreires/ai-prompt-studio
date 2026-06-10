@@ -1,14 +1,18 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   readApiKeys,
   writeApiKeys,
   clearApiKeys,
   STORAGE_KEY,
-} from "../src/ui/config/api-key-storage.js";
+} from "../apps/promptizer/ui/config/api-key-storage.js";
 
 describe("api-key-storage", () => {
   beforeEach(() => {
     window.localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it("returns empty object when nothing stored", () => {
@@ -72,5 +76,13 @@ describe("api-key-storage", () => {
     const keys = readApiKeys();
     expect(keys).toEqual({ gemini: "valid" });
     expect("unknownProvider" in keys).toBe(false);
+  });
+
+  it("no-ops when window is unavailable", () => {
+    vi.stubGlobal("window", undefined);
+
+    expect(readApiKeys()).toEqual({});
+    expect(() => writeApiKeys({ gemini: "AIzaSy-test" })).not.toThrow();
+    expect(() => clearApiKeys()).not.toThrow();
   });
 });

@@ -3,8 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 import {
   usePromptGeneration,
   type UsePromptGenerationArgs,
-} from "../src/ui/hooks/usePromptGeneration";
-import type { Role } from "../src/ui/types/role";
+} from "../apps/promptizer/ui/hooks/usePromptGeneration";
+import type { Role } from "../apps/promptizer/ui/types/role";
 
 const geminiProvider = {
   id: "gemini" as const,

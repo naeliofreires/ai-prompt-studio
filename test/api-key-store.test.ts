@@ -1,10 +1,10 @@
 import { waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { apiKeySyncClient } from "../src/ui/api/api-key-sync-client";
-import { readApiKeys } from "../src/ui/config/api-key-storage";
-import { isProviderConfigured, useApiKeyStore } from "../src/ui/store/api-key-store";
+import { apiKeySyncClient } from "../apps/promptizer/ui/api/api-key-sync-client";
+import { readApiKeys } from "../apps/promptizer/ui/config/api-key-storage";
+import { isProviderConfigured, useApiKeyStore } from "../apps/promptizer/ui/store/api-key-store";
 
-vi.mock("../src/ui/api/api-key-sync-client", () => ({
+vi.mock("../apps/promptizer/ui/api/api-key-sync-client", () => ({
   apiKeySyncClient: {
     listConfigured: vi.fn().mockResolvedValue([]),
     syncKeys: vi.fn().mockResolvedValue(undefined),

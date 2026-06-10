@@ -1,5 +1,7 @@
 # Progresso da Fase 1 - AI Prompt Studio
 
+> Nota: documento histórico de acompanhamento. Os caminhos abaixo foram atualizados para o layout com hub em `src/` e Promptizer em `apps/promptizer/`, mas o status funcional pode estar defasado em relação ao código atual.
+
 ## Resumo executivo
 
 Com base no PRD, na tech spec e no código atual, o projeto já tem uma boa fundação técnica para um app desktop com Electron + React, incluindo contratos compartilhados, IPC seguro, preload exposto com `contextBridge`, shell inicial da interface e testes básicos de contratos.
@@ -25,32 +27,32 @@ Ao mesmo tempo, a maior parte dos fluxos funcionais da Fase 1 ainda não está i
 
 ### 1. Fundação do app desktop
 
-- Estrutura principal do Electron configurada em [src/main/index.ts](/Users/naeliofreires/Developer/New project/src/main/index.ts).
-- Shell React carregado via Vite em [src/renderer/main.tsx](/Users/naeliofreires/Developer/New project/src/renderer/main.tsx).
-- Scripts de desenvolvimento, build e testes definidos em [package.json](/Users/naeliofreires/Developer/New project/package.json).
+- Estrutura principal do Electron configurada em [src/main/index.ts](/Users/naeliofreires/Developer/Promptizer/src/main/index.ts).
+- Shell React carregado via Vite em [src/ui/main.tsx](/Users/naeliofreires/Developer/Promptizer/src/ui/main.tsx).
+- Scripts de desenvolvimento, build e testes definidos em [package.json](/Users/naeliofreires/Developer/Promptizer/package.json).
 
 ### 2. Camada compartilhada de domínio e contratos
 
 Já existem as entidades centrais previstas na tech spec:
 
-- `Persona` em [src/shared/domain/persona.ts](/Users/naeliofreires/Developer/New project/src/shared/domain/persona.ts)
-- `LlmProviderOption` em [src/shared/domain/provider.ts](/Users/naeliofreires/Developer/New project/src/shared/domain/provider.ts)
-- `PromptSession` em [src/shared/domain/prompt-session.ts](/Users/naeliofreires/Developer/New project/src/shared/domain/prompt-session.ts)
-- contratos de `LLM` e `IPC` em [src/shared](/Users/naeliofreires/Developer/New project/src/shared)
+- `Persona` em [apps/promptizer/shared/domain/persona.ts](/Users/naeliofreires/Developer/Promptizer/apps/promptizer/shared/domain/persona.ts)
+- `LlmProviderOption` em [apps/promptizer/shared/domain/provider.ts](/Users/naeliofreires/Developer/Promptizer/apps/promptizer/shared/domain/provider.ts)
+- `PromptSession` em [apps/promptizer/shared/domain/prompt-session.ts](/Users/naeliofreires/Developer/Promptizer/apps/promptizer/shared/domain/prompt-session.ts)
+- contratos de `LLM` e `IPC` em [apps/promptizer/shared](/Users/naeliofreires/Developer/Promptizer/apps/promptizer/shared)
 
-Também já há validação com Zod para payloads de IPC em [src/shared/contracts/ipc.ts](/Users/naeliofreires/Developer/New project/src/shared/contracts/ipc.ts).
+Também já há validação com Zod para payloads de IPC em [apps/promptizer/shared/contracts/ipc.ts](/Users/naeliofreires/Developer/Promptizer/apps/promptizer/shared/contracts/ipc.ts).
 
 ### 3. IPC seguro e preload
 
-- `contextBridge.exposeInMainWorld(...)` implementado em [src/main/preload.ts](/Users/naeliofreires/Developer/New project/src/main/preload.ts)
-- canais de IPC registrados em [src/main/ipc/register-handlers.ts](/Users/naeliofreires/Developer/New project/src/main/ipc/register-handlers.ts)
-- tipagem global do objeto `window.aiPromptStudio` em [src/shared/types/global.d.ts](/Users/naeliofreires/Developer/New project/src/shared/types/global.d.ts)
+- `contextBridge.exposeInMainWorld(...)` implementado em [apps/promptizer/main/preload.ts](/Users/naeliofreires/Developer/Promptizer/apps/promptizer/main/preload.ts)
+- canais de IPC registrados em [apps/promptizer/main/ipc/register-handlers.ts](/Users/naeliofreires/Developer/Promptizer/apps/promptizer/main/ipc/register-handlers.ts)
+- tipagem global do objeto `window.aiPromptStudio` em [apps/promptizer/shared/types/global.d.ts](/Users/naeliofreires/Developer/Promptizer/apps/promptizer/shared/types/global.d.ts)
 
 Isso cobre uma parte importante do que a tech spec pede para segurança e separação entre renderer e main.
 
 ### 4. Interface inicial
 
-A interface atual em [src/renderer/app/App.tsx](/Users/naeliofreires/Developer/New project/src/renderer/app/App.tsx) já possui:
+A interface Promptizer atual em [apps/promptizer/ui/app/PromptizerApp.tsx](/Users/naeliofreires/Developer/Promptizer/apps/promptizer/ui/app/PromptizerApp.tsx) já possui:
 
 - tabs de personas;
 - seleção de provider;
@@ -63,7 +65,7 @@ Ou seja: a estrutura visual básica do fluxo principal existe.
 
 ### 5. Testes iniciais
 
-Há testes básicos em [test/shared-contracts.test.ts](/Users/naeliofreires/Developer/New project/test/shared-contracts.test.ts) cobrindo payload válido de geração.
+Há testes básicos em [test/shared-contracts.test.ts](/Users/naeliofreires/Developer/Promptizer/test/shared-contracts.test.ts) cobrindo payload válido de geração.
 
 Resultado atual dos testes:
 
@@ -146,10 +148,9 @@ Esses números são uma estimativa qualitativa para acompanhamento interno, não
 
 ## Evidências consultadas
 
-- [docs/prd-ai-prompt-studio.md](/Users/naeliofreires/Developer/New project/docs/prd-ai-prompt-studio.md)
-- [docs/tech-spec-ai-prompt-studio.md](/Users/naeliofreires/Developer/New project/docs/tech-spec-ai-prompt-studio.md)
-- [src/main](/Users/naeliofreires/Developer/New project/src/main)
-- [src/renderer](/Users/naeliofreires/Developer/New project/src/renderer)
-- [src/shared](/Users/naeliofreires/Developer/New project/src/shared)
-- [test/shared-contracts.test.ts](/Users/naeliofreires/Developer/New project/test/shared-contracts.test.ts)
-
+- [docs/prd-ai-prompt-studio.md](/Users/naeliofreires/Developer/Promptizer/docs/prd-ai-prompt-studio.md)
+- [docs/tech-spec-ai-prompt-studio.md](/Users/naeliofreires/Developer/Promptizer/docs/tech-spec-ai-prompt-studio.md)
+- [src/main](/Users/naeliofreires/Developer/Promptizer/src/main)
+- [src/ui](/Users/naeliofreires/Developer/Promptizer/src/ui)
+- [apps/promptizer](/Users/naeliofreires/Developer/Promptizer/apps/promptizer)
+- [test/shared-contracts.test.ts](/Users/naeliofreires/Developer/Promptizer/test/shared-contracts.test.ts)

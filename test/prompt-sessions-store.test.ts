@@ -3,43 +3,22 @@ import {
   listPromptSessions,
   savePromptSession,
   togglePromptSessionFavorite,
-} from "../src/main/store/prompt-sessions-store";
+} from "../apps/promptizer/main/store/prompt-sessions-store";
+import { resetElectronStoreMocks } from "./helpers/electron-store";
 
-const mocks = vi.hoisted(() => ({
-  randomUUID: vi.fn(() => "550e8400-e29b-41d4-a716-446655440000"),
-  values: new Map<string, unknown>(),
-}));
+vi.mock("node:crypto", async () => {
+  const { mockNodeCrypto } = await import("./helpers/electron-store");
+  return mockNodeCrypto();
+});
 
-vi.mock("node:crypto", () => ({
-  default: {
-    randomUUID: mocks.randomUUID,
-  },
-  randomUUID: mocks.randomUUID,
-}));
-
-vi.mock("electron-store", () => ({
-  default: class MockStore {
-    constructor() {
-      if (!mocks.values.has("promptSessions")) {
-        mocks.values.set("promptSessions", []);
-      }
-    }
-
-    get(key: string): unknown {
-      return mocks.values.get(key);
-    }
-
-    set(key: string, value: unknown): void {
-      mocks.values.set(key, value);
-    }
-  },
-}));
+vi.mock("electron-store", async () => {
+  const { mockElectronStore } = await import("./helpers/electron-store");
+  return mockElectronStore("promptSessions");
+});
 
 describe("prompt-sessions-store", () => {
   beforeEach(() => {
-    mocks.values.clear();
-    mocks.values.set("promptSessions", []);
-    mocks.randomUUID.mockReturnValue("550e8400-e29b-41d4-a716-446655440000");
+    resetElectronStoreMocks("promptSessions");
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-06-09T12:00:00.000Z"));
   });

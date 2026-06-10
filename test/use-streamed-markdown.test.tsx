@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { useStreamedMarkdown } from "../src/ui/hooks/useStreamedMarkdown";
+import { useStreamedMarkdown } from "../apps/promptizer/ui/hooks/useStreamedMarkdown";
 
 describe("useStreamedMarkdown", () => {
   it("cancels a readable stream and releases the reader lock when aborted", async () => {

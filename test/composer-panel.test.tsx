@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { ComposerPanel } from "../src/ui/components/ComposerPanel";
-import type { Provider } from "../src/shared";
+import { ComposerPanel } from "../apps/promptizer/ui/components/ComposerPanel";
+import type { Provider } from "../apps/promptizer/shared";
 
 const geminiProvider = {
   id: "gemini",
@@ -10,6 +10,31 @@ const geminiProvider = {
 } satisfies Provider;
 
 describe("ComposerPanel", () => {
+  it("opens settings from the composer panel action", () => {
+    const onOpenSettings = vi.fn();
+
+    render(
+      <ComposerPanel
+        inputIdea=""
+        onInputChange={vi.fn()}
+        provider="gemini"
+        model="gemini-2.5-pro"
+        providers={[geminiProvider]}
+        selectedProvider={geminiProvider}
+        isGenerating={false}
+        keyMissing={false}
+        onProviderChange={vi.fn()}
+        onModelChange={vi.fn()}
+        onGenerate={vi.fn()}
+        onOpenSettings={onOpenSettings}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /settings/i }));
+
+    expect(onOpenSettings).toHaveBeenCalledTimes(1);
+  });
+
   it('1. appends a newly selected markdown file to current prompt attachments ', () => {
     const onPromptAttachmentsChange = vi.fn();
     const existingAttachment = {

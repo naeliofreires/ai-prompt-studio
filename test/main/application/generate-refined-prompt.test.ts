@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { describe, expect, it, vi } from "vitest";
-import { generateRefinedPrompt } from "../../../src/main/application/generate-refined-prompt.js";
+import { generateRefinedPrompt } from "../../../apps/promptizer/main/application/generate-refined-prompt.js";
 
 describe("generateRefinedPrompt", () => {
   const payload = {
@@ -20,7 +20,7 @@ describe("generateRefinedPrompt", () => {
 
   it("does not depend on IPC result or payload contracts", async () => {
     const source = await readFile(
-      `${process.cwd()}/src/main/application/generate-refined-prompt.ts`,
+      `${process.cwd()}/apps/promptizer/main/application/generate-refined-prompt.ts`,
       "utf8"
     );
 

@@ -1,48 +1,27 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { PERSONAS } from "../src/shared";
+import { PERSONAS } from "../apps/promptizer/shared";
 import {
   createCustomPersona,
   deleteCustomPersona,
   findCustomPersona,
   listCustomPersonas,
-} from "../src/main/store/custom-personas-store";
-import { resolvePersonaContext } from "../src/main/utils/resolve-persona-context";
+} from "../apps/promptizer/main/store/custom-personas-store";
+import { resolvePersonaContext } from "../apps/promptizer/main/utils/resolve-persona-context";
+import { resetElectronStoreMocks } from "./helpers/electron-store";
 
-const mocks = vi.hoisted(() => ({
-  randomUUID: vi.fn(() => "550e8400-e29b-41d4-a716-446655440000"),
-  values: new Map<string, unknown>(),
-}));
+vi.mock("node:crypto", async () => {
+  const { mockNodeCrypto } = await import("./helpers/electron-store");
+  return mockNodeCrypto();
+});
 
-vi.mock("node:crypto", () => ({
-  default: {
-    randomUUID: mocks.randomUUID,
-  },
-  randomUUID: mocks.randomUUID,
-}));
-
-vi.mock("electron-store", () => ({
-  default: class MockStore {
-    constructor() {
-      if (!mocks.values.has("customPersonas")) {
-        mocks.values.set("customPersonas", []);
-      }
-    }
-
-    get(key: string): unknown {
-      return mocks.values.get(key);
-    }
-
-    set(key: string, value: unknown): void {
-      mocks.values.set(key, value);
-    }
-  },
-}));
+vi.mock("electron-store", async () => {
+  const { mockElectronStore } = await import("./helpers/electron-store");
+  return mockElectronStore("customPersonas");
+});
 
 describe("custom-personas-store", () => {
   beforeEach(() => {
-    mocks.values.clear();
-    mocks.values.set("customPersonas", []);
-    mocks.randomUUID.mockReturnValue("550e8400-e29b-41d4-a716-446655440000");
+    resetElectronStoreMocks("customPersonas");
   });
 
   it("creates, lists, finds, and deletes custom personas", () => {
@@ -77,9 +56,7 @@ describe("custom-personas-store", () => {
 
 describe("resolvePersonaContext", () => {
   beforeEach(() => {
-    mocks.values.clear();
-    mocks.values.set("customPersonas", []);
-    mocks.randomUUID.mockReturnValue("550e8400-e29b-41d4-a716-446655440000");
+    resetElectronStoreMocks("customPersonas");
   });
 
   it("resolves built-in persona context", () => {

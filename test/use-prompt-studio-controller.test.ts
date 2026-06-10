@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import type { GeneratePromptAttachment } from "../src/shared";
-import { usePromptStudioController } from "../src/ui/app/usePromptStudioController";
+import type { GeneratePromptAttachment } from "../apps/promptizer/shared";
+import { usePromptStudioController } from "../apps/promptizer/ui/app/usePromptStudioController";
 
 type ComposerAttachmentControls = {
   promptAttachments: GeneratePromptAttachment[];
@@ -9,7 +9,7 @@ type ComposerAttachmentControls = {
   onRemovePromptAttachment: (index: number) => void;
 };
 
-vi.mock("../src/ui/hooks/useRoles", () => ({
+vi.mock("../apps/promptizer/ui/hooks/useRoles", () => ({
   useRoles: () => ({
     roles: [
       {
@@ -26,7 +26,7 @@ vi.mock("../src/ui/hooks/useRoles", () => ({
   }),
 }));
 
-vi.mock("../src/ui/hooks/useApiKeySettings", () => ({
+vi.mock("../apps/promptizer/ui/hooks/useApiKeySettings", () => ({
   useApiKeySettings: () => ({
     keys: {},
     saveKeys: vi.fn(),
@@ -36,7 +36,7 @@ vi.mock("../src/ui/hooks/useApiKeySettings", () => ({
   }),
 }));
 
-vi.mock("../src/ui/hooks/useCopyWithFeedback", () => ({
+vi.mock("../apps/promptizer/ui/hooks/useCopyWithFeedback", () => ({
   useCopyWithFeedback: () => ({
     isCopied: false,
     copyText: vi.fn(),

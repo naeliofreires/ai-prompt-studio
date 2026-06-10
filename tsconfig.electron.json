@@ -15,5 +15,11 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "include": ["src/main/**/*.ts", "src/shared/**/*.ts", "spec/personas.json", "spec/providers.json"]
+  "include": [
+    "src/main/**/*.ts",
+    "apps/promptizer/main/**/*.ts",
+    "apps/promptizer/shared/**/*.ts",
+    "apps/promptizer/spec/personas.json",
+    "apps/promptizer/spec/providers.json"
+  ]
 }

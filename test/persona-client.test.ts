@@ -1,23 +1,20 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   CUSTOM_PERSONAS_STORAGE_KEY,
   readLocalCustomPersonas,
-} from "../src/ui/api/custom-persona-local-repository";
-import { personaClient } from "../src/ui/api/persona-client";
-
-function setBridge(bridge: Partial<Window["aiPromptStudio"]> | undefined): void {
-  Object.defineProperty(window, "aiPromptStudio", {
-    value: bridge,
-    configurable: true,
-    writable: true,
-  });
-}
+} from "../apps/promptizer/ui/api/custom-persona-local-repository";
+import { personaClient } from "../apps/promptizer/ui/api/persona-client";
+import { setAiPromptStudioBridge } from "./helpers/ai-prompt-studio-bridge";
 
 describe("personaClient", () => {
   beforeEach(() => {
     window.localStorage.clear();
-    setBridge(undefined);
+    setAiPromptStudioBridge(undefined);
     vi.restoreAllMocks();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it("uses local storage when the Electron bridge is absent", async () => {
@@ -53,7 +50,7 @@ describe("personaClient", () => {
       setApiKeys: vi.fn(),
       clearAllApiKeys: vi.fn(),
     } satisfies Window["aiPromptStudio"];
-    setBridge(bridge);
+    setAiPromptStudioBridge(bridge);
 
     await personaClient.listCustomPersonas();
     await personaClient.createCustomPersona({ label: "Reviewer", role: "Review carefully." });
@@ -71,11 +68,31 @@ describe("personaClient", () => {
   });
 
   it("reports unavailable custom personas when only prompt generation is bridged", async () => {
-    setBridge({ generatePrompt: vi.fn() });
+    setAiPromptStudioBridge({ generatePrompt: vi.fn() });
 
     await expect(personaClient.listCustomPersonas()).rejects.toThrow(/load custom personas/i);
     await expect(
       personaClient.createCustomPersona({ label: "Reviewer", role: "Review carefully." }),
     ).rejects.toThrow(/custom persona bridge/i);
+  });
+
+  it("uses no-op local storage when window is unavailable", async () => {
+    vi.spyOn(crypto, "randomUUID").mockReturnValue("550e8400-e29b-41d4-a716-446655440000");
+    vi.stubGlobal("window", undefined);
+
+    await expect(personaClient.listCustomPersonas()).resolves.toEqual({ personas: [] });
+    await expect(
+      personaClient.createCustomPersona({
+        label: "Architect",
+        role: "Design clear module boundaries.",
+      }),
+    ).resolves.toEqual({
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      label: "Architect",
+      role: "Design clear module boundaries.",
+    });
+    await expect(
+      personaClient.deleteCustomPersona({ id: "550e8400-e29b-41d4-a716-446655440000" }),
+    ).resolves.toEqual({ deleted: false });
   });
 });

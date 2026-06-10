@@ -9,7 +9,7 @@ The current implementation is a local-first desktop app with Electron packaging 
 - Electron desktop shell with a React + TypeScript renderer.
 - Built-in personas for frontend, backend, UI/UX, and general prompting.
 - Custom persona creation and deletion.
-- Provider/model selection from `spec/providers.json`.
+- Provider/model selection from `apps/promptizer/spec/providers.json`.
 - Provider adapters for Google Gemini, GLM, and DeepSeek through the Vercel AI SDK.
 - API key settings UI, with environment-variable fallback in the Electron main process.
 - Prompt refinement through a validated IPC contract.
@@ -33,10 +33,14 @@ Planned but not implemented yet: 0-5 AI scoring, qualitative prompt feedback, hi
 
 ```text
 src/
-  main/       Electron main process, IPC handlers, provider resolution, stores
-  ui/         React app, panels, modals, hooks, renderer clients
-  shared/     Domain types, Zod schemas, IPC contracts, provider/persona registries
-spec/         JSON source for built-in personas and provider/model options
+  main/       Electron window shell
+  ui/         Hub renderer shell and global styles
+apps/
+  promptizer/
+    main/     Promptizer IPC handlers, provider resolution, stores, preload bridge
+    ui/       Promptizer React app, panels, modals, hooks, renderer clients
+    shared/   Promptizer domain types, Zod schemas, IPC contracts, registries
+    spec/     Promptizer built-in personas and provider/model options
 test/         Vitest test suite
 docs/         Product and technical planning docs
 scripts/      Build helper scripts
@@ -91,7 +95,7 @@ npm run dist:mac       # Build a macOS DMG
 npm run dist:win       # Build a Windows NSIS installer
 npm run dist:linux     # Build a Linux AppImage
 npm run preview        # Preview the renderer build only
-npm run lint           # Run ESLint over src
+npm run lint           # Run ESLint over src and apps
 npm run test           # Run the Vitest suite once
 npm run test:watch     # Run Vitest in watch mode
 npm run format         # Format source files with Prettier
@@ -114,7 +118,7 @@ The generated macOS app is ad-hoc signed for local use. Public distribution stil
 
 ## Configuration
 
-`src/main/index.ts` loads `.env` only when Electron is not packaged. Runtime keys entered in Settings are synchronized from the renderer to the Electron main process through IPC.
+`src/main/index.ts` owns the Electron window shell and loads `.env` only when Electron is not packaged. Runtime keys entered in Settings are synchronized from the Promptizer renderer to the Electron main process through IPC.
 
 Supported environment variables:
 
@@ -139,29 +143,29 @@ Security note: API keys entered in Settings are stored in renderer `localStorage
 1. The user selects a persona and provider/model in the renderer.
 2. `usePromptGeneration` validates basic UI state and sends the request through `promptStudioClient`.
 3. The preload bridge exposes `window.aiPromptStudio.generatePrompt`.
-4. `src/main/ipc/register-handlers.ts` validates the payload with Zod and resolves the selected persona.
-5. `src/main/services/LLMAdapter.ts` builds the refinement system prompt and calls `generateText`.
+4. `apps/promptizer/main/ipc/register-handlers.ts` validates the payload with Zod and resolves the selected persona.
+5. `apps/promptizer/main/services/LLMAdapter.ts` builds the refinement system prompt and calls `generateText`.
 6. The renderer displays the returned prompt and token usage when available.
 
-The system instruction used for refinement lives in `src/main/services/prompt-instructions.ts`; the human-facing copy is mirrored in `docs/prompt-instructions.md`.
+The system instruction used for refinement lives in `apps/promptizer/main/services/prompt-instructions.ts`; the human-facing copy is mirrored in `docs/prompt-instructions.md`.
 
 ## Extending the App
 
 To add a built-in persona:
 
-1. Add an entry to `spec/personas.json`.
+1. Add an entry to `apps/promptizer/spec/personas.json`.
 2. Keep `id`, `label`, and `role` non-empty and unique.
 3. Add or adjust tests if the change affects persona behavior.
 
 To add a provider:
 
-1. Add the provider and model list to `spec/providers.json`.
-2. Add provider resolution logic in `src/main/utils/resolve-language-model.ts`.
-3. Add provider key metadata in `src/shared/domain/provider-meta.ts`.
+1. Add the provider and model list to `apps/promptizer/spec/providers.json`.
+2. Add provider resolution logic in `apps/promptizer/main/utils/resolve-language-model.ts`.
+3. Add provider key metadata in `apps/promptizer/shared/domain/provider-meta.ts`.
 4. Document the environment variable in `.env.example`.
 5. Cover the provider contract with focused tests.
 
-Shared contracts live under `src/shared`; update them first when renderer and main-process behavior need to change together.
+Promptizer shared contracts live under `apps/promptizer/shared`; update them first when renderer and main-process behavior need to change together.
 
 ## Documentation
 

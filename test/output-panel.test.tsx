@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { OutputPanel } from "../src/ui/components/OutputPanel";
+import { OutputPanel } from "../apps/promptizer/ui/components/OutputPanel";
 
 describe("OutputPanel", () => {
   it("shows token usage when generation returns tokens", () => {

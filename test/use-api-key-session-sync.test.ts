@@ -1,6 +1,6 @@
 import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useApiKeySessionSync } from "../src/ui/hooks/useApiKeySessionSync";
+import { useApiKeySessionSync } from "../apps/promptizer/ui/hooks/useApiKeySessionSync";
 
 const mocks = vi.hoisted(() => {
   const state = {
@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => {
   };
 });
 
-vi.mock("../src/ui/store/api-key-store", () => ({
+vi.mock("../apps/promptizer/ui/store/api-key-store", () => ({
   useApiKeyStore: mocks.useApiKeyStore,
 }));
 

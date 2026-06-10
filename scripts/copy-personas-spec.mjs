@@ -3,8 +3,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const specDir = path.join(root, "spec");
-const destDir = path.join(root, "dist-electron", "spec");
+const specDir = path.join(root, "apps", "promptizer", "spec");
+const destDir = path.join(root, "dist-electron", "apps", "promptizer", "spec");
 mkdirSync(destDir, { recursive: true });
 
 for (const name of readdirSync(specDir).filter((f) => f.endsWith(".json"))) {
@@ -16,7 +16,7 @@ for (const name of readdirSync(specDir).filter((f) => f.endsWith(".json"))) {
   try {
     JSON.parse(contents);
   } catch (error) {
-    throw new Error(`Invalid JSON in spec/${name}: ${error.message}`);
+    throw new Error(`Invalid JSON in apps/promptizer/spec/${name}: ${error.message}`);
   }
 
   try {

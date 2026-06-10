@@ -1,17 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { apiKeySyncClient } from "../src/ui/api/api-key-sync-client";
-
-function setBridge(bridge: Partial<Window["aiPromptStudio"]> | undefined): void {
-  Object.defineProperty(window, "aiPromptStudio", {
-    value: bridge,
-    configurable: true,
-    writable: true,
-  });
-}
+import { apiKeySyncClient } from "../apps/promptizer/ui/api/api-key-sync-client";
+import { setAiPromptStudioBridge } from "./helpers/ai-prompt-studio-bridge";
 
 describe("apiKeySyncClient", () => {
   beforeEach(() => {
-    setBridge(undefined);
+    setAiPromptStudioBridge(undefined);
   });
 
   it("no-ops when the Electron bridge is absent", async () => {
@@ -26,7 +19,7 @@ describe("apiKeySyncClient", () => {
       setApiKeys: vi.fn().mockResolvedValue(undefined),
       clearAllApiKeys: vi.fn().mockResolvedValue(undefined),
     };
-    setBridge(bridge);
+    setAiPromptStudioBridge(bridge);
 
     await expect(apiKeySyncClient.listConfigured()).resolves.toEqual(["gemini"]);
     await apiKeySyncClient.syncKeys({ gemini: "AIzaSy-test" });

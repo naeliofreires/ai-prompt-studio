@@ -1,18 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { GeneratePromptPayload } from "../src/shared";
-import { promptStudioClient } from "../src/ui/api/prompt-studio-client";
-
-function setBridge(bridge: Partial<Window["aiPromptStudio"]> | undefined): void {
-  Object.defineProperty(window, "aiPromptStudio", {
-    value: bridge,
-    configurable: true,
-    writable: true,
-  });
-}
+import type { GeneratePromptPayload } from "../apps/promptizer/shared";
+import { promptStudioClient } from "../apps/promptizer/ui/api/prompt-studio-client";
+import { setAiPromptStudioBridge } from "./helpers/ai-prompt-studio-bridge";
 
 describe("promptStudioClient", () => {
   beforeEach(() => {
-    setBridge(undefined);
+    setAiPromptStudioBridge(undefined);
     vi.restoreAllMocks();
   });
 
@@ -20,7 +13,7 @@ describe("promptStudioClient", () => {
     const bridge = {
       generatePrompt: vi.fn().mockResolvedValue({ ok: true, prompt: "Refined text" }),
     } satisfies Partial<Window["aiPromptStudio"]>;
-    setBridge(bridge);
+    setAiPromptStudioBridge(bridge);
 
     const payload: GeneratePromptPayload = {
       rawInput: "Refine this idea",
