@@ -7,6 +7,7 @@ import {
   type CreateCustomPersonaInput,
   type CustomPersona,
   type UpdateCustomPersonaInput,
+  seedCustomPersonas,
 } from "../../shared/domain/custom-persona.js";
 
 const storeSchema = {
@@ -24,19 +25,6 @@ type StoreSchema = {
   customPersonas: CustomPersona[];
   seedPersonasInitialized: boolean;
 };
-
-const SEED_PERSONAS: CustomPersona[] = [
-  {
-    id: "11111111-1111-4111-8111-111111111111",
-    label: "Frontend Specialist",
-    role: "Refines prompts for React, TypeScript, browser APIs, and client-side architecture.",
-  },
-  {
-    id: "22222222-2222-4222-8222-222222222222",
-    label: "Backend Specialist",
-    role: "Refines prompts for APIs, databases, distributed systems, and server-side design.",
-  },
-];
 
 const store = new Store<StoreSchema>({
   name: "custom-personas",
@@ -57,7 +45,7 @@ function ensureSeedPersonasInitialized(): void {
 
   const personas = readStoredCustomPersonas();
   if (personas.length === 0) {
-    store.set("customPersonas", customPersonaSchema.array().parse(SEED_PERSONAS));
+    store.set("customPersonas", customPersonaSchema.array().parse(seedCustomPersonas));
   }
 
   store.set("seedPersonasInitialized", true);

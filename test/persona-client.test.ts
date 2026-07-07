@@ -4,7 +4,18 @@ import {
   readLocalCustomPersonas,
 } from "../apps/promptizer/ui/api/custom-persona-local-repository";
 import { personaClient } from "../apps/promptizer/ui/api/persona-client";
+import { selectPersonaClientMode } from "../apps/promptizer/ui/api/persona-client-mode-policy";
 import { setAiPromptStudioBridge } from "./helpers/ai-prompt-studio-bridge";
+
+describe("selectPersonaClientMode", () => {
+  it.each([
+    [{ hasPromptBridge: true, hasCustomPersonaBridge: true }, "bridge"],
+    [{ hasPromptBridge: true, hasCustomPersonaBridge: false }, "unavailable"],
+    [{ hasPromptBridge: false, hasCustomPersonaBridge: false }, "local"],
+  ] as const)("selects %s as %s", (input, mode) => {
+    expect(selectPersonaClientMode(input)).toBe(mode);
+  });
+});
 
 describe("personaClient", () => {
   beforeEach(() => {

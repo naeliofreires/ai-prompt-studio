@@ -16,22 +16,11 @@ import {
   type AiPromptStudioBridge,
 } from "./electron-bridge";
 import { getBrowserStorage } from "../utils/browser-storage";
+import { seedCustomPersonas } from "../../shared/domain/custom-persona";
+import { selectPersonaClientMode } from "./persona-client-mode-policy";
 
 export const CUSTOM_PERSONAS_STORAGE_KEY = "promptizer.custom-personas";
 export const CUSTOM_PERSONAS_SEED_MARKER_KEY = "promptizer.custom-personas.seeded";
-
-const SEED_PERSONAS: ListCustomPersonasResult["personas"] = [
-  {
-    id: "11111111-1111-4111-8111-111111111111",
-    label: "Frontend Specialist",
-    role: "Refines prompts for React, TypeScript, browser APIs, and client-side architecture.",
-  },
-  {
-    id: "22222222-2222-4222-8222-222222222222",
-    label: "Backend Specialist",
-    role: "Refines prompts for APIs, databases, distributed systems, and server-side design.",
-  },
-];
 
 function ensureLocalSeedPersonasInitialized(): void {
   const storage = getBrowserStorage();
@@ -42,7 +31,7 @@ function ensureLocalSeedPersonasInitialized(): void {
   const raw = storage.getItem(CUSTOM_PERSONAS_STORAGE_KEY);
   const personas = raw ? customPersonaSchema.array().parse(JSON.parse(raw)) : [];
   if (personas.length === 0) {
-    storage.setItem(CUSTOM_PERSONAS_STORAGE_KEY, JSON.stringify(SEED_PERSONAS));
+    storage.setItem(CUSTOM_PERSONAS_STORAGE_KEY, JSON.stringify(seedCustomPersonas));
   }
 
   storage.setItem(CUSTOM_PERSONAS_SEED_MARKER_KEY, "true");
@@ -176,8 +165,14 @@ const unavailablePersonaClient: PersonaClient = {
 
 function resolvePersonaClient(): PersonaClient {
   const bridge = getAiPromptStudioBridge();
-  if (hasCustomPersonaBridge(bridge)) return createIpcPersonaClient(bridge);
-  if (hasBridgeMethod(bridge, "generatePrompt")) return unavailablePersonaClient;
+  const hasCustomBridge = hasCustomPersonaBridge(bridge);
+  const mode = selectPersonaClientMode({
+    hasPromptBridge: hasBridgeMethod(bridge, "generatePrompt"),
+    hasCustomPersonaBridge: hasCustomBridge,
+  });
+
+  if (mode === "bridge" && hasCustomBridge) return createIpcPersonaClient(bridge);
+  if (mode === "unavailable") return unavailablePersonaClient;
   return localPersonaClient;
 }
 
