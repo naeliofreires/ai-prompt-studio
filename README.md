@@ -1,31 +1,28 @@
 # Promptizer
 
-Promptizer is the working repository for **AI Prompt Studio**, a local Electron desktop app that turns rough ideas into paste-ready LLM prompts. The app lets you choose a persona, pick a provider/model, enter an API key, refine an idea, and copy the generated prompt.
+Promptizer is a local Electron app for turning rough ideas into structured, paste-ready LLM prompts. It lets you manage personas, choose a provider/model, enter API keys, refine an idea, and copy the result.
 
-The current implementation is a local-first desktop app with Electron packaging scripts for unsigned local releases.
+The app is local-first and currently packaged for unsigned local releases.
 
-## Current Features
+## Features
 
 - Electron desktop shell with a React + TypeScript renderer.
-- Built-in personas for frontend, backend, UI/UX, and general prompting.
-- Custom persona creation and deletion.
+- Editable personas with title and description fields.
+- A dedicated Personas page for listing, creating, editing, deleting, and selecting personas.
 - Provider/model selection from `apps/promptizer/spec/providers.json`.
 - Provider adapters for Google Gemini, GLM, DeepSeek, and OpenCode Zen through the Vercel AI SDK.
-- API key settings UI, with environment-variable fallback in the Electron main process.
-- Prompt refinement through a validated IPC contract.
-- Markdown output rendering, copy-to-clipboard feedback, and token usage display when the provider returns it.
-- Vitest coverage for adapter behavior, IPC/shared contracts, API key storage, persona client behavior, and streaming markdown helpers.
-
-Planned but not implemented yet: 0-5 AI scoring, qualitative prompt feedback, history, favorites, signed releases, notarization, and auto-update.
+- API key Settings UI with development `.env` fallback in the Electron main process.
+- Prompt refinement through a validated IPC bridge.
+- Structured output rendering, copy feedback, token usage, and prompt evaluation when available.
+- Vitest coverage for core UI, IPC, provider, persona, and generation flows.
 
 ## Stack
 
 - **Desktop:** Electron
 - **Renderer:** React 19, TypeScript, Vite
-- **State:** Zustand and React hooks
-- **LLM access:** Vercel AI SDK with Google and OpenAI-compatible providers
+- **LLM access:** Vercel AI SDK
 - **Validation:** Zod
-- **Storage:** `electron-store` for desktop custom personas, `localStorage` for renderer-held API keys and browser-mode persona fallback
+- **Storage:** `electron-store` for desktop personas, `localStorage` for renderer API keys and browser-mode persona fallback
 - **Tests:** Vitest, React Testing Library, jsdom
 - **Styling:** CSS Modules and SCSS modules
 
@@ -37,10 +34,10 @@ src/
   ui/         Hub renderer shell and global styles
 apps/
   promptizer/
-    main/     Promptizer IPC handlers, provider resolution, stores, preload bridge
-    ui/       Promptizer React app, panels, modals, hooks, renderer clients
-    shared/   Promptizer domain types, Zod schemas, IPC contracts, registries
-    spec/     Promptizer built-in personas and provider/model options
+    main/     IPC handlers, provider registry, stores, preload bridge
+    ui/       React app, panels, pages, hooks, renderer clients
+    shared/   Domain types, Zod schemas, IPC contracts, registries
+    spec/     Provider/model options and legacy persona spec
 test/         Vitest test suite
 docs/         Product and technical planning docs
 scripts/      Build helper scripts
@@ -48,78 +45,62 @@ scripts/      Build helper scripts
 
 ## Prerequisites
 
-- A recent Node.js/npm installation.
-- At least one API key for a supported provider if you want to generate prompts.
+- Node.js and npm.
+- At least one API key for generation.
 
-The app supports these providers:
+Supported providers:
 
-| Provider      | Models                                      | API key                          |
-| ------------- | ------------------------------------------- | -------------------------------- |
-| Google Gemini | `gemini-2.5-pro`                            | `GOOGLE_GENERATIVE_AI_API_KEY`   |
-| GLM           | `glm-4.6`, `glm-4.7`, `glm-5`               | `GLM_API_KEY` or `ZHIPU_API_KEY` |
-| DeepSeek      | `deepseek-chat`, `deepseek-reasoner`        | `DEEPSEEK_API_KEY`               |
+| Provider      | Models                                                | API key                          |
+| ------------- | ----------------------------------------------------- | -------------------------------- |
+| Google Gemini | `gemini-2.5-pro`                                      | `GOOGLE_GENERATIVE_AI_API_KEY`   |
+| GLM           | `glm-4.6`, `glm-4.7`, `glm-5`                         | `GLM_API_KEY` or `ZHIPU_API_KEY` |
+| DeepSeek      | `deepseek-reasoner`                                   | `DEEPSEEK_API_KEY`               |
 | OpenCode Zen  | `big-pickle`, `minimax-m3-free`, `north-mini-code-free` | `OPENCODE_API_KEY`               |
 
-You can enter keys in the Settings modal at runtime, or set them in `.env` for local development.
+You can enter keys in Settings at runtime or set them in `.env` for local development.
 
 ## Getting Started
 
-Install dependencies:
-
 ```bash
 npm install
-```
-
-Optional: copy the example environment file and fill in provider keys:
-
-```bash
-cp .env.example .env
-```
-
-Run the desktop app in development mode:
-
-```bash
+cp .env.example .env # optional
 npm run dev
 ```
 
-This starts the Vite renderer on port `5173`, watches the Electron main-process TypeScript build, waits for both pieces, and then launches Electron.
+`npm run dev` starts Vite, watches the Electron main-process TypeScript build, waits for both, and launches Electron.
 
-## Useful Scripts
+## Scripts
 
 ```bash
 npm run dev            # Start Vite, Electron main watch, and Electron
 npm run build          # Build renderer and Electron main process
-npm run build:ui       # Build only the Vite renderer
-npm run build:main     # Compile Electron main process and copy spec JSON files
-npm run dist           # Build the app and package for the current platform
+npm run dist           # Build and package for the current platform
 npm run dist:mac       # Build a macOS DMG
 npm run dist:win       # Build a Windows NSIS installer
 npm run dist:linux     # Build a Linux AppImage
 npm run preview        # Preview the renderer build only
-npm run lint           # Run ESLint over src and apps
-npm run test           # Run the Vitest suite once
+npm run lint           # Run ESLint
+npm run test           # Run Vitest once
 npm run test:watch     # Run Vitest in watch mode
 npm run format         # Format source files with Prettier
 npm run format:check   # Check Prettier formatting
 ```
 
-`npm run preview` serves only the renderer build. Prompt generation requires the Electron preload bridge, so use `npm run dev` for the full app.
+`npm run preview` serves only the renderer build. Use `npm run dev` for prompt generation because it requires the Electron preload bridge.
 
 ## Packaging
-
-Generate a local macOS installer:
 
 ```bash
 npm run dist:mac
 ```
 
-The DMG is written to `release/`. Windows and Linux installers can be generated with `npm run dist:win` and `npm run dist:linux`, preferably on their target operating systems or in CI.
+Packages are written to `release/`. Windows and Linux installers can be built with `npm run dist:win` and `npm run dist:linux`, preferably on their target OS or in CI.
 
-The generated macOS app is ad-hoc signed for local use. Public distribution still needs a developer signing identity, notarization, and release pipeline.
+The macOS build is ad-hoc signed for local use. Public distribution still needs a signing identity, notarization, and a release pipeline.
 
 ## Configuration
 
-`src/main/index.ts` owns the Electron window shell and loads `.env` only when Electron is not packaged. Runtime keys entered in Settings are synchronized from the Promptizer renderer to the Electron main process through IPC.
+`src/main/index.ts` owns the Electron shell and loads `.env` only when Electron is not packaged. Runtime keys entered in Settings are synced from the renderer to the Electron main process through IPC.
 
 Supported environment variables:
 
@@ -134,42 +115,40 @@ OPENCODE_API_KEY=
 OPENCODE_ZEN_BASE_URL=
 ```
 
-Defaults:
+Default base URLs:
 
-- GLM uses `https://api.z.ai/api/paas/v4/` unless `GLM_BASE_URL` is set.
-- DeepSeek uses `https://api.deepseek.com/v1` unless `DEEPSEEK_BASE_URL` is set.
-- OpenCode Zen uses `https://opencode.ai/zen/v1` unless `OPENCODE_ZEN_BASE_URL` is set.
+- GLM: `https://api.z.ai/api/paas/v4/`
+- DeepSeek: `https://api.deepseek.com/v1`
+- OpenCode Zen: `https://opencode.ai/zen/v1`
 
-Security note: API keys entered in Settings are stored in renderer `localStorage` and mirrored into main-process memory for local use. This is appropriate for a local BYOK development tool, but a production deployment should move provider credentials behind a server-side proxy or native secure storage.
+API keys saved in Settings are stored in renderer `localStorage` and mirrored into main-process memory. This is acceptable for a local BYOK tool; production distribution should use native secure storage or a server-side proxy.
 
-## How Prompt Generation Works
+## How Generation Works
 
-1. The user selects a persona and provider/model in the renderer.
-2. `usePromptGeneration` validates basic UI state and sends the request through `promptStudioClient`.
-3. The preload bridge exposes `window.aiPromptStudio.generatePrompt`.
-4. `apps/promptizer/main/ipc/register-handlers.ts` validates the payload with Zod and resolves the selected persona.
-5. `apps/promptizer/main/services/LLMAdapter.ts` builds the refinement system prompt and calls `generateText`.
-6. The renderer displays the returned prompt and token usage when available.
+1. The renderer validates the selected persona, provider/model, API key, and raw input.
+2. `promptStudioClient` sends the request through the preload bridge.
+3. `register-handlers.ts` validates the IPC payload and resolves the selected editable persona.
+4. `LLMAdapter` builds the refinement system prompt and calls `generateText`.
+5. The renderer displays the structured response, usage, and evaluation data when available.
 
-The system instruction used for refinement lives in `apps/promptizer/main/services/prompt-instructions.ts`; the human-facing copy is mirrored in `docs/prompt-instructions.md`.
+The refinement instruction lives in `apps/promptizer/main/services/prompt-instructions.ts`; the human-facing copy is mirrored in `docs/prompt-instructions.md`.
 
-## Extending the App
+## Extending Promptizer
 
-To add a built-in persona:
+### Add a provider
 
-1. Add an entry to `apps/promptizer/spec/personas.json`.
-2. Keep `id`, `label`, and `role` non-empty and unique.
-3. Add or adjust tests if the change affects persona behavior.
+1. Add the provider to `apps/promptizer/spec/providers.json`.
+2. Ensure `apps/promptizer/main/services/provider-registry.ts` supports its `sdkType`.
+3. Document the environment variable in `.env.example`.
+4. Add focused tests for provider resolution and request behavior.
 
-To add a provider:
+### Change persona behavior
 
-1. Add the provider and model list to `apps/promptizer/spec/providers.json`.
-2. Add provider resolution logic in `apps/promptizer/main/utils/resolve-language-model.ts`.
-3. Add provider key metadata in `apps/promptizer/shared/domain/provider-meta.ts`.
-4. Document the environment variable in `.env.example`.
-5. Cover the provider contract with focused tests.
+- Editable personas are stored through the custom persona store and browser fallback client.
+- Keep persona fields limited to `label` and `role` unless the UI, IPC contracts, and tests are updated together.
+- Prompt generation resolves personas from the editable persona store.
 
-Promptizer shared contracts live under `apps/promptizer/shared`; update them first when renderer and main-process behavior need to change together.
+Shared renderer/main contracts live under `apps/promptizer/shared`; update them first when behavior crosses the process boundary.
 
 ## Documentation
 
@@ -177,4 +156,4 @@ Promptizer shared contracts live under `apps/promptizer/shared`; update them fir
 - `docs/tech-spec-ai-prompt-studio.md` describes the planned architecture.
 - `.notebook/` contains implementation notes about current flows and boundaries.
 
-When these docs disagree with the source, treat the source as the current behavior and update the relevant document as part of the change.
+When docs disagree with source code, treat source code as current behavior and update the relevant document in the same change.
