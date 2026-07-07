@@ -11,6 +11,7 @@ const envKeys = [
   "GLM_API_KEY",
   "ZHIPU_API_KEY",
   "DEEPSEEK_API_KEY",
+  "OPENCODE_API_KEY",
 ] as const;
 
 const previousEnv = new Map<string, string | undefined>();
@@ -49,9 +50,11 @@ describe("api-key-manager", () => {
   it("resolves provider keys from environment variables", () => {
     process.env.GOOGLE_GENERATIVE_AI_API_KEY = "env-gemini";
     process.env.DEEPSEEK_API_KEY = "env-deepseek";
+    process.env.OPENCODE_API_KEY = "env-opencode";
 
     expect(getApiKey("gemini")).toBe("env-gemini");
     expect(getApiKey("deepseek")).toBe("env-deepseek");
+    expect(getApiKey("opencode")).toBe("env-opencode");
   });
 
   it("resolves GLM from GLM_API_KEY or ZHIPU_API_KEY", () => {

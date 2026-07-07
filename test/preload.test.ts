@@ -2,10 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ipcChannels, type GeneratePromptPayload } from "../apps/promptizer/shared";
 
 const mocks = vi.hoisted(() => {
-  let exposedApi: Window["aiPromptStudio"] | null = null;
+  let exposedApi: any = null;
 
   return {
-    exposeInMainWorld: vi.fn((_key: string, api: Window["aiPromptStudio"]) => {
+    exposeInMainWorld: vi.fn((_key: string, api: any) => {
       exposedApi = api;
     }),
     exposedApi: () => exposedApi,
@@ -63,6 +63,17 @@ describe("preload bridge", () => {
       role: "Review prompts carefully.",
     });
     expect(mocks.invoke).toHaveBeenLastCalledWith(ipcChannels.createCustomPersona, {
+      label: "Reviewer",
+      role: "Review prompts carefully.",
+    });
+
+    await api.updateCustomPersona({
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      label: "Reviewer",
+      role: "Review prompts carefully.",
+    });
+    expect(mocks.invoke).toHaveBeenLastCalledWith(ipcChannels.updateCustomPersona, {
+      id: "550e8400-e29b-41d4-a716-446655440000",
       label: "Reviewer",
       role: "Review prompts carefully.",
     });

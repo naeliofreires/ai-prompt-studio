@@ -1,18 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { PERSONAS } from "../../shared";
 import { getErrorMessage } from "../../shared/utils/error";
 import { personaClient } from "../api/persona-client";
 import type { Role } from "../types/role";
 
-const BUILTIN_ROLES: Role[] = PERSONAS.map((persona) => ({
-  id: persona.id,
-  title: persona.label,
-  description: persona.role,
-  source: "builtin",
-}));
-
 export function useRoles() {
-  const [roles, setRoles] = useState<Role[]>(BUILTIN_ROLES);
+  const [roles, setRoles] = useState<Role[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -31,7 +23,7 @@ export function useRoles() {
           source: "custom",
         }));
 
-        setRoles([...BUILTIN_ROLES, ...customRoles]);
+        setRoles(customRoles);
         setError("");
       } catch (err) {
         if (!cancelled) {
@@ -78,5 +70,27 @@ export function useRoles() {
     return true;
   }, []);
 
-  return { roles, addRole, deleteRole, isLoading, error };
+  const updateRole = useCallback(async (id: string, patch: { title: string; description: string }) => {
+    const trimmedTitle = patch.title.trim();
+    const trimmedDescription = patch.description.trim();
+    const persona = await personaClient.updateCustomPersona({
+      id,
+      label: trimmedTitle,
+      role: trimmedDescription,
+    });
+
+    setRoles((prev) =>
+      prev.map((role) =>
+        role.id === id
+          ? {
+              ...role,
+              title: persona.label,
+              description: persona.role,
+            }
+          : role,
+      ),
+    );
+  }, []);
+
+  return { roles, addRole, deleteRole, updateRole, isLoading, error };
 }

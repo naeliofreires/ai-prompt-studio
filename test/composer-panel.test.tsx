@@ -35,6 +35,34 @@ describe("ComposerPanel", () => {
     expect(onOpenSettings).toHaveBeenCalledTimes(1);
   });
 
+  it("disables generate and shows persona guidance when persona state blocks generation", () => {
+    const onGenerate = vi.fn();
+
+    render(
+      <ComposerPanel
+        inputIdea="Build a todo app"
+        onInputChange={vi.fn()}
+        provider="gemini"
+        model="gemini-2.5-pro"
+        providers={[geminiProvider]}
+        selectedProvider={geminiProvider}
+        isGenerating={false}
+        keyMissing={false}
+        disabledReason="Create or select a persona before generating."
+        onProviderChange={vi.fn()}
+        onModelChange={vi.fn()}
+        onGenerate={onGenerate}
+        onOpenSettings={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Create or select a persona before generating.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /refine prompt/i })).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("button", { name: /refine prompt/i }));
+    expect(onGenerate).not.toHaveBeenCalled();
+  });
+
   it('1. appends a newly selected markdown file to current prompt attachments ', () => {
     const onPromptAttachmentsChange = vi.fn();
     const existingAttachment = {

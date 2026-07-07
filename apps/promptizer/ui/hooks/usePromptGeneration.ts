@@ -3,6 +3,8 @@ import type { GeneratePromptIpcResult, GeneratePromptPayload, ProviderId } from 
 import type { Provider } from "../../shared/domain/provider";
 import { getErrorMessage } from "../../shared/utils/error";
 import { promptStudioClient } from "../api/prompt-studio-client";
+import { validatePromtizerResponse } from "../services/promtizer";
+import type { PromtizerResponse } from "../types/api";
 import type { GenerationEvaluation, GenerationUsage } from "../types/generation";
 import type { Role } from "../types/role";
 
@@ -32,6 +34,7 @@ export function usePromptGeneration({
   const [inputIdea, setInputIdea] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [outputPrompt, setOutputPrompt] = useState("");
+  const [promtizerResponse, setPromtizerResponse] = useState<PromtizerResponse | null>(null);
   const [usage, setUsage] = useState<GenerationUsage | null>(null);
   const [evaluation, setEvaluation] = useState<GenerationEvaluation | null>(null);
   const [generationError, setGenerationError] = useState("");
@@ -42,14 +45,10 @@ export function usePromptGeneration({
 
     if (!rawInput) {
       setOutputPrompt("");
+      setPromtizerResponse(null);
       setUsage(null);
       setEvaluation(null);
       setGenerationError("Enter an idea before refining the prompt.");
-      return;
-    }
-
-    if (!model.trim()) {
-      setGenerationError("Select a model before refining the prompt.");
       return;
     }
 
@@ -57,6 +56,11 @@ export function usePromptGeneration({
       setGenerationError(
         `Add your ${selectedProvider.provider} API key in Settings to generate prompts.`,
       );
+      return;
+    }
+
+    if (!model.trim()) {
+      setGenerationError("Select a model before refining the prompt.");
       return;
     }
 
@@ -68,6 +72,7 @@ export function usePromptGeneration({
     onGenerateStart?.();
     setIsGenerating(true);
     setOutputPrompt("");
+    setPromtizerResponse(null);
     setUsage(null);
     setEvaluation(null);
     setGenerationError("");
@@ -91,7 +96,10 @@ export function usePromptGeneration({
         return;
       }
 
-      setOutputPrompt(result.prompt);
+      const structuredResponse = validatePromtizerResponse(result.prompt);
+
+      setPromtizerResponse(structuredResponse);
+      setOutputPrompt(JSON.stringify(structuredResponse, null, 2));
       setUsage({
         tokensUsed: result.tokensUsed,
       });
@@ -120,6 +128,7 @@ export function usePromptGeneration({
     setPromptAttachments,
     isGenerating,
     outputPrompt,
+    promtizerResponse,
     usage,
     evaluation,
     generationError,

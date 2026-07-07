@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Architecture review — Promptizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose" });
+    </script>
+    <style>
+      .seam { stroke-dasharray: 6 4; }
+      .leak { stroke: #dc2626; }
+      .deep { background: linear-gradient(135deg, #0f172a, #1e293b); }
+      .mass-before-iface { background: #fbbf24; opacity: 0.7; }
+      .mass-before-impl { background: #e2e8f0; }
+      .mass-after-iface { background: #10b981; }
+      .mass-after-impl { background: #1e293b; }
+    </style>
+  </head>
+  <body class="bg-stone-50 text-slate-900 font-sans">
+    <main class="max-w-5xl mx-auto px-6 py-12 space-y-12">
+
+      <header class="space-y-4">
+        <h1 class="text-3xl font-serif text-slate-800">Architecture review — Promptizer</h1>
+        <p class="text-sm text-slate-500">22 June 2026</p>
+        <div class="flex flex-wrap gap-4 text-xs text-slate-600 pt-2">
+          <span class="flex items-center gap-1"><span class="inline-block w-4 h-4 border-2 border-slate-700 rounded-sm"></span> module</span>
+          <span class="flex items-center gap-1"><span class="inline-block w-8 h-0 border-t-2 border-dashed border-slate-400"></span> seam</span>
+          <span class="flex items-center gap-1"><span class="inline-block w-4 h-0 border-t-2 border-red-500"></span> leakage</span>
+          <span class="flex items-center gap-1"><span class="inline-block w-4 h-4 rounded-sm bg-slate-900"></span> deep module</span>
+        </div>
+      </header>
+
+      <section id="candidates" class="space-y-10">
+
+        <!-- Candidate 1: Collapse API key management -->
+        <article class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="px-6 pt-6 pb-4 space-y-3">
+            <h2 class="text-xl font-serif text-slate-800">Collapse the API key management module</h2>
+            <div class="flex flex-wrap gap-2">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">Strong</span>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">in-process</span>
+            </div>
+            <div class="font-mono text-xs text-slate-500 space-y-0.5">
+              <div>ui/store/api-key-store.ts</div>
+              <div>ui/config/api-key-storage.ts</div>
+              <div>ui/api/api-key-sync-client.ts</div>
+              <div>ui/hooks/useApiKeySettings.ts</div>
+              <div>main/services/api-key-manager.ts</div>
+              <div>shared/domain/api-keys.ts</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 divide-x divide-slate-100 bg-slate-50/50">
+            <div class="p-5 space-y-2">
+              <p class="text-xs uppercase tracking-wider text-slate-400 font-medium">Before — 6 modules, 2 seams</p>
+              <div class="relative" style="height: 260px;">
+                <svg viewBox="0 0 300 250" class="w-full h-full">
+                  <!-- Modules -->
+                  <rect x="15" y="15" width="120" height="50" rx="4" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+                  <text x="75" y="42" text-anchor="middle" font-size="9" fill="#92400e" font-family="monospace">api-key-store</text>
+                  <text x="75" y="54" text-anchor="middle" font-size="7" fill="#92400e">Zustand · 88 lines</text>
+
+                  <rect x="165" y="15" width="120" height="50" rx="4" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+                  <text x="225" y="42" text-anchor="middle" font-size="9" fill="#92400e" font-family="monospace">api-key-storage</text>
+                  <text x="225" y="54" text-anchor="middle" font-size="7" fill="#92400e">localStorage · 44 lines</text>
+
+                  <rect x="15" y="80" width="120" height="50" rx="4" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+                  <text x="75" y="107" text-anchor="middle" font-size="9" fill="#92400e" font-family="monospace">api-key-sync</text>
+                  <text x="75" y="119" text-anchor="middle" font-size="7" fill="#92400e">IPC bridge · 34 lines</text>
+
+                  <rect x="165" y="80" width="120" height="50" rx="4" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+                  <text x="225" y="107" text-anchor="middle" font-size="9" fill="#92400e" font-family="monospace">useApiKeySettings</text>
+                  <text x="225" y="119" text-anchor="middle" font-size="7" fill="#92400e">hook · 24 lines</text>
+
+                  <rect x="15" y="145" width="120" height="50" rx="4" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+                  <text x="75" y="172" text-anchor="middle" font-size="9" fill="#92400e" font-family="monospace">api-key-manager</text>
+                  <text x="75" y="184" text-anchor="middle" font-size="7" fill="#92400e">main process · Map</text>
+
+                  <rect x="165" y="145" width="120" height="50" rx="4" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/>
+                  <text x="225" y="172" text-anchor="middle" font-size="9" fill="#3730a3" font-family="monospace">shared helpers</text>
+                  <text x="225" y="184" text-anchor="middle" font-size="7" fill="#3730a3">mask · has · get</text>
+
+                  <!-- Arrows: messy web -->
+                  <line x1="75" y1="65" x2="75" y2="80" stroke="#dc2626" stroke-width="1.5" marker-end="url(#arrowRed)"/>
+                  <line x1="135" y1="35" x2="165" y2="35" stroke="#dc2626" stroke-width="1.5" marker-end="url(#arrowRed)"/>
+                  <line x1="135" y1="100" x2="165" y2="100" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+                  <line x1="225" y1="65" x2="225" y2="80" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrow)"/>
+                  <line x1="75" y1="130" x2="75" y2="145" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+                  <line x1="225" y1="130" x2="225" y2="145" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrow)"/>
+                  <!-- IPC seam -->
+                  <line x1="150" y1="0" x2="150" y2="230" stroke="#6366f1" stroke-width="2" stroke-dasharray="8 4"/>
+                  <text x="150" y="242" text-anchor="middle" font-size="7" fill="#6366f1">IPC seam</text>
+
+                  <defs>
+                    <marker id="arrow" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+                      <polygon points="0 0, 6 2, 0 4" fill="#94a3b8"/>
+                    </marker>
+                    <marker id="arrowRed" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+                      <polygon points="0 0, 6 2, 0 4" fill="#dc2626"/>
+                    </marker>
+                  </defs>
+                </svg>
+              </div>
+            </div>
+            <div class="p-5 space-y-2">
+              <p class="text-xs uppercase tracking-wider text-slate-400 font-medium">After — 1 deep module, 1 seam</p>
+              <div class="relative" style="height: 260px;">
+                <svg viewBox="0 0 300 250" class="w-full h-full">
+                  <rect x="30" y="25" width="240" height="190" rx="6" fill="#0f172a" stroke="#334155" stroke-width="2"/>
+                  <text x="150" y="50" text-anchor="middle" font-size="11" fill="#e2e8f0" font-weight="600" font-family="monospace">ApiKeyRepository</text>
+                  <line x1="50" y1="60" x2="250" y2="60" stroke="#475569" stroke-width="0.5"/>
+                  <!-- Internal: faded -->
+                  <text x="70" y="85" font-size="8" fill="#64748b" font-family="monospace">localStorage persistence</text>
+                  <text x="70" y="102" font-size="8" fill="#64748b" font-family="monospace">sessionStorage hydration</text>
+                  <text x="70" y="119" font-size="8" fill="#64748b" font-family="monospace">IPC sync to main</text>
+                  <text x="70" y="136" font-size="8" fill="#64748b" font-family="monospace">mask · has · get</text>
+                  <text x="70" y="153" font-size="8" fill="#64748b" font-family="monospace">validation</text>
+
+                  <!-- Interface surface (green) -->
+                  <rect x="50" y="170" width="200" height="32" rx="3" fill="#10b981" opacity="0.2" stroke="#10b981" stroke-width="1"/>
+                  <text x="150" y="184" text-anchor="middle" font-size="8" fill="#10b981" font-family="monospace">getKeys() · setKeys() · clearProvider() · clearAll()</text>
+                  <text x="150" y="196" text-anchor="middle" font-size="7" fill="#10b981">isConfigured(id) · configuredIds()</text>
+
+                  <!-- IPC seam to main -->
+                  <line x1="270" y1="120" x2="298" y2="120" stroke="#6366f1" stroke-width="2" stroke-dasharray="6 4"/>
+                  <text x="284" y="140" text-anchor="middle" font-size="7" fill="#6366f1">IPC</text>
+                  <rect x="275" y="95" width="20" height="50" rx="3" fill="#e0e7ff" stroke="#6366f1" stroke-width="1"/>
+                  <text x="285" y="123" text-anchor="middle" font-size="6" fill="#3730a3" transform="rotate(-90, 285, 123)">main</text>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="px-6 py-4 space-y-3 border-t border-slate-100">
+            <p class="text-sm text-slate-700"><strong>Problem:</strong> Six modules across two layers for one concept — API keys. Fire-and-forget sync swallows errors. Hydration races between store init and IPC. The Zustand store is a thin proxy over localStorage with no leverage.</p>
+            <p class="text-sm text-slate-700"><strong>Solution:</strong> Collapse into one deep module — `ApiKeyRepository` — that owns persistence, hydration, validation, masking, and IPC sync behind a single interface. The seam stays at the IPC boundary (one adapter for Electron, one for browser localStorage).</p>
+            <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+              <li><strong>locality:</strong> key lifecycle bugs concentrate in one module</li>
+              <li><strong>leverage:</strong> callers learn one interface for all key operations</li>
+              <li><strong>tests:</strong> swap IPC adapter for in-memory; assert on observable state</li>
+              <li>delete Zustand store, storage config, sync client, settings hook</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- Candidate 2: Inject dependencies into IPC composition root -->
+        <article class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="px-6 pt-6 pb-4 space-y-3">
+            <h2 class="text-xl font-serif text-slate-800">Open the IPC handler composition root for injection</h2>
+            <div class="flex flex-wrap gap-2">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">Strong</span>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">ports &amp; adapters</span>
+            </div>
+            <div class="font-mono text-xs text-slate-500 space-y-0.5">
+              <div>main/ipc/register-handlers.ts</div>
+              <div>main/services/LLMAdapter.ts</div>
+              <div>main/services/PromptEvaluator.ts</div>
+              <div>main/application/generate-refined-prompt.ts</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 divide-x divide-slate-100 bg-slate-50/50">
+            <div class="p-5 space-y-2">
+              <p class="text-xs uppercase tracking-wider text-slate-400 font-medium">Before — baked at module scope</p>
+              <div class="rounded-lg border border-slate-200 bg-white p-4">
+                <pre class="mermaid">
+flowchart TB
+                  subgraph registerIpcHandlers["register-handlers.ts (module scope)"]
+                    A["LLMAdapter({ generateText })"] --> B["PromptEvaluator({ generateText })"]
+                    B --> C["generateRefinedPrompt(deps)"]
+                    C --> D["savePromptSession"]
+                  end
+                  E["ipcMain.handle('generate')"] --> C
+                  style A fill:#fbbf24,stroke:#d97706
+                  style B fill:#fbbf24,stroke:#d97706
+                  style C fill:#e0e7ff,stroke:#6366f1
+                  style D fill:#e0e7ff,stroke:#6366f1
+                  style E fill:#f1f5f9,stroke:#94a3b8
+                </pre>
+              </div>
+            </div>
+            <div class="p-5 space-y-2">
+              <p class="text-xs uppercase tracking-wider text-slate-400 font-medium">After — injected at seam</p>
+              <div class="rounded-lg border border-slate-200 bg-white p-4">
+                <pre class="mermaid">
+flowchart TB
+                  subgraph registerIpcHandlers["register-handlers.ts"]
+                    C["generateRefinedPrompt(deps)"]
+                  end
+                  E["ipcMain.handle('generate')"] --> C
+                  A["LlmAdapter (port)"] -.->|injected| C
+                  B["PromptEvaluator (port)"] -.->|injected| C
+                  style C fill:#0f172a,color:#e2e8f0,stroke:#334155
+                  style A fill:#e0e7ff,stroke:#6366f1
+                  style B fill:#e0e7ff,stroke:#6366f1
+                  style E fill:#f1f5f9,stroke:#94a3b8
+                </pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="px-6 py-4 space-y-3 border-t border-slate-100">
+            <p class="text-sm text-slate-700"><strong>Problem:</strong> `register-handlers.ts` creates `LLMAdapter` and `PromptEvaluator` at module scope, baking the real `generateText` (Vercel AI SDK) into every IPC handler. No seam to replace them — tests must mock entire modules or skip the layer entirely.</p>
+            <p class="text-sm text-slate-700"><strong>Solution:</strong> Accept the adapters as parameters in `registerIpcHandlers(options)`. Production wiring happens at the host hub entry point; tests inject fakes. The existing `LlmAdapter` and `PromptEvaluator` interfaces already define the seam — just stop hard-coding inside.</p>
+            <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+              <li><strong>locality:</strong> IPC handler logic testable without Vercel AI SDK</li>
+              <li><strong>leverage:</strong> existing LlmAdapter seam becomes real (two adapters)</li>
+              <li><strong>tests:</strong> inject in-memory adapter; no module mocking</li>
+              <li>wiring moves to hub entry point — composition responsibility</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- Candidate 3: Consolidate provider registration -->
+        <article class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="px-6 pt-6 pb-4 space-y-3">
+            <h2 class="text-xl font-serif text-slate-800">Consolidate the provider registry</h2>
+            <div class="flex flex-wrap gap-2">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">Worth exploring</span>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">in-process</span>
+            </div>
+            <div class="font-mono text-xs text-slate-500 space-y-0.5">
+              <div>spec/providers.json</div>
+              <div>shared/domain/provider.ts</div>
+              <div>shared/domain/provider-meta.ts</div>
+              <div>main/services/api-key-manager.ts</div>
+              <div>main/utils/resolve-language-model.ts</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 divide-x divide-slate-100 bg-slate-50/50">
+            <div class="p-5 space-y-2">
+              <p class="text-xs uppercase tracking-wider text-slate-400 font-medium">Before — 4 files for one concept</p>
+              <div class="relative" style="height: 220px;">
+                <svg viewBox="0 0 300 210" class="w-full h-full">
+                  <!-- Cross-section layers -->
+                  <rect x="20" y="10" width="260" height="36" rx="3" fill="#fef3c7" stroke="#d97706" stroke-width="1"/>
+                  <text x="150" y="32" text-anchor="middle" font-size="9" fill="#92400e" font-family="monospace">providers.json → provider.ts (validation)</text>
+
+                  <rect x="20" y="52" width="260" height="36" rx="3" fill="#fef3c7" stroke="#d97706" stroke-width="1"/>
+                  <text x="150" y="74" text-anchor="middle" font-size="9" fill="#92400e" font-family="monospace">provider-meta.ts (labels, key placeholders)</text>
+
+                  <rect x="20" y="94" width="260" height="36" rx="3" fill="#fef3c7" stroke="#d97706" stroke-width="1"/>
+                  <text x="150" y="116" text-anchor="middle" font-size="9" fill="#92400e" font-family="monospace">api-key-manager.ts (env var mapping, runtime Map)</text>
+
+                  <rect x="20" y="136" width="260" height="36" rx="3" fill="#fef3c7" stroke="#d97706" stroke-width="1"/>
+                  <text x="150" y="158" text-anchor="middle" font-size="9" fill="#92400e" font-family="monospace">resolve-language-model.ts (99-line switch)</text>
+
+                  <text x="150" y="195" text-anchor="middle" font-size="7" fill="#dc2626">Adding a provider touches all 4 layers + spec JSON</text>
+                </svg>
+              </div>
+            </div>
+            <div class="p-5 space-y-2">
+              <p class="text-xs uppercase tracking-wider text-slate-400 font-medium">After — 1 registry module</p>
+              <div class="relative" style="height: 220px;">
+                <svg viewBox="0 0 300 210" class="w-full h-full">
+                  <rect x="20" y="10" width="260" height="150" rx="6" fill="#0f172a" stroke="#334155" stroke-width="2"/>
+                  <text x="150" y="35" text-anchor="middle" font-size="11" fill="#e2e8f0" font-weight="600" font-family="monospace">ProviderRegistry</text>
+                  <line x1="40" y1="45" x2="260" y2="45" stroke="#475569" stroke-width="0.5"/>
+
+                  <text x="50" y="65" font-size="8" fill="#64748b" font-family="monospace">validate provider spec</text>
+                  <text x="50" y="80" font-size="8" fill="#64748b" font-family="monospace">resolve model → AI SDK adapter</text>
+                  <text x="50" y="95" font-size="8" fill="#64748b" font-family="monospace">key placeholder metadata</text>
+                  <text x="50" y="110" font-size="8" fill="#64748b" font-family="monospace">env var → runtime key resolution</text>
+                  <text x="50" y="125" font-size="8" fill="#64748b" font-family="monospace">list configured providers</text>
+
+                  <rect x="40" y="138" width="220" height="14" rx="2" fill="#10b981" opacity="0.2" stroke="#10b981" stroke-width="1"/>
+                  <text x="150" y="148" text-anchor="middle" font-size="7" fill="#10b981" font-family="monospace">resolveModel(provider, model) · getConfigured()</text>
+
+                  <text x="150" y="185" text-anchor="middle" font-size="7" fill="#10b981">Adding a provider = one JSON entry + one model resolver</text>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="px-6 py-4 space-y-3 border-t border-slate-100">
+            <p class="text-sm text-slate-700"><strong>Problem:</strong> Provider knowledge is scattered across 4 files with a 99-line switch statement. Adding a new provider requires coordinated edits in `providers.json`, `api-key-manager.ts` (env var), `provider-meta.ts` (placeholder), and `resolve-language-model.ts` (AI SDK mapping). No single place to reason about "what does this provider need?"</p>
+            <p class="text-sm text-slate-700"><strong>Solution:</strong> Consolidate into one `ProviderRegistry` module that owns the provider spec, metadata, key resolution, and model resolution. The spec JSON becomes a private detail; the interface is `resolveModel()` and `getProviderMeta()`.</p>
+            <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+              <li><strong>locality:</strong> new provider = one place to edit</li>
+              <li><strong>leverage:</strong> callers don't know about env vars, switches, or AI SDK internals</li>
+              <li><strong>tests:</strong> register a mock provider, assert on model resolution</li>
+              <li>delete 99-line switch, scattered env var mapping</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- Candidate 4: Unify persona resolution -->
+        <article class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="px-6 pt-6 pb-4 space-y-3">
+            <h2 class="text-xl font-serif text-slate-800">Unify the persona resolution module</h2>
+            <div class="flex flex-wrap gap-2">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">Worth exploring</span>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">ports &amp; adapters</span>
+            </div>
+            <div class="font-mono text-xs text-slate-500 space-y-0.5">
+              <div>ui/api/persona-client.ts</div>
+              <div>ui/api/custom-persona-local-repository.ts</div>
+              <div>ui/hooks/useRoles.ts</div>
+              <div>main/store/custom-personas-store.ts</div>
+              <div>main/utils/resolve-persona-context.ts</div>
+              <div>shared/domain/persona.ts</div>
+              <div>shared/domain/custom-persona.ts</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 divide-x divide-slate-100 bg-slate-50/50">
+            <div class="p-5 space-y-2">
+              <p class="text-xs uppercase tracking-wider text-slate-400 font-medium">Before — two parallel resolution paths</p>
+              <div class="rounded-lg border border-slate-200 bg-white p-4">
+                <pre class="mermaid">
+flowchart LR
+                  subgraph UI["Renderer"]
+                    A[spec/personas.json] --> B[shared/persona.ts]
+                    C[persona-client.ts] --> D{strategy}
+                    D -->|IPC| E[custom-personas-store.ts]
+                    D -->|local| F[custom-persona-local-repo.ts]
+                    D -->|unavail| G[reject]
+                    B --> H[useRoles.ts]
+                    C --> H
+                    H --> I["roles[]"]
+                  end
+                  subgraph Main
+                    E --> J[resolve-persona-context.ts]
+                    B --> J
+                    J --> K["context string"]
+                  end
+                  style D fill:#fbbf24,stroke:#d97706
+                  style F fill:#dc2626,stroke:#dc2626,color:#fff
+                  style H fill:#f1f5f9,stroke:#94a3b8
+                </pre>
+              </div>
+            </div>
+            <div class="p-5 space-y-2">
+              <p class="text-xs uppercase tracking-wider text-slate-400 font-medium">After — one resolution module per layer</p>
+              <div class="rounded-lg border border-slate-200 bg-white p-4">
+                <pre class="mermaid">
+flowchart LR
+                  subgraph shared
+                    A["PersonaRegistry"] --> B["resolvePersona(id)"]
+                  end
+                  subgraph UI["Renderer"]
+                    B --> C["useRoles()"]
+                    C --> D["roles[]"]
+                  end
+                  subgraph Main
+                    B --> E["resolve-persona-context"]
+                  end
+                  style A fill:#0f172a,color:#e2e8f0,stroke:#334155
+                  style B fill:#10b981,stroke:#10b981
+                </pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="px-6 py-4 space-y-3 border-t border-slate-100">
+            <p class="text-sm text-slate-700"><strong>Problem:</strong> Two separate resolution paths — the renderer merges built-in and custom personas through a strategy client with 3 implementations; the main process resolves context through a separate utility that bridges into the store. `custom-persona-local-repository.ts` duplicates the main store's CRUD logic for browser mode. Understanding "how does a persona get resolved?" requires bouncing across 7 files.</p>
+            <p class="text-sm text-slate-700"><strong>Solution:</strong> The existing `PersonaClient` interface is a good seam with two real adapters (IPC + localStorage). Delete `custom-persona-local-repository.ts` by moving its localStorage implementation into the client itself. Let `useRoles` consume the client directly instead of importing built-in personas separately. The main process resolver becomes a thin wrapper over the same client.</p>
+            <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+              <li><strong>locality:</strong> persona resolution bugs in one module per layer</li>
+              <li><strong>leverage:</strong> one interface to resolve any persona by ID</li>
+              <li><strong>tests:</strong> swap adapter, assert on resolved persona</li>
+              <li>delete duplicated localStorage CRUD (91 lines)</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- Candidate 5: Dead code cleanup -->
+        <article class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="px-6 pt-6 pb-4 space-y-3">
+            <h2 class="text-xl font-serif text-slate-800">Remove orphaned modules and unexercised store</h2>
+            <div class="flex flex-wrap gap-2">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">Speculative</span>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">in-process</span>
+            </div>
+            <div class="font-mono text-xs text-slate-500 space-y-0.5">
+              <div>ui/hooks/usePromtizer.ts — unused hook</div>
+              <div>ui/hooks/useStreamedMarkdown.ts — unused hook</div>
+              <div>main/store/prompt-sessions-store.ts — no consumer</div>
+              <div>ui/services/promtizer.ts — partially superseded</div>
+            </div>
+          </div>
+
+          <div class="px-6 py-4 space-y-3 border-t border-slate-100">
+            <p class="text-sm text-slate-700"><strong>Problem:</strong> Three modules have no consumers. `usePromtizer` was superseded by `usePromptGeneration`. `useStreamedMarkdown` was built for streaming output that was never wired. `prompt-sessions-store` saves sessions but no UI reads them. They fail the deletion test: deleting all three removes complexity with zero spread.</p>
+            <p class="text-sm text-slate-700"><strong>Solution:</strong> Delete them. If streaming or session history is needed later, the domain types in `shared/` survive. The seam at `LlmAdapter` still supports streaming if the output channel changes.</p>
+            <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+              <li><strong>locality:</strong> no dead code to confuse newcomers</li>
+              <li>removes ~200 lines with zero risk</li>
+            </ul>
+          </div>
+        </article>
+
+      </section>
+
+      <section id="top-recommendation" class="space-y-4">
+        <div class="bg-slate-900 rounded-xl p-6 text-white">
+          <h2 class="text-lg font-serif mb-3">Top recommendation</h2>
+          <p class="text-sm text-slate-300 mb-4">
+            <a href="#" onclick="document.getElementById('candidates').scrollIntoView({behavior:'smooth'}); return false;" class="text-emerald-400 underline underline-offset-2 hover:text-emerald-300">Open the IPC handler composition root for injection</a>
+          </p>
+          <p class="text-sm text-slate-400 leading-relaxed">
+            This is the highest-leverage change. The IPC handlers are the composition root of the entire main process — every main-process feature flows through them. Right now they are untestable without module mocking because adapters are baked at module scope. Opening this seam gives you testability across the entire main-process surface (prompt generation, evaluation, session saving, persona CRUD, key management) with a single structural change. It also unblocks meaningful tests for <code class="text-emerald-400/80">generate-refined-prompt.ts</code>, which is already well-structured with injected dependencies but can't be exercised through its actual call path. Two adapters (production Vercel AI SDK, in-memory test fake) justify the seam.
+          </p>
+        </div>
+      </section>
+
+    </main>
+  </body>
+</html>

@@ -4,7 +4,7 @@ import {
 } from "../../shared/domain/prompt-evaluation.js";
 import { getErrorMessage } from "../../shared/utils/error.js";
 import { logger } from "../../shared/utils/logger.js";
-import { resolveLanguageModel } from "../utils/resolve-language-model.js";
+import { resolveLanguageModel } from "./provider-registry.js";
 import type { GenerateTextFn } from "./LLMAdapter.js";
 
 export interface PromptEvaluatorOptions {

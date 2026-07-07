@@ -7,6 +7,8 @@ import type {
   GeneratePromptPayload,
   ListConfiguredApiKeysResult,
   ListCustomPersonasResult,
+  UpdateCustomPersonaInput,
+  UpdateCustomPersonaResult,
 } from "../contracts/ipc";
 
 declare global {
@@ -17,6 +19,9 @@ declare global {
       createCustomPersona: (
         payload: CreateCustomPersonaInput,
       ) => Promise<CreateCustomPersonaResult>;
+      updateCustomPersona: (
+        payload: UpdateCustomPersonaInput,
+      ) => Promise<UpdateCustomPersonaResult>;
       deleteCustomPersona: (
         payload: DeleteCustomPersonaInput,
       ) => Promise<DeleteCustomPersonaResult>;

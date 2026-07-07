@@ -168,7 +168,7 @@ describe("generateRefinedPrompt", () => {
 
     expect(result).toEqual({
       ok: false,
-      message: "Unknown persona. Select a built-in persona or create a custom one.",
+      message: "Unknown persona. Create or select a persona before generating.",
     });
     expect(generatePrompt).not.toHaveBeenCalled();
     expect(savePromptSession).not.toHaveBeenCalled();

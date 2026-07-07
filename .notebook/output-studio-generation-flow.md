@@ -20,6 +20,10 @@ Main:
 - Successful generations are saved best-effort as `PromptSession` snapshots with raw input, persona, provider/model, output, optional usage/evaluation, `favorite`, and `createdAt`; no history/favorites UI consumes this yet
 - API keys resolve in main-process code: runtime keys from Settings take priority, then environment variables loaded from `.env` in dev mode.
 
+Provider wiring:
+- Provider options come from `apps/promptizer/spec/providers.json`; the shared `PROVIDER_IDS` tuple drives IPC/storage validation.
+- `apps/promptizer/main/utils/resolve-language-model.ts` maps provider ids to AI SDK adapters. OpenCode Zen uses `@ai-sdk/openai-compatible` with default base URL `https://opencode.ai/zen/v1`, `OPENCODE_API_KEY`, optional `OPENCODE_ZEN_BASE_URL`, and models `big-pickle`, `minimax-m3-free`, and `north-mini-code-free`.
+
 Contract: `apps/promptizer/shared/contracts/ipc.ts`
 
-Updated: 2026-06-09
+Updated: 2026-06-11

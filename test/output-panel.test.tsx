@@ -1,12 +1,22 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { OutputPanel } from "../apps/promptizer/ui/components/OutputPanel";
+import type { PromtizerResponse } from "../apps/promptizer/ui/types/api";
+
+const structuredResponse: PromtizerResponse = {
+  title: "Refined Prompt",
+  description: "A concise prompt for a todo app.",
+  requirements: ["Must include CRUD operations."],
+  expectations: "The assistant should provide a complete implementation plan.",
+  goodToGo: true,
+};
 
 describe("OutputPanel", () => {
   it("shows token usage when generation returns tokens", () => {
     render(
       <OutputPanel
-        outputPrompt="Refined prompt"
+        outputPrompt={JSON.stringify(structuredResponse, null, 2)}
+        promtizerResponse={structuredResponse}
         outputIsError={false}
         generationError=""
         isGenerating={false}
@@ -25,7 +35,8 @@ describe("OutputPanel", () => {
   it("does not show evaluation copy when only token usage exists", () => {
     render(
       <OutputPanel
-        outputPrompt="Refined prompt"
+        outputPrompt={JSON.stringify(structuredResponse, null, 2)}
+        promtizerResponse={structuredResponse}
         outputIsError={false}
         generationError=""
         isGenerating={false}
@@ -40,10 +51,11 @@ describe("OutputPanel", () => {
     expect(screen.queryByText(/feedback/i)).not.toBeInTheDocument();
   });
 
-  it("AC11 shows prompt evaluation when generation returns feedback", () => {
+  it("keeps prompt evaluation collapsed until the toggle is opened", () => {
     render(
       <OutputPanel
-        outputPrompt="Refined prompt"
+        outputPrompt={JSON.stringify(structuredResponse, null, 2)}
+        promtizerResponse={structuredResponse}
         outputIsError={false}
         generationError=""
         isGenerating={false}
@@ -58,10 +70,28 @@ describe("OutputPanel", () => {
       />,
     );
 
+    const toggle = screen.getByRole("button", { name: /show prompt score/i });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByText("Prompt score")).not.toBeVisible();
+
+    fireEvent.click(toggle);
+
+    expect(screen.getByRole("button", { name: /hide prompt score/i })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
     expect(screen.getByText("Prompt score")).toBeInTheDocument();
     expect(screen.getByText("4/5")).toBeInTheDocument();
     expect(screen.getByText("Clear prompt with a focused goal.")).toBeInTheDocument();
     expect(screen.getByText("Add input constraints.")).toBeInTheDocument();
     expect(screen.getByText("Specify the output format.")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /hide prompt score/i }));
+
+    expect(screen.getByRole("button", { name: /show prompt score/i })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    expect(screen.getByText("Prompt score")).not.toBeVisible();
   });
 });

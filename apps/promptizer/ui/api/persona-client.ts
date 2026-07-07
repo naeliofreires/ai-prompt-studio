@@ -5,27 +5,133 @@ import {
   type DeleteCustomPersonaInput,
   type DeleteCustomPersonaResult,
   type ListCustomPersonasResult,
+  updateCustomPersonaInputSchema,
+  type UpdateCustomPersonaInput,
+  type UpdateCustomPersonaResult,
 } from "../../shared";
-import {
-  createLocalCustomPersona,
-  deleteLocalCustomPersona,
-  listLocalCustomPersonas,
-} from "./custom-persona-local-repository";
+import { customPersonaSchema } from "../../shared/domain/custom-persona";
 import {
   getAiPromptStudioBridge,
   hasBridgeMethod,
   type AiPromptStudioBridge,
 } from "./electron-bridge";
+import { getBrowserStorage } from "../utils/browser-storage";
+
+export const CUSTOM_PERSONAS_STORAGE_KEY = "promptizer.custom-personas";
+export const CUSTOM_PERSONAS_SEED_MARKER_KEY = "promptizer.custom-personas.seeded";
+
+const SEED_PERSONAS: ListCustomPersonasResult["personas"] = [
+  {
+    id: "11111111-1111-4111-8111-111111111111",
+    label: "Frontend Specialist",
+    role: "Refines prompts for React, TypeScript, browser APIs, and client-side architecture.",
+  },
+  {
+    id: "22222222-2222-4222-8222-222222222222",
+    label: "Backend Specialist",
+    role: "Refines prompts for APIs, databases, distributed systems, and server-side design.",
+  },
+];
+
+function ensureLocalSeedPersonasInitialized(): void {
+  const storage = getBrowserStorage();
+  if (!storage) return;
+
+  if (storage.getItem(CUSTOM_PERSONAS_SEED_MARKER_KEY) === "true") return;
+
+  const raw = storage.getItem(CUSTOM_PERSONAS_STORAGE_KEY);
+  const personas = raw ? customPersonaSchema.array().parse(JSON.parse(raw)) : [];
+  if (personas.length === 0) {
+    storage.setItem(CUSTOM_PERSONAS_STORAGE_KEY, JSON.stringify(SEED_PERSONAS));
+  }
+
+  storage.setItem(CUSTOM_PERSONAS_SEED_MARKER_KEY, "true");
+}
+
+export function readLocalCustomPersonas(): ListCustomPersonasResult["personas"] {
+  const storage = getBrowserStorage();
+  if (!storage) return [];
+
+  ensureLocalSeedPersonasInitialized();
+
+  const raw = storage.getItem(CUSTOM_PERSONAS_STORAGE_KEY);
+  if (!raw) return [];
+
+  return customPersonaSchema.array().parse(JSON.parse(raw));
+}
+
+function writeLocalCustomPersonas(personas: ListCustomPersonasResult["personas"]): void {
+  const storage = getBrowserStorage();
+  if (!storage) return;
+
+  storage.setItem(
+    CUSTOM_PERSONAS_STORAGE_KEY,
+    JSON.stringify(customPersonaSchema.array().parse(personas)),
+  );
+}
+
+function createLocalCustomPersona(
+  input: CreateCustomPersonaInput,
+): CreateCustomPersonaResult {
+  const parsed = createCustomPersonaInputSchema.parse(input);
+  const persona = customPersonaSchema.parse({
+    id: crypto.randomUUID(),
+    label: parsed.label,
+    role: parsed.role,
+  });
+
+  writeLocalCustomPersonas([...readLocalCustomPersonas(), persona]);
+  return persona;
+}
+
+function deleteLocalCustomPersona(
+  input: DeleteCustomPersonaInput,
+): DeleteCustomPersonaResult {
+  const personas = readLocalCustomPersonas();
+  const next = personas.filter((persona) => persona.id !== input.id);
+  const deleted = next.length < personas.length;
+
+  if (deleted) {
+    writeLocalCustomPersonas(next);
+  }
+
+  return { deleted };
+}
+
+function updateLocalCustomPersona(
+  input: UpdateCustomPersonaInput,
+): UpdateCustomPersonaResult {
+  const parsed = updateCustomPersonaInputSchema.parse(input);
+  const personas = readLocalCustomPersonas();
+  const existing = personas.find((persona) => persona.id === parsed.id);
+
+  if (!existing) {
+    throw new Error("Custom persona not found.");
+  }
+
+  const updated = customPersonaSchema.parse({
+    ...existing,
+    label: parsed.label,
+    role: parsed.role,
+  });
+
+  writeLocalCustomPersonas(
+    personas.map((persona) => (persona.id === parsed.id ? updated : persona)),
+  );
+
+  return updated;
+}
 
 export interface PersonaClient {
   listCustomPersonas: () => Promise<ListCustomPersonasResult>;
   createCustomPersona: (input: CreateCustomPersonaInput) => Promise<CreateCustomPersonaResult>;
+  updateCustomPersona: (input: UpdateCustomPersonaInput) => Promise<UpdateCustomPersonaResult>;
   deleteCustomPersona: (input: DeleteCustomPersonaInput) => Promise<DeleteCustomPersonaResult>;
 }
 
 type CustomPersonaBridge = Pick<
   AiPromptStudioBridge,
-  "listCustomPersonas" | "createCustomPersona" | "deleteCustomPersona"
+  "listCustomPersonas" | "createCustomPersona" | "updateCustomPersona" | "deleteCustomPersona"
 >;
 
 function hasCustomPersonaBridge(
@@ -34,6 +140,7 @@ function hasCustomPersonaBridge(
   return (
     hasBridgeMethod(bridge, "listCustomPersonas") &&
     hasBridgeMethod(bridge, "createCustomPersona") &&
+    hasBridgeMethod(bridge, "updateCustomPersona") &&
     hasBridgeMethod(bridge, "deleteCustomPersona")
   );
 }
@@ -43,13 +150,16 @@ function createIpcPersonaClient(bridge: CustomPersonaBridge): PersonaClient {
     listCustomPersonas: () => bridge.listCustomPersonas(),
     createCustomPersona: (input) =>
       bridge.createCustomPersona(createCustomPersonaInputSchema.parse(input)),
+    updateCustomPersona: (input) =>
+      bridge.updateCustomPersona(updateCustomPersonaInputSchema.parse(input)),
     deleteCustomPersona: (input) => bridge.deleteCustomPersona(input),
   };
 }
 
 const localPersonaClient: PersonaClient = {
-  listCustomPersonas: () => Promise.resolve(listLocalCustomPersonas()),
+  listCustomPersonas: () => Promise.resolve({ personas: readLocalCustomPersonas() }),
   createCustomPersona: (input) => Promise.resolve(createLocalCustomPersona(input)),
+  updateCustomPersona: (input) => Promise.resolve(updateLocalCustomPersona(input)),
   deleteCustomPersona: (input) => Promise.resolve(deleteLocalCustomPersona(input)),
 };
 
@@ -57,6 +167,8 @@ const unavailablePersonaClient: PersonaClient = {
   listCustomPersonas: () =>
     Promise.reject(new Error("Restart the desktop app to load custom personas.")),
   createCustomPersona: () =>
+    Promise.reject(new Error("Restart the desktop app to load the latest custom persona bridge.")),
+  updateCustomPersona: () =>
     Promise.reject(new Error("Restart the desktop app to load the latest custom persona bridge.")),
   deleteCustomPersona: () =>
     Promise.reject(new Error("Restart the desktop app to load the latest custom persona bridge.")),
@@ -72,5 +184,6 @@ function resolvePersonaClient(): PersonaClient {
 export const personaClient: PersonaClient = {
   listCustomPersonas: () => resolvePersonaClient().listCustomPersonas(),
   createCustomPersona: (input) => resolvePersonaClient().createCustomPersona(input),
+  updateCustomPersona: (input) => resolvePersonaClient().updateCustomPersona(input),
   deleteCustomPersona: (input) => resolvePersonaClient().deleteCustomPersona(input),
 };

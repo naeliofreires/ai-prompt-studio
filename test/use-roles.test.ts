@@ -1,12 +1,12 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { PERSONAS } from "../apps/promptizer/shared";
 import { useRoles } from "../apps/promptizer/ui/hooks/useRoles";
 
 const mocks = vi.hoisted(() => ({
   createCustomPersona: vi.fn(),
   deleteCustomPersona: vi.fn(),
   listCustomPersonas: vi.fn(),
+  updateCustomPersona: vi.fn(),
 }));
 
 vi.mock("../apps/promptizer/ui/api/persona-client", () => ({
@@ -14,6 +14,7 @@ vi.mock("../apps/promptizer/ui/api/persona-client", () => ({
     createCustomPersona: mocks.createCustomPersona,
     deleteCustomPersona: mocks.deleteCustomPersona,
     listCustomPersonas: mocks.listCustomPersonas,
+    updateCustomPersona: mocks.updateCustomPersona,
   },
 }));
 
@@ -29,7 +30,7 @@ describe("useRoles", () => {
     mocks.listCustomPersonas.mockResolvedValue({ personas: [] });
   });
 
-  it("loads built-in roles plus custom personas", async () => {
+  it("loads editable personas from the persona client", async () => {
     mocks.listCustomPersonas.mockResolvedValue({ personas: [customPersona] });
 
     const { result } = renderHook(() => useRoles());
@@ -40,12 +41,6 @@ describe("useRoles", () => {
 
     expect(result.current.error).toBe("");
     expect(result.current.roles).toEqual([
-      ...PERSONAS.map((persona) => ({
-        id: persona.id,
-        title: persona.label,
-        description: persona.role,
-        source: "builtin",
-      })),
       {
         id: customPersona.id,
         title: customPersona.label,
@@ -65,7 +60,7 @@ describe("useRoles", () => {
     });
 
     expect(result.current.error).toBe("Custom persona bridge unavailable.");
-    expect(result.current.roles).toHaveLength(PERSONAS.length);
+    expect(result.current.roles).toEqual([]);
   });
 
   it("adds created custom roles to the role list", async () => {
@@ -122,5 +117,38 @@ describe("useRoles", () => {
     expect(result.current.roles).not.toContainEqual(
       expect.objectContaining({ id: customPersona.id }),
     );
+  });
+
+  it("updates roles through the custom persona client", async () => {
+    mocks.listCustomPersonas.mockResolvedValue({ personas: [customPersona] });
+    mocks.updateCustomPersona.mockResolvedValue({
+      id: customPersona.id,
+      label: "Frontend Lead",
+      role: "Lead frontend implementation.",
+    });
+    const { result } = renderHook(() => useRoles());
+
+    await waitFor(() => {
+      expect(result.current.roles).toContainEqual(expect.objectContaining({ id: customPersona.id }));
+    });
+
+    await act(async () => {
+      await result.current.updateRole(customPersona.id, {
+        title: " Frontend Lead ",
+        description: " Lead frontend implementation. ",
+      });
+    });
+
+    expect(mocks.updateCustomPersona).toHaveBeenCalledWith({
+      id: customPersona.id,
+      label: "Frontend Lead",
+      role: "Lead frontend implementation.",
+    });
+    expect(result.current.roles).toContainEqual({
+      id: customPersona.id,
+      title: "Frontend Lead",
+      description: "Lead frontend implementation.",
+      source: "custom",
+    });
   });
 });

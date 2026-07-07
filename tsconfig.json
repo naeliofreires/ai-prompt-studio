@@ -19,5 +19,11 @@
     "noFallthroughCasesInSwitch": true,
     "types": ["vite/client"]
   },
-  "include": ["src/ui", "apps/promptizer", "src/vite-env.d.ts", "vite.config.ts", "vitest.config.ts"]
+  "include": [
+    "src/ui",
+    "apps/promptizer",
+    "src/vite-env.d.ts",
+    "vite.config.ts",
+    "vitest.config.ts"
+  ]
 }

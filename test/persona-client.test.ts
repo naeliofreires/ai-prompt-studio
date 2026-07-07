@@ -24,6 +24,11 @@ describe("personaClient", () => {
       label: "Architect",
       role: "Design clear module boundaries.",
     });
+    const updated = await personaClient.updateCustomPersona({
+      id: created.id,
+      label: "Architect",
+      role: "Design explicit module boundaries.",
+    });
     const listed = await personaClient.listCustomPersonas();
     const deleted = await personaClient.deleteCustomPersona({ id: created.id });
 
@@ -32,9 +37,34 @@ describe("personaClient", () => {
       label: "Architect",
       role: "Design clear module boundaries.",
     });
-    expect(listed.personas).toEqual([created]);
+    expect(updated).toEqual({
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      label: "Architect",
+      role: "Design explicit module boundaries.",
+    });
+    expect(listed.personas).toEqual([
+      expect.objectContaining({ label: "Frontend Specialist" }),
+      expect.objectContaining({ label: "Backend Specialist" }),
+      updated,
+    ]);
     expect(deleted).toEqual({ deleted: true });
-    expect(readLocalCustomPersonas()).toEqual([]);
+    expect(readLocalCustomPersonas()).toEqual([
+      expect.objectContaining({ label: "Frontend Specialist" }),
+      expect.objectContaining({ label: "Backend Specialist" }),
+    ]);
+  });
+
+  it("does not recreate deleted local seed personas", async () => {
+    const listed = await personaClient.listCustomPersonas();
+    const frontend = listed.personas.find((persona) => persona.label === "Frontend Specialist");
+
+    expect(frontend).toBeDefined();
+    await expect(personaClient.deleteCustomPersona({ id: frontend!.id })).resolves.toEqual({
+      deleted: true,
+    });
+    await expect(personaClient.listCustomPersonas()).resolves.toEqual({
+      personas: [expect.objectContaining({ label: "Backend Specialist" })],
+    });
   });
 
   it("delegates to IPC when the custom persona bridge is available", async () => {
@@ -46,18 +76,33 @@ describe("personaClient", () => {
         label: "Reviewer",
         role: "Review carefully.",
       }),
+      updateCustomPersona: vi.fn().mockResolvedValue({
+        id: "550e8400-e29b-41d4-a716-446655440000",
+        label: "Reviewer",
+        role: "Review carefully.",
+      }),
       deleteCustomPersona: vi.fn().mockResolvedValue({ deleted: true }),
       setApiKeys: vi.fn(),
       clearAllApiKeys: vi.fn(),
-    } satisfies Window["aiPromptStudio"];
+    };
     setAiPromptStudioBridge(bridge);
 
     await personaClient.listCustomPersonas();
     await personaClient.createCustomPersona({ label: "Reviewer", role: "Review carefully." });
+    await personaClient.updateCustomPersona({
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      label: "Reviewer",
+      role: "Review carefully.",
+    });
     await personaClient.deleteCustomPersona({ id: "550e8400-e29b-41d4-a716-446655440000" });
 
     expect(bridge.listCustomPersonas).toHaveBeenCalledTimes(1);
     expect(bridge.createCustomPersona).toHaveBeenCalledWith({
+      label: "Reviewer",
+      role: "Review carefully.",
+    });
+    expect(bridge.updateCustomPersona).toHaveBeenCalledWith({
+      id: "550e8400-e29b-41d4-a716-446655440000",
       label: "Reviewer",
       role: "Review carefully.",
     });
@@ -73,6 +118,13 @@ describe("personaClient", () => {
     await expect(personaClient.listCustomPersonas()).rejects.toThrow(/load custom personas/i);
     await expect(
       personaClient.createCustomPersona({ label: "Reviewer", role: "Review carefully." }),
+    ).rejects.toThrow(/custom persona bridge/i);
+    await expect(
+      personaClient.updateCustomPersona({
+        id: "550e8400-e29b-41d4-a716-446655440000",
+        label: "Reviewer",
+        role: "Review carefully.",
+      }),
     ).rejects.toThrow(/custom persona bridge/i);
   });
 
@@ -94,5 +146,12 @@ describe("personaClient", () => {
     await expect(
       personaClient.deleteCustomPersona({ id: "550e8400-e29b-41d4-a716-446655440000" }),
     ).resolves.toEqual({ deleted: false });
+    expect(() =>
+      personaClient.updateCustomPersona({
+        id: "550e8400-e29b-41d4-a716-446655440000",
+        label: "Architect",
+        role: "Design clear module boundaries.",
+      }),
+    ).toThrow(/custom persona not found/i);
   });
 });

@@ -3,6 +3,7 @@ import {
   createCustomPersonaInputSchema,
   customPersonaSchema,
   deleteCustomPersonaInputSchema,
+  updateCustomPersonaInputSchema,
 } from "../domain/custom-persona.js";
 import { PERSONA_IDS } from "../domain/persona.js";
 import { promptEvaluationSchema } from "../domain/prompt-evaluation.js";
@@ -55,6 +56,7 @@ export const ipcChannels = {
   generatePrompt: "prompt:generate",
   listCustomPersonas: "persona:list-custom",
   createCustomPersona: "persona:create-custom",
+  updateCustomPersona: "persona:update-custom",
   deleteCustomPersona: "persona:delete-custom",
   listConfiguredApiKeys: "apiKeys:listConfigured",
   setApiKeys: "apiKeys:set",
@@ -66,6 +68,8 @@ export const listCustomPersonasResultSchema = z.object({
 });
 
 export const createCustomPersonaResultSchema = customPersonaSchema;
+
+export const updateCustomPersonaResultSchema = customPersonaSchema;
 
 export const deleteCustomPersonaResultSchema = z.object({
   deleted: z.boolean(),
@@ -79,13 +83,19 @@ export type GeneratePromptPayload = z.infer<typeof generatePromptPayloadSchema>;
 export type GeneratePromptAttachment = NonNullable<GeneratePromptPayload["attachments"]>[number];
 export type ListCustomPersonasResult = z.infer<typeof listCustomPersonasResultSchema>;
 export type CreateCustomPersonaResult = z.infer<typeof createCustomPersonaResultSchema>;
+export type UpdateCustomPersonaResult = z.infer<typeof updateCustomPersonaResultSchema>;
 export type DeleteCustomPersonaResult = z.infer<typeof deleteCustomPersonaResultSchema>;
 export type ListConfiguredApiKeysResult = z.infer<typeof listConfiguredApiKeysResultSchema>;
 export type {
   CreateCustomPersonaInput,
   DeleteCustomPersonaInput,
+  UpdateCustomPersonaInput,
 } from "../domain/custom-persona.js";
-export { createCustomPersonaInputSchema, deleteCustomPersonaInputSchema };
+export {
+  createCustomPersonaInputSchema,
+  deleteCustomPersonaInputSchema,
+  updateCustomPersonaInputSchema,
+};
 
 const generatePromptSuccessIpcSchema = z.object({
   ok: z.literal(true),

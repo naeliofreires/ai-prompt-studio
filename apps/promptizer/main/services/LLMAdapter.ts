@@ -6,7 +6,7 @@ import type {
 } from "../../shared/contracts/llm.js";
 import { logger } from "../../shared/utils/logger.js";
 import { buildRefinementSystemPrompt } from "../utils/build-refinement-system-prompt.js";
-import { resolveLanguageModel } from "../utils/resolve-language-model.js";
+import { resolveLanguageModel } from "./provider-registry.js";
 
 type GenerateTextFnResponse = Promise<{
   text: string;

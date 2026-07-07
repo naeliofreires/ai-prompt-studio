@@ -1,10 +1,8 @@
 import { useState, type ComponentType } from "react";
-import { GitPullRequest } from "lucide-react";
-import { GhReviewApp } from "../../../apps/gh-review/ui/app/GhReviewApp";
-import { PromptizerApp } from "../../../apps/promptizer/ui/app/PromptizerApp";
+import { PromptizerApp } from "../../../apps/promptizer/ui/index";
 import styles from "./App.module.css";
 
-type HubAppId = "promptizer" | "gh-review";
+type HubAppId = "promptizer";
 
 interface HubAppIconProps {
   size?: number;
@@ -18,7 +16,7 @@ interface HubApp {
 }
 
 function PromptizerMenuIcon({ className }: HubAppIconProps) {
-  return <img src="/icon.svg" alt="" aria-hidden="true" className={className} />;
+  return <img src="./icon.svg" alt="" aria-hidden="true" className={className} />;
 }
 
 const hubApps: HubApp[] = [
@@ -27,15 +25,15 @@ const hubApps: HubApp[] = [
     label: "Promptizer",
     icon: PromptizerMenuIcon,
   },
-  {
-    id: "gh-review",
-    label: "GH Review",
-    icon: GitPullRequest,
-  },
 ];
 
 export function App() {
   const [activeApp, setActiveApp] = useState<HubAppId>("promptizer");
+
+  function selectApp(appId: HubAppId) {
+    setActiveApp(appId);
+    window.history.replaceState(null, "", "/");
+  }
 
   return (
     <div className={styles.hubShell}>
@@ -53,7 +51,7 @@ export function App() {
                 aria-label={app.label}
                 aria-current={isActive ? "page" : undefined}
                 title={app.label}
-                onClick={() => setActiveApp(app.id)}
+                onClick={() => selectApp(app.id)}
               >
                 <Icon size={22} className={styles.appButtonIcon} />
               </button>
@@ -62,9 +60,7 @@ export function App() {
         </nav>
       </aside>
 
-      <div className={styles.appViewport}>
-        {activeApp === "promptizer" ? <PromptizerApp /> : <GhReviewApp />}
-      </div>
+      <div className={styles.appViewport}>{activeApp === "promptizer" && <PromptizerApp />}</div>
     </div>
   );
 }

@@ -10,7 +10,7 @@ The current implementation is a local-first desktop app with Electron packaging 
 - Built-in personas for frontend, backend, UI/UX, and general prompting.
 - Custom persona creation and deletion.
 - Provider/model selection from `apps/promptizer/spec/providers.json`.
-- Provider adapters for Google Gemini, GLM, and DeepSeek through the Vercel AI SDK.
+- Provider adapters for Google Gemini, GLM, DeepSeek, and OpenCode Zen through the Vercel AI SDK.
 - API key settings UI, with environment-variable fallback in the Electron main process.
 - Prompt refinement through a validated IPC contract.
 - Markdown output rendering, copy-to-clipboard feedback, and token usage display when the provider returns it.
@@ -53,11 +53,12 @@ scripts/      Build helper scripts
 
 The app supports these providers:
 
-| Provider      | Models                               | API key                          |
-| ------------- | ------------------------------------ | -------------------------------- |
-| Google Gemini | `gemini-2.5-pro`                     | `GOOGLE_GENERATIVE_AI_API_KEY`   |
-| GLM           | `glm-4.6`, `glm-4.7`, `glm-5`        | `GLM_API_KEY` or `ZHIPU_API_KEY` |
-| DeepSeek      | `deepseek-chat`, `deepseek-reasoner` | `DEEPSEEK_API_KEY`               |
+| Provider      | Models                                      | API key                          |
+| ------------- | ------------------------------------------- | -------------------------------- |
+| Google Gemini | `gemini-2.5-pro`                            | `GOOGLE_GENERATIVE_AI_API_KEY`   |
+| GLM           | `glm-4.6`, `glm-4.7`, `glm-5`               | `GLM_API_KEY` or `ZHIPU_API_KEY` |
+| DeepSeek      | `deepseek-chat`, `deepseek-reasoner`        | `DEEPSEEK_API_KEY`               |
+| OpenCode Zen  | `big-pickle`, `minimax-m3-free`, `north-mini-code-free` | `OPENCODE_API_KEY`               |
 
 You can enter keys in the Settings modal at runtime, or set them in `.env` for local development.
 
@@ -129,12 +130,15 @@ ZHIPU_API_KEY=
 GLM_BASE_URL=
 DEEPSEEK_API_KEY=
 DEEPSEEK_BASE_URL=
+OPENCODE_API_KEY=
+OPENCODE_ZEN_BASE_URL=
 ```
 
 Defaults:
 
 - GLM uses `https://api.z.ai/api/paas/v4/` unless `GLM_BASE_URL` is set.
 - DeepSeek uses `https://api.deepseek.com/v1` unless `DEEPSEEK_BASE_URL` is set.
+- OpenCode Zen uses `https://opencode.ai/zen/v1` unless `OPENCODE_ZEN_BASE_URL` is set.
 
 Security note: API keys entered in Settings are stored in renderer `localStorage` and mirrored into main-process memory for local use. This is appropriate for a local BYOK development tool, but a production deployment should move provider credentials behind a server-side proxy or native secure storage.
 

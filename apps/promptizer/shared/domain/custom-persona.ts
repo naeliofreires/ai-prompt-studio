@@ -20,3 +20,11 @@ export const deleteCustomPersonaInputSchema = z.object({
 });
 
 export type DeleteCustomPersonaInput = z.infer<typeof deleteCustomPersonaInputSchema>;
+
+export const updateCustomPersonaInputSchema = z.object({
+  id: z.string().uuid(),
+  label: z.string().trim().min(1),
+  role: z.string().trim().min(1),
+});
+
+export type UpdateCustomPersonaInput = z.infer<typeof updateCustomPersonaInputSchema>;

@@ -149,6 +149,34 @@
   box-shadow: 0 0 20px rgba(34, 211, 238, 0.18);
 }
 
+.fieldInput[aria-invalid="true"],
+.fieldTextarea[aria-invalid="true"] {
+  border-color: rgba(248, 113, 113, 0.72);
+  box-shadow: 0 0 18px rgba(248, 113, 113, 0.12);
+}
+
+.fieldInput:disabled,
+.fieldTextarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.fieldHelp {
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: rgba(207, 250, 254, 0.58);
+}
+
+.formError {
+  margin: 0;
+  border: 1px solid rgba(248, 113, 113, 0.32);
+  background: rgba(127, 29, 29, 0.22);
+  padding: 0.65rem 0.75rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: #fecaca;
+}
+
 .footer {
   display: flex;
   justify-content: flex-end;
@@ -191,6 +219,11 @@
 
 .cancelButton:hover {
   background: rgba(34, 211, 238, 0.1);
+}
+
+.cancelButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .primaryButton {

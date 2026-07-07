@@ -4,6 +4,7 @@ import {
   usePromptGeneration,
   type UsePromptGenerationArgs,
 } from "../apps/promptizer/ui/hooks/usePromptGeneration";
+import type { PromtizerResponse } from "../apps/promptizer/ui/types/api";
 import type { Role } from "../apps/promptizer/ui/types/role";
 
 const geminiProvider = {
@@ -150,9 +151,16 @@ describe("usePromptGeneration", () => {
   });
 
   it("sets output and usage on success", async () => {
+    const structuredResponse: PromtizerResponse = {
+      title: "Refined Prompt",
+      description: "A concise prompt for a todo app.",
+      requirements: ["Must include CRUD operations."],
+      expectations: "The assistant should provide a complete implementation plan.",
+      goodToGo: true,
+    };
     const generatePrompt = vi.fn().mockResolvedValue({
       ok: true,
-      prompt: "You are…",
+      prompt: JSON.stringify(structuredResponse),
       tokensUsed: 42,
     });
 
@@ -173,15 +181,23 @@ describe("usePromptGeneration", () => {
     });
 
     expect(result.current.isGenerating).toBe(false);
-    expect(result.current.outputPrompt).toBe("You are…");
+    expect(result.current.promtizerResponse).toEqual(structuredResponse);
+    expect(result.current.outputPrompt).toBe(JSON.stringify(structuredResponse, null, 2));
     expect(result.current.usage).toEqual({ tokensUsed: 42 });
     expect(result.current.generationError).toBe("");
   });
 
   it("AC11 sets evaluation when prompt generation returns prompt feedback", async () => {
+    const structuredResponse: PromtizerResponse = {
+      title: "Refined Prompt",
+      description: "A concise prompt for a todo app.",
+      requirements: ["Must include CRUD operations."],
+      expectations: "The assistant should provide a complete implementation plan.",
+      goodToGo: true,
+    };
     const generatePrompt = vi.fn().mockResolvedValue({
       ok: true,
-      prompt: "You are…",
+      prompt: JSON.stringify(structuredResponse),
       tokensUsed: 42,
       evaluation: {
         score: 4,
@@ -214,9 +230,16 @@ describe("usePromptGeneration", () => {
   });
 
   it("does not set evaluation when the provider only returns token usage", async () => {
+    const structuredResponse: PromtizerResponse = {
+      title: "Refined Prompt",
+      description: "A concise prompt for a todo app.",
+      requirements: ["Must include CRUD operations."],
+      expectations: "The assistant should provide a complete implementation plan.",
+      goodToGo: true,
+    };
     const generatePrompt = vi.fn().mockResolvedValue({
       ok: true,
-      prompt: "You are…",
+      prompt: JSON.stringify(structuredResponse),
       tokensUsed: 42,
     });
 
@@ -244,7 +267,7 @@ describe("usePromptGeneration", () => {
     const attachments = [
       {
         name: "notes.txt",
-        mimeType: "text/plain",
+        mimeType: "text/plain" as const,
         sizeBytes: 42,
         content: "Use this as context.",
       },
@@ -287,19 +310,19 @@ describe("usePromptGeneration", () => {
     const visibleAttachments = [
       {
         name: "brief.txt",
-        mimeType: "text/plain",
+        mimeType: "text/plain" as const,
         sizeBytes: 23,
         content: "Use this brief.",
       },
       {
         name: "requirements.md",
-        mimeType: "text/markdown",
+        mimeType: "text/markdown" as const,
         sizeBytes: 39,
         content: "# Requirements\n\nKeep these constraints.",
       },
       {
         name: "notes.txt",
-        mimeType: "text/plain",
+        mimeType: "text/plain" as const,
         sizeBytes: 31,
         content: "Additional notes.",
       },
@@ -339,7 +362,7 @@ describe("usePromptGeneration", () => {
     const attachments = [
       {
         name: "notes.txt",
-        mimeType: "text/plain",
+        mimeType: "text/plain" as const,
         sizeBytes: 42,
         content: "Use this as context.",
       },
@@ -371,7 +394,7 @@ describe("usePromptGeneration", () => {
     const attachments = [
       {
         name: "notes.md",
-        mimeType: "text/markdown",
+        mimeType: "text/markdown" as const,
         sizeBytes: 42,
         content: "# Notes\n\nUse this as context.",
       },
@@ -414,7 +437,7 @@ describe("usePromptGeneration", () => {
     const attachments = [
       {
         name: "notes.md",
-        mimeType: "text/markdown",
+        mimeType: "text/markdown" as const,
         sizeBytes: 42,
         content: "# Notes\n\nUse this as context.",
       },

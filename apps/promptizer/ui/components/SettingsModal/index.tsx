@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Eye, EyeOff, Save, Trash2 } from "lucide-react";
-import { PROVIDER_META, type Provider, type ProviderId } from "../../../shared";
+import { getProviderMeta, type Provider, type ProviderId } from "../../../shared";
 import ModalShell from "../shared/ModalShell";
 import modalStyles from "../shared/ModalShell.module.css";
 import styles from "./SettingsModal.module.css";
@@ -122,7 +122,7 @@ export default function SettingsModal({
 
       <div className={styles.keysPanel}>
         {providers.map((provider) => {
-          const meta = PROVIDER_META[provider.id];
+          const meta = getProviderMeta(provider.id);
           const configured = hasKeyConfigured(provider.id);
           return (
             <div className={styles.keyRow} key={provider.id}>

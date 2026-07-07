@@ -1,15 +1,17 @@
 import { ComposerPanel } from "../components/ComposerPanel";
 import { OutputPanel } from "../components/OutputPanel";
 import { PersonaPanel } from "../components/PersonaPanel";
-import RoleModal from "../components/RoleModal";
-import RoleViewModal from "../components/RoleViewModal";
+import { PersonasPage } from "../components/PersonasPage";
 import SettingsModal from "../components/SettingsModal";
+import type { PromtizerResponse } from "../types/api";
 import type { GenerationEvaluation, GenerationUsage } from "../types/generation";
 import type { Role } from "../types/role";
 import type { GeneratePromptPayload, Provider, ProviderId } from "../../shared";
 import styles from "./App.module.scss";
 
 type PromptAttachment = NonNullable<GeneratePromptPayload["attachments"]>[number];
+
+export type PromptizerView = "studio" | "personas";
 
 interface PersonaPanelGroup {
   roles: Role[];
@@ -18,8 +20,7 @@ interface PersonaPanelGroup {
   loadError: string;
   actionError: string;
   onSelect: (id: string) => void;
-  onCreate: () => void;
-  onManage: (role: Role) => void;
+  onManagePersonas: () => void;
 }
 
 interface ComposerPanelGroup {
@@ -31,6 +32,7 @@ interface ComposerPanelGroup {
   selectedProvider: Provider;
   isGenerating: boolean;
   keyMissing: boolean;
+  disabledReason: string;
   onProviderChange: (providerId: ProviderId) => void;
   onModelChange: (model: string) => void;
   onGenerate: () => void;
@@ -42,6 +44,7 @@ interface ComposerPanelGroup {
 
 interface OutputPanelGroup {
   outputPrompt: string;
+  promtizerResponse: PromtizerResponse | null;
   outputIsError: boolean;
   generationError: string;
   isGenerating: boolean;
@@ -49,18 +52,6 @@ interface OutputPanelGroup {
   usage: GenerationUsage | null;
   evaluation: GenerationEvaluation | null;
   onCopy: () => void;
-}
-
-interface RoleModalGroup {
-  open: boolean;
-  onClose: () => void;
-  onCreate: (title: string, description: string) => void | Promise<void>;
-}
-
-interface RoleViewModalGroup {
-  role: Role | null;
-  onClose: () => void;
-  onDelete: () => void | Promise<void>;
 }
 
 interface SettingsModalGroup {
@@ -75,20 +66,34 @@ interface SettingsModalGroup {
 }
 
 export interface PromptStudioScreenProps {
+  view: PromptizerView;
+  onShowStudio: () => void;
+  onShowPersonas: () => void;
   persona: PersonaPanelGroup;
   composer: ComposerPanelGroup;
   output: OutputPanelGroup;
-  roleModal: RoleModalGroup;
-  roleViewModal: RoleViewModalGroup;
+  personasPage: {
+    roles: Role[];
+    activeRole: string;
+    isLoading: boolean;
+    loadError: string;
+    actionError: string;
+    onSelect: (id: string) => void;
+    onCreate: (title: string, description: string) => Promise<unknown>;
+    onUpdate: (id: string, patch: { title: string; description: string }) => Promise<unknown>;
+    onDelete: (id: string) => Promise<boolean>;
+  };
   settingsModal: SettingsModalGroup;
 }
 
 export function PromptStudioScreen({
+  view,
+  onShowStudio,
+  onShowPersonas,
   persona,
   composer,
   output,
-  roleModal,
-  roleViewModal,
+  personasPage,
   settingsModal,
 }: PromptStudioScreenProps) {
   return (
@@ -96,63 +101,97 @@ export function PromptStudioScreen({
       <div className={styles.gridOverlay} />
       <div className={styles.radialOverlay} aria-hidden="true" />
 
-      <StudioShell>
-        <section className={styles.workspaceGrid}>
-          <section className={styles.panelCyan}>
-            <PersonaPanel
-              roles={persona.roles}
-              activeRole={persona.activeRole}
-              isLoading={persona.isLoading}
-              loadError={persona.loadError}
-              actionError={persona.actionError}
-              onSelect={persona.onSelect}
-              onCreate={persona.onCreate}
-              onManage={persona.onManage}
-            />
-          </section>
+      <div className={styles.studioShell}>
+        <header className={styles.chromeBar}>
+          <div>
+            <p className={styles.chromeKicker}>Promptizer</p>
+            <h1 className={styles.chromeTitle}>AI Prompt Studio</h1>
+          </div>
 
-          <section className={styles.panelFuchsia}>
-            <ComposerPanel
-              inputIdea={composer.inputIdea}
-              onInputChange={composer.onInputChange}
-              provider={composer.provider}
-              model={composer.model}
-              providers={composer.providers}
-              selectedProvider={composer.selectedProvider}
-              isGenerating={composer.isGenerating}
-              keyMissing={composer.keyMissing}
-              onProviderChange={composer.onProviderChange}
-              onModelChange={composer.onModelChange}
-              onGenerate={composer.onGenerate}
-              onOpenSettings={composer.onOpenSettings}
-              promptAttachments={composer.promptAttachments}
-              onPromptAttachmentsChange={composer.onPromptAttachmentsChange}
-              onRemovePromptAttachment={composer.onRemovePromptAttachment}
-            />
-          </section>
+          <div className={styles.viewSwitch} role="tablist" aria-label="Promptizer views">
+            <button
+              type="button"
+              className={[styles.viewButton, view === "studio" ? styles.viewButtonActive : ""].join(" ")}
+              aria-pressed={view === "studio"}
+              onClick={onShowStudio}
+            >
+              Studio
+            </button>
+            <button
+              type="button"
+              className={[styles.viewButton, view === "personas" ? styles.viewButtonActive : ""].join(" ")}
+              aria-pressed={view === "personas"}
+              onClick={onShowPersonas}
+            >
+              Personas
+            </button>
+          </div>
+        </header>
 
-          <section className={styles.panelCyan}>
-            <OutputPanel
-              outputPrompt={output.outputPrompt}
-              outputIsError={output.outputIsError}
-              generationError={output.generationError}
-              isGenerating={output.isGenerating}
-              isCopied={output.isCopied}
-              usage={output.usage}
-              evaluation={output.evaluation}
-              onCopy={output.onCopy}
-            />
-          </section>
-        </section>
-      </StudioShell>
+        {view === "studio" ? (
+          <section className={styles.workspaceGrid}>
+            <section className={styles.panelCyan}>
+              <PersonaPanel
+                roles={persona.roles}
+                activeRole={persona.activeRole}
+                isLoading={persona.isLoading}
+                loadError={persona.loadError}
+                actionError={persona.actionError}
+                onSelect={persona.onSelect}
+                onManagePersonas={persona.onManagePersonas}
+              />
+            </section>
 
-      <RoleModal open={roleModal.open} onClose={roleModal.onClose} onCreate={roleModal.onCreate} />
-      <RoleViewModal
-        open={roleViewModal.role !== null}
-        role={roleViewModal.role}
-        onClose={roleViewModal.onClose}
-        onDelete={roleViewModal.onDelete}
-      />
+            <section className={styles.panelFuchsia}>
+              <ComposerPanel
+                inputIdea={composer.inputIdea}
+                onInputChange={composer.onInputChange}
+                provider={composer.provider}
+                model={composer.model}
+                providers={composer.providers}
+                selectedProvider={composer.selectedProvider}
+                isGenerating={composer.isGenerating}
+                keyMissing={composer.keyMissing}
+                disabledReason={composer.disabledReason}
+                onProviderChange={composer.onProviderChange}
+                onModelChange={composer.onModelChange}
+                onGenerate={composer.onGenerate}
+                onOpenSettings={composer.onOpenSettings}
+                promptAttachments={composer.promptAttachments}
+                onPromptAttachmentsChange={composer.onPromptAttachmentsChange}
+                onRemovePromptAttachment={composer.onRemovePromptAttachment}
+              />
+            </section>
+
+            <section className={styles.panelCyan}>
+              <OutputPanel
+                outputPrompt={output.outputPrompt}
+                promtizerResponse={output.promtizerResponse}
+                outputIsError={output.outputIsError}
+                generationError={output.generationError}
+                isGenerating={output.isGenerating}
+                isCopied={output.isCopied}
+                usage={output.usage}
+                evaluation={output.evaluation}
+                onCopy={output.onCopy}
+              />
+            </section>
+          </section>
+        ) : (
+          <PersonasPage
+            roles={personasPage.roles}
+            activeRole={personasPage.activeRole}
+            isLoading={personasPage.isLoading}
+            loadError={personasPage.loadError}
+            actionError={personasPage.actionError}
+            onSelect={personasPage.onSelect}
+            onCreate={personasPage.onCreate}
+            onUpdate={personasPage.onUpdate}
+            onDelete={personasPage.onDelete}
+          />
+        )}
+      </div>
+
       <SettingsModal
         open={settingsModal.open}
         providers={settingsModal.providers}
@@ -165,8 +204,4 @@ export function PromptStudioScreen({
       />
     </main>
   );
-}
-
-function StudioShell({ children }: { children: React.ReactNode }) {
-  return <div className={styles.studioShell}>{children}</div>;
 }

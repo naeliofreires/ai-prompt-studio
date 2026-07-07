@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { registerIpcHandlers } from "../apps/promptizer/main/ipc/register-handlers.js";
 import { ipcChannels } from "../apps/promptizer/shared/index.js";
 
@@ -76,7 +76,7 @@ describe("registerIpcHandlers", () => {
 
     return import("../apps/promptizer/main/ipc/register-handlers.js")
       .then(({ registerIpcHandlers: registerHandlersWithMockAdapter }) => {
-        registerHandlersWithMockAdapter();
+        registerHandlersWithMockAdapter({ generateText: mocks.generateText });
         const handler = mocks.handlers.get(ipcChannels.generatePrompt);
 
         expect(handler).toBeDefined();
@@ -86,7 +86,7 @@ describe("registerIpcHandlers", () => {
           handler(
             {},
             {
-              personaId: "frontend",
+              personaId: "11111111-1111-4111-8111-111111111111",
               providerId: "gemini",
               model: "gemini-2.5-pro",
               rawInput: "Refine this prompt.",
@@ -118,7 +118,7 @@ describe("registerIpcHandlers", () => {
       .mockResolvedValueOnce({ text: "refined", usage: {} })
       .mockResolvedValueOnce({ text: JSON.stringify(evaluation), usage: {} });
 
-    registerIpcHandlers();
+    registerIpcHandlers({ generateText: mocks.generateText });
     const handler = mocks.handlers.get(ipcChannels.generatePrompt);
 
     expect(handler).toBeDefined();
@@ -128,7 +128,7 @@ describe("registerIpcHandlers", () => {
       handler(
         {},
         {
-          personaId: "frontend",
+          personaId: "11111111-1111-4111-8111-111111111111",
           providerId: "gemini",
           model: "gemini-2.5-pro",
           rawInput: "Refine this prompt.",

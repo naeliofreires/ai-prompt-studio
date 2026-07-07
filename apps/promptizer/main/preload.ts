@@ -9,6 +9,8 @@ import {
   type GeneratePromptPayload,
   type ListConfiguredApiKeysResult,
   type ListCustomPersonasResult,
+  type UpdateCustomPersonaInput,
+  type UpdateCustomPersonaResult,
 } from "../shared/index.js";
 
 contextBridge.exposeInMainWorld("aiPromptStudio", {
@@ -18,6 +20,8 @@ contextBridge.exposeInMainWorld("aiPromptStudio", {
     ipcRenderer.invoke(ipcChannels.listCustomPersonas),
   createCustomPersona: (payload: CreateCustomPersonaInput): Promise<CreateCustomPersonaResult> =>
     ipcRenderer.invoke(ipcChannels.createCustomPersona, payload),
+  updateCustomPersona: (payload: UpdateCustomPersonaInput): Promise<UpdateCustomPersonaResult> =>
+    ipcRenderer.invoke(ipcChannels.updateCustomPersona, payload),
   deleteCustomPersona: (payload: DeleteCustomPersonaInput): Promise<DeleteCustomPersonaResult> =>
     ipcRenderer.invoke(ipcChannels.deleteCustomPersona, payload),
   listConfiguredApiKeys: (): Promise<ListConfiguredApiKeysResult> =>

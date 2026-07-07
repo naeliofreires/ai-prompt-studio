@@ -1,12 +1,12 @@
-import { useMemo, useState } from "react";
-import { PERSONA_IDS, PROVIDERS, type ProviderId } from "../../shared";
+import { useEffect, useMemo, useState } from "react";
+import { PROVIDERS, type ProviderId } from "../../shared";
 import { getErrorMessage } from "../../shared/utils/error";
-import { useApiKeySettings } from "../hooks/useApiKeySettings";
+import { useApiKeyRepository } from "../hooks/useApiKeyRepository";
 import { useCopyWithFeedback } from "../hooks/useCopyWithFeedback";
 import { usePromptGeneration } from "../hooks/usePromptGeneration";
 import { useRoles } from "../hooks/useRoles";
-import type { Role } from "../types/role";
-import type { PromptStudioScreenProps } from "./PromptStudioScreen";
+import { formatPromtizerResponse } from "../utils/formatPromtizerResponse";
+import type { PromptStudioScreenProps, PromptizerView } from "./PromptStudioScreen";
 
 const providersConfig = PROVIDERS;
 
@@ -20,11 +20,17 @@ function modelForProvider(providerId: ProviderId): string | undefined {
 }
 
 export function usePromptStudioController(): PromptStudioScreenProps {
-  const { roles, addRole, deleteRole, isLoading, error: rolesError } = useRoles();
-  const apiKeySettings = useApiKeySettings();
-  const [activeRole, setActiveRole] = useState<string>(PERSONA_IDS[0]);
-  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
-  const [managedRole, setManagedRole] = useState<Role | null>(null);
+  const {
+    roles,
+    addRole,
+    deleteRole,
+    updateRole,
+    isLoading,
+    error: rolesError,
+  } = useRoles();
+  const apiKeySettings = useApiKeyRepository();
+  const [view, setView] = useState<PromptizerView>("studio");
+  const [activeRole, setActiveRole] = useState<string>("");
   const [personaActionError, setPersonaActionError] = useState("");
   const [provider, setProvider] = useState<ProviderId>("gemini");
   const [model, setModel] = useState("gemini-2.5-pro");
@@ -33,22 +39,67 @@ export function usePromptStudioController(): PromptStudioScreenProps {
   const { isCopied, copyText, resetCopied } = useCopyWithFeedback();
 
   const selectedRole = useMemo(
-    () => roles.find((role) => role.id === activeRole) ?? roles[0],
+    () => roles.find((role) => role.id === activeRole),
     [activeRole, roles],
+  );
+  const personaGuardMessage = useMemo(() => {
+    if (isLoading) return "";
+    if (roles.length === 0) return "Create a persona before generating.";
+    if (!selectedRole) return "Select a persona before generating.";
+    return "";
+  }, [isLoading, roles.length, selectedRole]);
+
+  useEffect(() => {
+    if (roles.length === 0) {
+      if (activeRole !== "") {
+        setActiveRole("");
+      }
+
+      return;
+    }
+
+    const hasActiveRole = roles.some((role) => role.id === activeRole);
+    if (!hasActiveRole) {
+      setActiveRole(roles[0]?.id ?? "");
+    }
+  }, [activeRole, roles]);
+
+  const configuredProviders = useMemo(
+    () => providersConfig.filter((entry) => apiKeySettings.isConfigured(entry.id)),
+    [apiKeySettings.isConfigured],
   );
 
   const selectedProvider = useMemo(
-    () => providersConfig.find((entry) => entry.id === provider) ?? providersConfig[0],
-    [provider],
+    () =>
+      configuredProviders.find((entry) => entry.id === provider) ??
+      configuredProviders[0] ??
+      providersConfig.find((entry) => entry.id === provider) ??
+      providersConfig[0],
+    [configuredProviders, provider],
   );
 
   const keyMissing = !apiKeySettings.isConfigured(provider);
+
+  useEffect(() => {
+    const firstConfiguredProvider = configuredProviders[0];
+
+    if (!firstConfiguredProvider) {
+      setModel("");
+      return;
+    }
+
+    if (!apiKeySettings.isConfigured(provider)) {
+      setProvider(firstConfiguredProvider.id);
+      setModel(modelForProvider(firstConfiguredProvider.id) ?? "");
+    }
+  }, [apiKeySettings.isConfigured, configuredProviders, provider]);
 
   const {
     inputIdea,
     setInputIdea,
     isGenerating,
     outputPrompt,
+    promtizerResponse,
     usage,
     evaluation,
     generationError,
@@ -72,7 +123,7 @@ export function usePromptStudioController(): PromptStudioScreenProps {
   }
 
   async function handleCopyOutput() {
-    await copyText(outputPrompt);
+    await copyText(promtizerResponse ? formatPromtizerResponse(promtizerResponse) : outputPrompt);
   }
 
   function handleRemovePromptAttachment(index: number) {
@@ -81,40 +132,65 @@ export function usePromptStudioController(): PromptStudioScreenProps {
     );
   }
 
+  function handleShowStudio() {
+    setView("studio");
+  }
+
+  function handleShowPersonas() {
+    setView("personas");
+  }
+
   async function handleCreateRole(title: string, description: string) {
     setPersonaActionError("");
 
     try {
       const role = await addRole(title, description);
       setActiveRole(role.id);
+      return role;
     } catch (err) {
       setPersonaActionError(getErrorMessage(err, "Could not create the custom persona."));
+      throw err;
     }
   }
 
-  async function handleDeleteManagedRole() {
-    if (!managedRole) return;
-
+  async function handleDeleteRole(id: string) {
     setPersonaActionError("");
 
     try {
-      const deleted = await deleteRole(managedRole.id);
+      const deleted = await deleteRole(id);
       if (!deleted) {
         setPersonaActionError("Could not delete the custom persona.");
-        return;
+        return false;
       }
 
-      if (activeRole === managedRole.id) {
-        setActiveRole(PERSONA_IDS[0]);
+      if (activeRole === id) {
+        const nextRole = roles.find((role) => role.id !== id);
+        setActiveRole(nextRole?.id ?? "");
       }
 
-      setManagedRole(null);
+      return true;
     } catch (err) {
       setPersonaActionError(getErrorMessage(err, "Could not delete the custom persona."));
+      throw err;
+    }
+  }
+
+  async function handleSavePersona(id: string, patch: { title: string; description: string }) {
+    setPersonaActionError("");
+
+    try {
+      await updateRole(id, patch);
+      return;
+    } catch (err) {
+      setPersonaActionError(getErrorMessage(err, "Could not save the persona."));
+      throw err;
     }
   }
 
   return {
+    view,
+    onShowStudio: handleShowStudio,
+    onShowPersonas: handleShowPersonas,
     persona: {
       roles,
       activeRole,
@@ -122,18 +198,18 @@ export function usePromptStudioController(): PromptStudioScreenProps {
       loadError: rolesError,
       actionError: personaActionError,
       onSelect: setActiveRole,
-      onCreate: () => setIsRoleModalOpen(true),
-      onManage: setManagedRole,
+      onManagePersonas: handleShowPersonas,
     },
     composer: {
       inputIdea,
       onInputChange: setInputIdea,
       provider,
       model,
-      providers: providersConfig,
+      providers: configuredProviders,
       selectedProvider,
       isGenerating,
       keyMissing,
+      disabledReason: personaGuardMessage,
       onProviderChange: handleProviderChange,
       onModelChange: setModel,
       onGenerate: handleGenerate,
@@ -144,6 +220,7 @@ export function usePromptStudioController(): PromptStudioScreenProps {
     },
     output: {
       outputPrompt,
+      promtizerResponse,
       outputIsError,
       generationError,
       isGenerating,
@@ -152,15 +229,16 @@ export function usePromptStudioController(): PromptStudioScreenProps {
       evaluation,
       onCopy: handleCopyOutput,
     },
-    roleModal: {
-      open: isRoleModalOpen,
-      onClose: () => setIsRoleModalOpen(false),
+    personasPage: {
+      roles,
+      activeRole,
+      isLoading,
+      loadError: rolesError,
+      actionError: personaActionError,
+      onSelect: setActiveRole,
       onCreate: handleCreateRole,
-    },
-    roleViewModal: {
-      role: managedRole,
-      onClose: () => setManagedRole(null),
-      onDelete: handleDeleteManagedRole,
+      onUpdate: handleSavePersona,
+      onDelete: handleDeleteRole,
     },
     settingsModal: {
       open: isSettingsModalOpen,

@@ -3,8 +3,10 @@ import { randomUUID } from "node:crypto";
 import {
   createCustomPersonaInputSchema,
   customPersonaSchema,
+  updateCustomPersonaInputSchema,
   type CreateCustomPersonaInput,
   type CustomPersona,
+  type UpdateCustomPersonaInput,
 } from "../../shared/domain/custom-persona.js";
 
 const storeSchema = {
@@ -12,11 +14,29 @@ const storeSchema = {
     type: "array",
     default: [],
   },
+  seedPersonasInitialized: {
+    type: "boolean",
+    default: false,
+  },
 } as const;
 
 type StoreSchema = {
   customPersonas: CustomPersona[];
+  seedPersonasInitialized: boolean;
 };
+
+const SEED_PERSONAS: CustomPersona[] = [
+  {
+    id: "11111111-1111-4111-8111-111111111111",
+    label: "Frontend Specialist",
+    role: "Refines prompts for React, TypeScript, browser APIs, and client-side architecture.",
+  },
+  {
+    id: "22222222-2222-4222-8222-222222222222",
+    label: "Backend Specialist",
+    role: "Refines prompts for APIs, databases, distributed systems, and server-side design.",
+  },
+];
 
 const store = new Store<StoreSchema>({
   name: "custom-personas",
@@ -24,7 +44,23 @@ const store = new Store<StoreSchema>({
 });
 
 function readCustomPersonas(): CustomPersona[] {
+  ensureSeedPersonasInitialized();
   return customPersonaSchema.array().parse(store.get("customPersonas"));
+}
+
+function readStoredCustomPersonas(): CustomPersona[] {
+  return customPersonaSchema.array().parse(store.get("customPersonas"));
+}
+
+function ensureSeedPersonasInitialized(): void {
+  if (store.get("seedPersonasInitialized")) return;
+
+  const personas = readStoredCustomPersonas();
+  if (personas.length === 0) {
+    store.set("customPersonas", customPersonaSchema.array().parse(SEED_PERSONAS));
+  }
+
+  store.set("seedPersonasInitialized", true);
 }
 
 function writeCustomPersonas(personas: CustomPersona[]): void {
@@ -56,6 +92,28 @@ export function deleteCustomPersona(id: string): boolean {
 
   writeCustomPersonas(next);
   return true;
+}
+
+export function updateCustomPersona(input: UpdateCustomPersonaInput): CustomPersona {
+  const parsed = updateCustomPersonaInputSchema.parse(input);
+  const personas = readCustomPersonas();
+  const existing = personas.find((persona) => persona.id === parsed.id);
+
+  if (!existing) {
+    throw new Error("Custom persona not found.");
+  }
+
+  const updated = customPersonaSchema.parse({
+    ...existing,
+    label: parsed.label,
+    role: parsed.role,
+  });
+
+  writeCustomPersonas(
+    personas.map((persona) => (persona.id === parsed.id ? updated : persona)),
+  );
+
+  return updated;
 }
 
 export function findCustomPersona(id: string): CustomPersona | undefined {

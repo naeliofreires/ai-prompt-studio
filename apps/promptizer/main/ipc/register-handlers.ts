@@ -1,5 +1,4 @@
 import { app, ipcMain } from "electron";
-import { generateText } from "ai";
 import { ZodError } from "zod";
 import {
   createCustomPersonaInputSchema,
@@ -11,8 +10,11 @@ import {
   ipcChannels,
   listConfiguredApiKeysResultSchema,
   listCustomPersonasResultSchema,
+  updateCustomPersonaInputSchema,
+  updateCustomPersonaResultSchema,
 } from "../../shared/index.js";
 import { logger } from "../../shared/utils/logger.js";
+import type { GenerateTextFn } from "../services/LLMAdapter.js";
 import { LLMAdapter } from "../services/LLMAdapter.js";
 import { PromptEvaluator } from "../services/PromptEvaluator.js";
 import {
@@ -24,19 +26,22 @@ import {
   createCustomPersona,
   deleteCustomPersona,
   listCustomPersonas,
+  updateCustomPersona,
 } from "../store/custom-personas-store.js";
-import { savePromptSession } from "../store/prompt-sessions-store.js";
 import { generateRefinedPrompt } from "../application/generate-refined-prompt.js";
 import { resolvePersonaContext } from "../utils/resolve-persona-context.js";
 
-const llmAdapter = LLMAdapter({ generateText });
-const promptEvaluator = PromptEvaluator({ generateText });
+export interface RegisterHandlersOptions {
+  generateText: GenerateTextFn;
+}
 
 function zodIssuesToMessage(err: ZodError): string {
   return err.issues.map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`).join("; ");
 }
 
-export function registerIpcHandlers(): void {
+export function registerIpcHandlers(options: RegisterHandlersOptions): void {
+  const llmAdapter = LLMAdapter({ generateText: options.generateText });
+  const promptEvaluator = PromptEvaluator({ generateText: options.generateText });
   ipcMain.handle(ipcChannels.listCustomPersonas, () => {
     logger.debug("listCustomPersonas");
     return listCustomPersonasResultSchema.parse({
@@ -56,6 +61,12 @@ export function registerIpcHandlers(): void {
     return deleteCustomPersonaResultSchema.parse({
       deleted: deleteCustomPersona(parsed.id),
     });
+  });
+
+  ipcMain.handle(ipcChannels.updateCustomPersona, (_event, payload) => {
+    logger.info("updateCustomPersona", { id: payload?.id });
+    const parsed = updateCustomPersonaInputSchema.parse(payload);
+    return updateCustomPersonaResultSchema.parse(updateCustomPersona(parsed));
   });
 
   ipcMain.handle(ipcChannels.listConfiguredApiKeys, () => {
@@ -100,7 +111,6 @@ export function registerIpcHandlers(): void {
       resolvePersonaContext,
       llmAdapter,
       promptEvaluator,
-      savePromptSession,
     });
 
     return generatePromptIpcResultSchema.parse(result);

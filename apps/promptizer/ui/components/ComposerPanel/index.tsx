@@ -15,6 +15,7 @@ export interface ComposerPanelProps {
   selectedProvider: Provider;
   isGenerating: boolean;
   keyMissing: boolean;
+  disabledReason?: string;
   onProviderChange: (providerId: ProviderId) => void;
   onModelChange: (model: string) => void;
   onGenerate: () => void;
@@ -58,6 +59,7 @@ function ComposerControls({
   selectedProvider,
   providers,
   isGenerating,
+  disabledReason,
   onProviderChange,
   onModelChange,
   onGenerate,
@@ -67,10 +69,15 @@ function ComposerControls({
   selectedProvider: Provider;
   providers: Provider[];
   isGenerating: boolean;
+  disabledReason?: string;
   onProviderChange: (providerId: ProviderId) => void;
   onModelChange: (model: string) => void;
   onGenerate: () => void;
 }) {
+  const availableModels = providers.some((entry) => entry.id === provider)
+    ? selectedProvider.models
+    : [];
+
   return (
     <div className={styles.composerControls}>
       <div className={styles.controlsGrid}>
@@ -80,12 +87,17 @@ function ComposerControls({
             value={provider}
             onChange={(event) => onProviderChange(event.target.value as ProviderId)}
             className={styles.select}
+            disabled={providers.length === 0}
           >
-            {providers.map((entry) => (
-              <option key={entry.id} value={entry.id}>
-                {entry.provider}
-              </option>
-            ))}
+            {providers.length > 0 ? (
+              providers.map((entry) => (
+                <option key={entry.id} value={entry.id}>
+                  {entry.provider}
+                </option>
+              ))
+            ) : (
+              <option value={provider}>No API keys saved</option>
+            )}
           </select>
         </label>
 
@@ -95,12 +107,17 @@ function ComposerControls({
             value={model}
             onChange={(event) => onModelChange(event.target.value)}
             className={styles.select}
+            disabled={availableModels.length === 0}
           >
-            {selectedProvider.models.map((entry) => (
-              <option key={entry} value={entry}>
-                {entry}
-              </option>
-            ))}
+            {availableModels.length > 0 ? (
+              availableModels.map((entry) => (
+                <option key={entry} value={entry}>
+                  {entry}
+                </option>
+              ))
+            ) : (
+              <option value="">Save an API key first</option>
+            )}
           </select>
         </label>
       </div>
@@ -109,7 +126,7 @@ function ComposerControls({
         type="button"
         aria-label={isGenerating ? "Refining prompt" : "Refine prompt"}
         onClick={onGenerate}
-        disabled={isGenerating}
+        disabled={isGenerating || Boolean(disabledReason)}
         className={styles.generateButton}
       >
         {isGenerating ? <Loader2 className={styles.spinner} size={18} /> : <Wand2 size={18} />}
@@ -128,6 +145,7 @@ export function ComposerPanel({
   selectedProvider,
   isGenerating,
   keyMissing,
+  disabledReason,
   onProviderChange,
   onModelChange,
   onGenerate,
@@ -185,6 +203,12 @@ export function ComposerPanel({
           <button type="button" className={styles.keyWarningCta} onClick={onOpenSettings}>
             Open Settings
           </button>
+        </div>
+      )}
+
+      {disabledReason && (
+        <div className={styles.personaWarning} role="status">
+          {disabledReason}
         </div>
       )}
 
@@ -256,6 +280,7 @@ export function ComposerPanel({
         selectedProvider={selectedProvider}
         providers={providers}
         isGenerating={isGenerating}
+        disabledReason={disabledReason}
         onProviderChange={onProviderChange}
         onModelChange={onModelChange}
         onGenerate={onGenerate}

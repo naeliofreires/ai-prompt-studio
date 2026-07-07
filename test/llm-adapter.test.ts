@@ -7,6 +7,7 @@ describe("LLMAdapter", () => {
   const prevZhipu = process.env.ZHIPU_API_KEY;
   const prevDeepseekKey = process.env.DEEPSEEK_API_KEY;
   const prevDeepseekBase = process.env.DEEPSEEK_BASE_URL;
+  const prevOpencode = process.env.OPENCODE_API_KEY;
 
   beforeEach(() => {
     delete process.env.GOOGLE_GENERATIVE_AI_API_KEY;
@@ -14,6 +15,7 @@ describe("LLMAdapter", () => {
     delete process.env.ZHIPU_API_KEY;
     delete process.env.DEEPSEEK_API_KEY;
     delete process.env.DEEPSEEK_BASE_URL;
+    delete process.env.OPENCODE_API_KEY;
   });
 
   afterEach(() => {
@@ -27,6 +29,8 @@ describe("LLMAdapter", () => {
     else process.env.DEEPSEEK_API_KEY = prevDeepseekKey;
     if (prevDeepseekBase === undefined) delete process.env.DEEPSEEK_BASE_URL;
     else process.env.DEEPSEEK_BASE_URL = prevDeepseekBase;
+    if (prevOpencode === undefined) delete process.env.OPENCODE_API_KEY;
+    else process.env.OPENCODE_API_KEY = prevOpencode;
   });
 
   it("calls generateText with persona in system and raw input as prompt for gemini", async () => {
@@ -130,6 +134,45 @@ describe("LLMAdapter", () => {
     expect(generateText).toHaveBeenCalledWith(
       expect.objectContaining({ prompt: "in" })
     );
+  });
+
+  it("uses OpenCode Zen big-pickle when OPENCODE_API_KEY is set", async () => {
+    process.env.OPENCODE_API_KEY = "test-opencode-key";
+    const generateText = vi.fn().mockResolvedValue({
+      text: "opencode result",
+      usage: { totalTokens: 7 },
+    });
+    const adapter = LLMAdapter({ generateText });
+
+    const out = await adapter.generatePrompt({
+      personaContext: "p",
+      rawInput: "in",
+      providerId: "opencode",
+      model: "big-pickle",
+    });
+
+    expect(out.prompt).toBe("opencode result");
+    expect(out.tokensUsed).toBe(7);
+    expect(generateText).toHaveBeenCalledTimes(1);
+    expect(generateText).toHaveBeenCalledWith(
+      expect.objectContaining({ prompt: "in" })
+    );
+  });
+
+  it("rejects OpenCode Zen big-pickle without OPENCODE_API_KEY", async () => {
+    const generateText = vi.fn();
+    const adapter = LLMAdapter({ generateText });
+
+    await expect(
+      adapter.generatePrompt({
+        personaContext: "p",
+        rawInput: "in",
+        providerId: "opencode",
+        model: "big-pickle",
+      })
+    ).rejects.toThrow("Missing OPENCODE_API_KEY");
+
+    expect(generateText).not.toHaveBeenCalled();
   });
 
   it("honors DEEPSEEK_BASE_URL when set", async () => {

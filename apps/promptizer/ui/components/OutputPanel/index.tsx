@@ -1,11 +1,15 @@
+import { useEffect, useId, useState } from "react";
 import { Check, Clipboard, Terminal } from "lucide-react";
+import type { PromtizerResponse } from "../../types/api";
 import type { GenerationEvaluation, GenerationUsage } from "../../types/generation";
+import { ResponseCard } from "../ResponseCard";
 import { PanelHeader } from "../shared/PanelHeader";
 import { StreamingMarkdown } from "../StreamingMarkdown";
 import styles from "./OutputPanel.module.scss";
 
 export interface OutputPanelProps {
   outputPrompt: string;
+  promtizerResponse: PromtizerResponse | null;
   outputIsError: boolean;
   generationError: string;
   isGenerating: boolean;
@@ -26,6 +30,7 @@ function ErrorHeader() {
 
 export function OutputPanel({
   outputPrompt,
+  promtizerResponse,
   outputIsError,
   generationError,
   isGenerating,
@@ -34,6 +39,15 @@ export function OutputPanel({
   evaluation,
   onCopy,
 }: OutputPanelProps) {
+  const [isEvaluationOpen, setIsEvaluationOpen] = useState(false);
+  const evaluationPanelId = useId();
+
+  useEffect(() => {
+    if (evaluation) {
+      setIsEvaluationOpen(false);
+    }
+  }, [evaluation]);
+
   return (
     <>
       <PanelHeader
@@ -57,7 +71,7 @@ export function OutputPanel({
           styles.outputContent,
           outputIsError
             ? styles.outputContentError
-            : outputPrompt
+            : promtizerResponse || outputPrompt
               ? styles.outputContentFilled
               : styles.outputContentEmpty,
         ].join(" ")}
@@ -67,6 +81,8 @@ export function OutputPanel({
             <ErrorHeader />
             <p className={styles.preWrap}>{generationError}</p>
           </div>
+        ) : promtizerResponse ? (
+          <ResponseCard response={promtizerResponse} />
         ) : outputPrompt ? (
           <>
             <StreamingMarkdown content={outputPrompt} isStreaming={isGenerating} />
@@ -100,20 +116,37 @@ export function OutputPanel({
       )}
 
       {evaluation && (
-        <section className={styles.evaluationPanel} aria-label="Prompt evaluation">
-          <div className={styles.evaluationHeader}>
-            <span className={styles.evaluationLabel}>Prompt score</span>
-            <strong className={styles.evaluationScore}>{evaluation.score}/5</strong>
-          </div>
-          <p className={styles.evaluationSummary}>{evaluation.summary}</p>
-          {evaluation.suggestions.length > 0 && (
-            <ul className={styles.evaluationSuggestions}>
-              {evaluation.suggestions.map((suggestion) => (
-                <li key={suggestion}>{suggestion}</li>
-              ))}
-            </ul>
-          )}
-        </section>
+        <div className={styles.evaluationDisclosure}>
+          <button
+            type="button"
+            className={styles.evaluationToggle}
+            aria-expanded={isEvaluationOpen}
+            aria-controls={evaluationPanelId}
+            onClick={() => setIsEvaluationOpen((current) => !current)}
+          >
+            {isEvaluationOpen ? "Hide prompt score" : "Show prompt score"}
+          </button>
+
+          <section
+            id={evaluationPanelId}
+            className={styles.evaluationPanel}
+            aria-label="Prompt evaluation"
+            hidden={!isEvaluationOpen}
+          >
+            <div className={styles.evaluationHeader}>
+              <span className={styles.evaluationLabel}>Prompt score</span>
+              <strong className={styles.evaluationScore}>{evaluation.score}/5</strong>
+            </div>
+            <p className={styles.evaluationSummary}>{evaluation.summary}</p>
+            {evaluation.suggestions.length > 0 && (
+              <ul className={styles.evaluationSuggestions}>
+                {evaluation.suggestions.map((suggestion) => (
+                  <li key={suggestion}>{suggestion}</li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
       )}
     </>
   );

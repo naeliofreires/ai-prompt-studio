@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import type { Role } from "../../types/role";
 import { PanelHeader } from "../shared/PanelHeader";
 import { iconForRole } from "./roleIcons";
@@ -11,8 +11,13 @@ export interface PersonaPanelProps {
   loadError: string;
   actionError: string;
   onSelect: (id: string) => void;
-  onCreate: () => void;
-  onManage: (role: Role) => void;
+  onManagePersonas: () => void;
+}
+
+interface PersonaCardProps {
+  persona: Role;
+  isActive: boolean;
+  onSelect: (id: string) => void;
 }
 
 export function PersonaPanel({
@@ -22,8 +27,7 @@ export function PersonaPanel({
   loadError,
   actionError,
   onSelect,
-  onCreate,
-  onManage,
+  onManagePersonas,
 }: PersonaPanelProps) {
   return (
     <>
@@ -31,9 +35,9 @@ export function PersonaPanel({
         label="Module 01"
         title="Persona Matrix"
         action={
-          <button type="button" className={styles.personaCreateButton} onClick={onCreate}>
-            <Plus size={14} />
-            <span>New persona</span>
+          <button type="button" className={styles.personaCreateButton} onClick={onManagePersonas}>
+            <ArrowRight size={14} />
+            <span>Personas</span>
           </button>
         }
       />
@@ -47,40 +51,58 @@ export function PersonaPanel({
           <p className={styles.personaFeedback}>Loading custom personas...</p>
         ) : (
           roles.map((role) => {
-            const Icon = iconForRole(role);
             const isActive = role.id === activeRole;
 
             return (
-              <div key={role.id} className={styles.personaCard}>
-                <button
-                  type="button"
-                  aria-pressed={isActive}
-                  onClick={() => onSelect(role.id)}
-                  className={[
-                    styles.personaButton,
-                    isActive ? styles.personaButtonActive : styles.personaButtonIdle,
-                  ].join(" ")}
-                >
-                  <div className={styles.personaButtonLabel}>
-                    <Icon size={14} />
-                    <span>{role.title}</span>
-                  </div>
-                  <p className={styles.personaDescription}>{role.description}</p>
-                </button>
-                {role.source === "custom" && (
-                  <button
-                    type="button"
-                    className={styles.personaManageButton}
-                    onClick={() => onManage(role)}
-                  >
-                    Manage
-                  </button>
-                )}
+              <div key={role.id} className={styles.personaCardShell}>
+                <PersonaCard
+                  persona={role}
+                  isActive={isActive}
+                  onSelect={onSelect}
+                />
               </div>
             );
           })
         )}
       </div>
     </>
+  );
+}
+
+function PersonaCard({
+  persona,
+  isActive,
+  onSelect,
+}: PersonaCardProps) {
+  const Icon = iconForRole(persona);
+
+  return (
+    <div
+      className={[
+        styles.personaCard,
+        isActive ? styles.personaButtonActive : styles.personaButtonIdle,
+      ].join(" ")}
+    >
+      <button
+        type="button"
+        aria-pressed={isActive}
+        onClick={() => onSelect(persona.id)}
+        className={styles.personaButton}
+      >
+        <div className={styles.personaButtonLabel}>
+          <span className={styles.personaTitleGroup}>
+            <Icon size={12} />
+            <span>{persona.title}</span>
+          </span>
+          {isActive && (
+            <span className={styles.personaSelectedBadge}>
+              <Check size={12} />
+              Selected
+            </span>
+          )}
+        </div>
+        <p className={styles.personaDescription}>{persona.description}</p>
+      </button>
+    </div>
   );
 }

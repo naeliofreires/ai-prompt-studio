@@ -1,8 +1,9 @@
 import { app, BrowserWindow } from "electron";
+import { generateText } from "ai";
 import dotenv from "dotenv";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { registerIpcHandlers } from "../../apps/promptizer/main/ipc/register-handlers.js";
+import { registerPromptizerMain } from "../../apps/promptizer/main/index.js";
 
 if (!app.isPackaged) {
   dotenv.config({ path: path.join(process.cwd(), ".env") });
@@ -26,7 +27,7 @@ function createMainWindow(): BrowserWindow {
     icon: appIconPath,
     backgroundColor: "#0b1020",
     webPreferences: {
-      preload: path.join(__dirname, "..", "..", "apps", "promptizer", "main", "preload.js"),
+      preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
@@ -44,7 +45,7 @@ function createMainWindow(): BrowserWindow {
 }
 
 app.whenReady().then(() => {
-  registerIpcHandlers();
+  registerPromptizerMain({ generateText });
   createMainWindow();
 
   app.on("activate", () => {

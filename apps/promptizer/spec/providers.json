@@ -2,16 +2,41 @@
   {
     "id": "gemini",
     "provider": "Google Gemini",
-    "models": ["gemini-2.5-pro"]
+    "models": ["gemini-2.5-pro"],
+    "sdkType": "google",
+    "envKeys": ["GOOGLE_GENERATIVE_AI_API_KEY"],
+    "keyPlaceholder": "AIzaSy...",
+    "defaultBaseUrl": null,
+    "modelFn": "chat"
   },
   {
     "id": "glm",
     "provider": "GLM",
-    "models": ["glm-4.6", "glm-4.7", "glm-5"]
+    "models": ["glm-4.6", "glm-4.7", "glm-5"],
+    "sdkType": "openai",
+    "envKeys": ["GLM_API_KEY", "ZHIPU_API_KEY"],
+    "keyPlaceholder": "glm-...",
+    "defaultBaseUrl": "https://api.z.ai/api/paas/v4/",
+    "modelFn": "chat"
   },
   {
     "id": "deepseek",
     "provider": "DeepSeek",
-    "models": ["deepseek-chat", "deepseek-reasoner"]
+    "models": ["deepseek-reasoner"],
+    "sdkType": "openai",
+    "envKeys": ["DEEPSEEK_API_KEY"],
+    "keyPlaceholder": "sk-...",
+    "defaultBaseUrl": "https://api.deepseek.com/v1",
+    "modelFn": "chat"
+  },
+  {
+    "id": "opencode",
+    "provider": "OpenCode Zen",
+    "models": ["big-pickle", "minimax-m3-free", "north-mini-code-free"],
+    "sdkType": "openai-compatible",
+    "envKeys": ["OPENCODE_API_KEY"],
+    "keyPlaceholder": "opencode-...",
+    "defaultBaseUrl": "https://opencode.ai/zen/v1",
+    "modelFn": "chatModel"
   }
 ]
