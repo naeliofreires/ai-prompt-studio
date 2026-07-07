@@ -2,7 +2,7 @@
 
 ## Flows
 
-- [App hub layout](app-hub-layout.md) - Root renderer shell, side app menu, and app boundary rules.
+- [Promptizer app layout](app-hub-layout.md) - Single-app renderer entry and source boundary rules.
 - [Packaging flow](packaging-flow.md) - Electron Builder packaging and dev startup flow.
 - [Markdown stream rendering](markdown-stream-rendering.md) - Streaming output markdown sanitization and stream hook cleanup.
 - [Output Studio generation flow](output-studio-generation-flow.md) - Renderer output calls Electron IPC and main-process LLM adapter.

@@ -20,11 +20,11 @@
     "dist:win": "npm run build && electron-builder --win nsis",
     "dist:linux": "npm run build && electron-builder --linux AppImage",
     "preview": "vite preview",
-    "lint": "eslint \"{src,apps}/**/*.{ts,tsx}\"",
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "test": "vitest run",
     "test:watch": "vitest",
-    "format": "prettier --write \"{src,apps}/**/*.{ts,tsx,css,scss,json}\"",
-    "format:check": "prettier --check \"{src,apps}/**/*.{ts,tsx,css,scss,json}\""
+    "format": "prettier --write \"src/**/*.{ts,tsx,css,scss,json}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css,scss,json}\""
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.64",
@@ -39,8 +39,7 @@
     "react-markdown": "^10.1.0",
     "rehype-sanitize": "^6.0.0",
     "remark-gfm": "^4.0.1",
-    "zod": "^3.24.1",
-    "zustand": "^5.0.3"
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

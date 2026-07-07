@@ -3,9 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 import {
   usePromptGeneration,
   type UsePromptGenerationArgs,
-} from "../apps/promptizer/ui/hooks/usePromptGeneration";
-import type { PromtizerResponse } from "../apps/promptizer/ui/types/api";
-import type { Role } from "../apps/promptizer/ui/types/role";
+} from "../src/renderer/hooks/usePromptGeneration";
+import type { PromtizerResponse } from "../src/renderer/types/api";
+import type { Role } from "../src/renderer/types/role";
 
 const geminiProvider = {
   id: "gemini" as const,

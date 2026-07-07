@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   CUSTOM_PERSONAS_STORAGE_KEY,
+  personaClient,
   readLocalCustomPersonas,
-} from "../apps/promptizer/ui/api/custom-persona-local-repository";
-import { personaClient } from "../apps/promptizer/ui/api/persona-client";
-import { selectPersonaClientMode } from "../apps/promptizer/ui/api/persona-client-mode-policy";
+} from "../src/renderer/api/persona-client";
+import { selectPersonaClientMode } from "../src/renderer/api/persona-client-mode-policy";
 import { setAiPromptStudioBridge } from "./helpers/ai-prompt-studio-bridge";
 
 describe("selectPersonaClientMode", () => {

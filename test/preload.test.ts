@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ipcChannels, type GeneratePromptPayload } from "../apps/promptizer/shared";
+import { ipcChannels, type GeneratePromptPayload } from "../src/shared";
 
 const mocks = vi.hoisted(() => {
   let exposedApi: any = null;
@@ -34,7 +34,7 @@ describe("preload bridge", () => {
   });
 
   it("exposes the aiPromptStudio API and maps methods to IPC channels", async () => {
-    await import("../apps/promptizer/main/preload");
+    await import("../src/main/preload");
 
     expect(mocks.exposeInMainWorld).toHaveBeenCalledWith(
       "aiPromptStudio",

@@ -9,7 +9,7 @@ The app is local-first and currently packaged for unsigned local releases.
 - Electron desktop shell with a React + TypeScript renderer.
 - Editable personas with title and description fields.
 - A dedicated Personas page for listing, creating, editing, deleting, and selecting personas.
-- Provider/model selection from `apps/promptizer/spec/providers.json`.
+- Provider/model selection from `src/spec/providers.json`.
 - Provider adapters for Google Gemini, GLM, DeepSeek, and OpenCode Zen through the Vercel AI SDK.
 - API key Settings UI with development `.env` fallback in the Electron main process.
 - Prompt refinement through a validated IPC bridge.
@@ -30,14 +30,10 @@ The app is local-first and currently packaged for unsigned local releases.
 
 ```text
 src/
-  main/       Electron window shell
-  ui/         Hub renderer shell and global styles
-apps/
-  promptizer/
-    main/     IPC handlers, provider registry, stores, preload bridge
-    ui/       React app, panels, pages, hooks, renderer clients
-    shared/   Domain types, Zod schemas, IPC contracts, registries
-    spec/     Provider/model options and legacy persona spec
+  main/       Electron window shell, IPC handlers, provider registry, stores, preload bridge
+  renderer/   React app, panels, pages, hooks, renderer clients, and global styles
+  shared/     Domain types, Zod schemas, IPC contracts, registries
+  spec/       Provider/model options and seed Persona spec
 test/         Vitest test suite
 docs/         Product and technical planning docs
 scripts/      Build helper scripts
@@ -131,14 +127,14 @@ API keys saved in Settings are stored in renderer `localStorage` and mirrored in
 4. `LLMAdapter` builds the refinement system prompt and calls `generateText`.
 5. The renderer displays the structured response, usage, and evaluation data when available.
 
-The refinement instruction lives in `apps/promptizer/main/services/prompt-instructions.ts`; the human-facing copy is mirrored in `docs/prompt-instructions.md`.
+The refinement instruction lives in `src/main/services/prompt-instructions.ts`; the human-facing copy is mirrored in `docs/prompt-instructions.md`.
 
 ## Extending Promptizer
 
 ### Add a provider
 
-1. Add the provider to `apps/promptizer/spec/providers.json`.
-2. Ensure `apps/promptizer/main/services/provider-registry.ts` supports its `sdkType`.
+1. Add the provider to `src/spec/providers.json`.
+2. Ensure `src/main/services/provider-registry.ts` supports its `sdkType`.
 3. Document the environment variable in `.env.example`.
 4. Add focused tests for provider resolution and request behavior.
 
@@ -148,7 +144,7 @@ The refinement instruction lives in `apps/promptizer/main/services/prompt-instru
 - Keep persona fields limited to `label` and `role` unless the UI, IPC contracts, and tests are updated together.
 - Prompt generation resolves personas from the editable persona store.
 
-Shared renderer/main contracts live under `apps/promptizer/shared`; update them first when behavior crosses the process boundary.
+Shared renderer/main contracts live under `src/shared`; update them first when behavior crosses the process boundary.
 
 ## Documentation
 

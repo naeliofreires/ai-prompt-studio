@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { registerIpcHandlers } from "../apps/promptizer/main/ipc/register-handlers.js";
-import { ipcChannels } from "../apps/promptizer/shared/index.js";
+import { registerIpcHandlers } from "../src/main/ipc/register-handlers.js";
+import { ipcChannels } from "../src/shared/index.js";
 
 type IpcHandler = (_event: unknown, payload: unknown) => unknown;
 
@@ -70,11 +70,11 @@ describe("registerIpcHandlers", () => {
     const generatePrompt = vi.fn().mockResolvedValue({ prompt: "refined" });
 
     vi.resetModules();
-    vi.doMock("../apps/promptizer/main/services/LLMAdapter.js", () => ({
+    vi.doMock("../src/main/services/LLMAdapter.js", () => ({
       LLMAdapter: vi.fn(() => ({ generatePrompt })),
     }));
 
-    return import("../apps/promptizer/main/ipc/register-handlers.js")
+    return import("../src/main/ipc/register-handlers.js")
       .then(({ registerIpcHandlers: registerHandlersWithMockAdapter }) => {
         registerHandlersWithMockAdapter({ generateText: mocks.generateText });
         const handler = mocks.handlers.get(ipcChannels.generatePrompt);
@@ -103,7 +103,7 @@ describe("registerIpcHandlers", () => {
         );
       })
       .finally(() => {
-        vi.doUnmock("../apps/promptizer/main/services/LLMAdapter.js");
+        vi.doUnmock("../src/main/services/LLMAdapter.js");
       });
   });
 

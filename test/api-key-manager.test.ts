@@ -4,7 +4,7 @@ import {
   getApiKey,
   listConfiguredApiKeyProviders,
   setApiKeys,
-} from "../apps/promptizer/main/services/api-key-manager";
+} from "../src/main/services/api-key-manager";
 
 const envKeys = [
   "GOOGLE_GENERATIVE_AI_API_KEY",

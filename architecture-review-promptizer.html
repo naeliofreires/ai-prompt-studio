@@ -203,12 +203,12 @@ flowchart TB
 
           <div class="px-6 py-4 space-y-3 border-t border-slate-100">
             <p class="text-sm text-slate-700"><strong>Problem:</strong> `register-handlers.ts` creates `LLMAdapter` and `PromptEvaluator` at module scope, baking the real `generateText` (Vercel AI SDK) into every IPC handler. No seam to replace them — tests must mock entire modules or skip the layer entirely.</p>
-            <p class="text-sm text-slate-700"><strong>Solution:</strong> Accept the adapters as parameters in `registerIpcHandlers(options)`. Production wiring happens at the host hub entry point; tests inject fakes. The existing `LlmAdapter` and `PromptEvaluator` interfaces already define the seam — just stop hard-coding inside.</p>
+            <p class="text-sm text-slate-700"><strong>Solution:</strong> Accept the adapters as parameters in `registerIpcHandlers(options)`. Production wiring happens at the Electron entry point; tests inject fakes. The existing `LlmAdapter` and `PromptEvaluator` interfaces already define the seam — just stop hard-coding inside.</p>
             <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
               <li><strong>locality:</strong> IPC handler logic testable without Vercel AI SDK</li>
               <li><strong>leverage:</strong> existing LlmAdapter seam becomes real (two adapters)</li>
               <li><strong>tests:</strong> inject in-memory adapter; no module mocking</li>
-              <li>wiring moves to hub entry point — composition responsibility</li>
+              <li>wiring moves to the Electron entry point — composition responsibility</li>
             </ul>
           </div>
         </article>

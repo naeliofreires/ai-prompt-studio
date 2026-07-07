@@ -1,8 +1,8 @@
 # Output Studio Generation Flow
 > Renderer output calls Electron IPC; main process owns provider API access
 
-Entry: `apps/promptizer/ui/app/usePromptStudioController.ts` delegates generation state to `apps/promptizer/ui/hooks/usePromptGeneration.ts`
-Flow: renderer → `promptStudioClient.generatePrompt()` → `window.aiPromptStudio.generatePrompt()` → `apps/promptizer/main/preload.ts` → `apps/promptizer/main/ipc/register-handlers.ts` → `apps/promptizer/main/application/generate-refined-prompt.ts` → `apps/promptizer/main/services/LLMAdapter.ts` → optional `apps/promptizer/main/services/PromptEvaluator.ts` → optional snapshot save in `apps/promptizer/main/store/prompt-sessions-store.ts`
+Entry: `src/renderer/app/usePromptStudioController.ts` delegates generation state to `src/renderer/hooks/usePromptGeneration.ts`
+Flow: renderer → `promptStudioClient.generatePrompt()` → `window.aiPromptStudio.generatePrompt()` → `src/main/preload.ts` → `src/main/ipc/register-handlers.ts` → `src/main/application/generate-refined-prompt.ts` → `src/main/services/LLMAdapter.ts` → optional `src/main/services/PromptEvaluator.ts` → optional snapshot save in `src/main/store/prompt-sessions-store.ts`
 
 Renderer:
 - Sends `rawInput`, `personaId`, `providerId`, `model`
@@ -21,9 +21,9 @@ Main:
 - API keys resolve in main-process code: runtime keys from Settings take priority, then environment variables loaded from `.env` in dev mode.
 
 Provider wiring:
-- Provider options come from `apps/promptizer/spec/providers.json`; the shared `PROVIDER_IDS` tuple drives IPC/storage validation.
-- `apps/promptizer/main/utils/resolve-language-model.ts` maps provider ids to AI SDK adapters. OpenCode Zen uses `@ai-sdk/openai-compatible` with default base URL `https://opencode.ai/zen/v1`, `OPENCODE_API_KEY`, optional `OPENCODE_ZEN_BASE_URL`, and models `big-pickle`, `minimax-m3-free`, and `north-mini-code-free`.
+- Provider options come from `src/spec/providers.json`; the shared `PROVIDER_IDS` tuple drives IPC/storage validation.
+- `src/main/utils/resolve-language-model.ts` maps provider ids to AI SDK adapters. OpenCode Zen uses `@ai-sdk/openai-compatible` with default base URL `https://opencode.ai/zen/v1`, `OPENCODE_API_KEY`, optional `OPENCODE_ZEN_BASE_URL`, and models `big-pickle`, `minimax-m3-free`, and `north-mini-code-free`.
 
-Contract: `apps/promptizer/shared/contracts/ipc.ts`
+Contract: `src/shared/contracts/ipc.ts`
 
 Updated: 2026-06-11

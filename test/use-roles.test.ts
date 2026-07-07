@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useRoles } from "../apps/promptizer/ui/hooks/useRoles";
+import { useRoles } from "../src/renderer/hooks/useRoles";
 
 const mocks = vi.hoisted(() => ({
   createCustomPersona: vi.fn(),
@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
   updateCustomPersona: vi.fn(),
 }));
 
-vi.mock("../apps/promptizer/ui/api/persona-client", () => ({
+vi.mock("../src/renderer/api/persona-client", () => ({
   personaClient: {
     createCustomPersona: mocks.createCustomPersona,
     deleteCustomPersona: mocks.deleteCustomPersona,

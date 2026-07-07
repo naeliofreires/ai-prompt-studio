@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { PersonasPage } from "../apps/promptizer/ui/components/PersonasPage";
-import type { Role } from "../apps/promptizer/ui/types/role";
+import { PersonasPage } from "../src/renderer/components/PersonasPage";
+import type { Role } from "../src/renderer/types/role";
 
 const personas: Role[] = [
   {

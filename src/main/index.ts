@@ -3,7 +3,7 @@ import { generateText } from "ai";
 import dotenv from "dotenv";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { registerPromptizerMain } from "../../apps/promptizer/main/index.js";
+import { registerIpcHandlers as registerPromptizerMain } from "./ipc/register-handlers.js";
 
 if (!app.isPackaged) {
   dotenv.config({ path: path.join(process.cwd(), ".env") });
@@ -23,7 +23,7 @@ function createMainWindow(): BrowserWindow {
     height: 860,
     minWidth: 960,
     minHeight: 700,
-    title: "Promptizer Hub",
+    title: "Promptizer",
     icon: appIconPath,
     backgroundColor: "#0b1020",
     webPreferences: {

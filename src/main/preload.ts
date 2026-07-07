@@ -11,7 +11,7 @@ import {
   type ListCustomPersonasResult,
   type UpdateCustomPersonaInput,
   type UpdateCustomPersonaResult,
-} from "../../apps/promptizer/shared/index.js";
+} from "../shared/index.js";
 
 contextBridge.exposeInMainWorld("aiPromptStudio", {
   generatePrompt: (payload: GeneratePromptPayload): Promise<GeneratePromptIpcResult> =>

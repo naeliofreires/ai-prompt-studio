@@ -1,9 +1,9 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { GeneratePromptAttachment } from "../apps/promptizer/shared";
-import { usePromptStudioController } from "../apps/promptizer/ui/app/prompt-studio/usePromptStudioController";
-import type { PromtizerResponse } from "../apps/promptizer/ui/types/api";
+import type { GeneratePromptAttachment } from "../src/shared";
+import { usePromptStudioController } from "../src/renderer/app/prompt-studio/usePromptStudioController";
+import type { PromtizerResponse } from "../src/renderer/types/api";
 
 type ComposerAttachmentControls = {
   promptAttachments: GeneratePromptAttachment[];
@@ -39,7 +39,7 @@ const mockApiKeyState = vi.hoisted(() => ({
   clearAll: vi.fn(),
 }));
 
-vi.mock("../apps/promptizer/ui/hooks/useRoles", () => ({
+vi.mock("../src/renderer/hooks/useRoles", () => ({
   useRoles: () => ({
     roles: mockRolesState.roles,
     addRole: mockRolesState.addRole,
@@ -50,7 +50,7 @@ vi.mock("../apps/promptizer/ui/hooks/useRoles", () => ({
   }),
 }));
 
-vi.mock("../apps/promptizer/ui/hooks/useApiKeyRepository", () => ({
+vi.mock("../src/renderer/hooks/useApiKeyRepository", () => ({
   useApiKeyRepository: () => ({
     keys: mockApiKeyState.keys,
     saveKeys: mockApiKeyState.saveKeys,
@@ -61,7 +61,7 @@ vi.mock("../apps/promptizer/ui/hooks/useApiKeyRepository", () => ({
   }),
 }));
 
-vi.mock("../apps/promptizer/ui/hooks/useCopyWithFeedback", () => ({
+vi.mock("../src/renderer/hooks/useCopyWithFeedback", () => ({
   useCopyWithFeedback: () => ({
     isCopied: false,
     copyText,
@@ -69,7 +69,7 @@ vi.mock("../apps/promptizer/ui/hooks/useCopyWithFeedback", () => ({
   }),
 }));
 
-vi.mock("../apps/promptizer/ui/hooks/usePromptGeneration", () => {
+vi.mock("../src/renderer/hooks/usePromptGeneration", () => {
   const promtizerResponse: PromtizerResponse = {
     title: "Refined Prompt",
     description: "A concise prompt for a todo app.",

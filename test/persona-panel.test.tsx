@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { PersonaPanel } from "../apps/promptizer/ui/components/PersonaPanel";
-import type { Role } from "../apps/promptizer/ui/types/role";
+import { PersonaPanel } from "../src/renderer/components/PersonaPanel";
+import type { Role } from "../src/renderer/types/role";
 
 const longDescription =
   "A focused role for deeply technical prompt refinement, with a long description that exercises the inline editor and accessibility attributes for layout stability.";

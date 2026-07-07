@@ -48,17 +48,17 @@ inside the function body, using `options.generateText`.
 
 #### Task 1.3 — Update `main/index.ts` public surface
 
-Change the re-export so the hub can pass options:
+Change the registration seam so the Electron entry can pass options:
 
 ```ts
 export { registerIpcHandlers as registerPromptizerMain, type RegisterHandlersOptions } from "./ipc/register-handlers.js";
 ```
 
-The hub calls `registerPromptizerMain({ generateText })` from `ai` at wiring time.
+The Electron entry calls `registerIpcHandlers({ generateText })` from `ai` at wiring time.
 
-#### Task 1.4 — Update hub wiring
+#### Task 1.4 — Update Electron wiring
 
-In `src/main/` (the host), update the call site to pass `{ generateText }` from the Vercel AI SDK. This keeps the composition responsibility at the hub level.
+In `src/main/` (the Electron entry), update the call site to pass `{ generateText }` from the Vercel AI SDK. This keeps composition responsibility at the process entry.
 
 #### Task 1.5 — Write tests for `generatePrompt` IPC handler
 
@@ -72,7 +72,7 @@ With injection in place, write a test that:
 
 - [ ] `registerIpcHandlers` accepts `options` param; no module-scope `generateText` import
 - [ ] Existing `main/index.ts` re-exports the options type
-- [ ] Hub wiring compiles and app starts normally
+- [ ] Electron wiring compiles and app starts normally
 - [ ] New test file `main/ipc/__tests__/register-handlers.test.ts` passes with fake `generateText`
 - [ ] No change to `LLMAdapter.ts` or `PromptEvaluator.ts` internals
 

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { OutputPanel } from "../apps/promptizer/ui/components/OutputPanel";
-import type { PromtizerResponse } from "../apps/promptizer/ui/types/api";
+import { OutputPanel } from "../src/renderer/components/OutputPanel";
+import type { PromtizerResponse } from "../src/renderer/types/api";
 
 const structuredResponse: PromtizerResponse = {
   title: "Refined Prompt",

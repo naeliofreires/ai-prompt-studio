@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { PROVIDERS, type Provider, type ProviderId } from "../apps/promptizer/shared";
-import SettingsModal from "../apps/promptizer/ui/components/SettingsModal";
+import { PROVIDERS, type Provider, type ProviderId } from "../src/shared";
+import SettingsModal from "../src/renderer/components/SettingsModal";
 
 const providers = PROVIDERS.slice(0, 2) as Provider[];
 

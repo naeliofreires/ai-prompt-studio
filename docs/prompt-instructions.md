@@ -1,6 +1,6 @@
 # Prompt instructions
 
-This file is the **human-editable source** for system prompts and other instruction text used by the main process (e.g. `LLMAdapter`). Runtime code loads strings from [`apps/promptizer/main/services/prompt-instructions.ts`](../apps/promptizer/main/services/prompt-instructions.ts); when you change instruction text here, update that module so behavior stays in sync.
+This file is the **human-editable source** for system prompts and other instruction text used by the main process (e.g. `LLMAdapter`). Runtime code loads strings from [`src/main/services/prompt-instructions.ts`](../src/main/services/prompt-instructions.ts); when you change instruction text here, update that module so behavior stays in sync.
 
 ## Conventions
 

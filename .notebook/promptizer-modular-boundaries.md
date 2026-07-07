@@ -8,10 +8,10 @@ Promptizer should remain one bounded context for now. The current pressure is be
 
 ## Outer Boundary
 
-- `apps/promptizer/ui`: renderer presentation, controller hooks, UI state, and renderer clients.
-- `apps/promptizer/main`: Electron IPC handlers, application use cases, provider integration, credential sync, and local persistence.
-- `apps/promptizer/shared`: stable renderer/main contracts, public catalogs, and narrow shared kernel types.
-- `src/ui/app/App.tsx`: hub composition root; it may mount app roots but should not import Promptizer internals beyond `PromptizerApp`.
+- `src/renderer`: renderer presentation, controller hooks, UI state, and renderer clients.
+- `src/main`: Electron IPC handlers, application use cases, provider integration, credential sync, and local persistence.
+- `src/shared`: stable renderer/main contracts, public catalogs, and narrow shared kernel types.
+- `src/renderer/main.tsx`: renderer composition root; it mounts `PromptizerApp` directly.
 
 ## Sub-Units
 
@@ -23,7 +23,7 @@ Promptizer should remain one bounded context for now. The current pressure is be
 
 ## Boundary Rules
 
-- Keep `apps/promptizer/shared/index.ts` intentionally small: IPC contracts, public catalogs, provider metadata, prompt evaluation, and API key helpers only.
+- Keep `src/shared/index.ts` intentionally small: IPC contracts, public catalogs, provider metadata, prompt evaluation, and API key helpers only.
 - Do not export persistence schemas, stores, adapter contracts, or implementation services from the shared barrel.
 - Main-process stores own their persistence details. Renderer code should use IPC clients or browser-mode fallback repositories, not main stores.
 - Logs should identify operations and routing metadata without printing raw prompts, system prompts, API keys, or persona text.

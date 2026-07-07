@@ -7,8 +7,8 @@ Build chain: `npm run dist:mac` -> `npm run build` -> Vite renderer in `dist/` +
 
 Dev chain: `npm run dev` -> Vite renderer + Electron main watcher + Electron shell
 - `dev:electron` runs `copy:personas` before waiting on Vite/main output.
-- `scripts/copy-personas-spec.mjs` validates JSON and renames temp files atomically into `dist-electron/apps/promptizer/spec/`.
-- Avoids Electron reading stale or partially-written `dist-electron/apps/promptizer/spec/*.json` while importing shared domain modules.
+- `scripts/copy-personas-spec.mjs` validates JSON and renames temp files atomically into `dist-electron/src/spec/`.
+- Avoids Electron reading stale or partially-written `dist-electron/src/spec/*.json` while importing shared domain modules.
 
 Config: `package.json` (L66-93)
 - Output directory: `release/`
@@ -20,7 +20,7 @@ Config: `package.json` (L66-93)
 Packaged renderer load: `src/main/index.ts:createMainWindow()` (L32-37)
 - Dev loads Vite at `http://localhost:5173`
 - Packaged app loads `dist/index.html` relative to compiled main file
-- The preload script is emitted at `dist-electron/apps/promptizer/main/preload.js` while the window shell stays at `dist-electron/src/main/index.js`.
+- The preload script is emitted at `dist-electron/src/main/preload.js` while the window shell stays at `dist-electron/src/main/index.js`.
 - Avoids `process.cwd()` because installed apps may launch from another directory
 
 Gotchas:

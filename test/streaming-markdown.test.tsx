@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { StreamingMarkdown } from "../apps/promptizer/ui/components/StreamingMarkdown";
+import { StreamingMarkdown } from "../src/renderer/components/StreamingMarkdown";
 
 describe("StreamingMarkdown", () => {
   it("renders headings and lists from markdown", () => {

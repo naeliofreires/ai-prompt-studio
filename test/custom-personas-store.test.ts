@@ -5,9 +5,9 @@ import {
   findCustomPersona,
   listCustomPersonas,
   updateCustomPersona,
-} from "../apps/promptizer/main/store/custom-personas-store";
-import { resolvePersonaContext } from "../apps/promptizer/main/utils/resolve-persona-context";
-import { buildRefinementSystemPrompt } from "../apps/promptizer/main/utils/build-refinement-system-prompt";
+} from "../src/main/store/custom-personas-store";
+import { resolvePersonaContext } from "../src/main/utils/resolve-persona-context";
+import { buildRefinementSystemPrompt } from "../src/main/utils/build-refinement-system-prompt";
 import { resetElectronStoreMocks } from "./helpers/electron-store";
 
 vi.mock("node:crypto", async () => {

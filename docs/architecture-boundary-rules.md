@@ -1,56 +1,53 @@
 # Architecture Boundary Rules
 
-These rules protect the app boundaries introduced by the Promptizer modularization work.
+These rules protect the single-app Promptizer structure.
 
-## 1. `src` is the composition shell
+## 1. `src` is the application root
 
-- `src/main/**` may create the Electron host and compose app modules.
-- `src/ui/**` may render the hub shell and switch between app modules.
-- `src/**` must not contain feature-owned domain types, hooks, services, stores, or mock data.
+- `src/main/**` owns the Electron host, IPC handlers, services, stores, and preload.
+- `src/renderer/**` owns the Promptizer renderer.
+- `src/shared/**` owns renderer/main contracts and shared domain schemas.
+- `src/spec/**` owns built-in Persona and Provider specs.
 
 Allowed examples:
 
 ```ts
-import { registerPromptizerMain } from "../../apps/promptizer/main/index.js";
-import { PromptizerApp } from "../../../apps/promptizer/ui/index";
+import { registerIpcHandlers } from "./ipc/register-handlers.js";
+import { PromptizerApp } from "./app/PromptizerApp";
 ```
 
 Disallowed examples:
 
 ```ts
-import { registerIpcHandlers } from "../../apps/promptizer/main/ipc/register-handlers.js";
-import { PromptizerApp } from "../../../apps/promptizer/ui/app/PromptizerApp";
+import { PromptizerApp } from "../../old-multi-app-path/ui/index";
+import { App } from "../old-hub-shell/App";
 ```
 
-## 2. Apps expose public entry points
-
-Each app must expose public entry points for the host/hub to consume.
+## 2. Public entry points
 
 Current public surfaces:
 
-- `apps/promptizer/main/index.ts`
-- `apps/promptizer/ui/index.ts`
+- `src/main/index.ts`
+- `src/renderer/index.ts`
 
-The hub must import from these files, not from deeper implementation paths.
+Use these files for bootstrapping when possible.
 
 ## 3. Deep app internals are private by default
 
-Files under these folders are implementation details unless re-exported by an app entry point:
+Files under these folders are implementation details unless re-exported:
 
-- `apps/*/main/ipc/**`
-- `apps/*/main/services/**`
-- `apps/*/main/store/**`
-- `apps/*/ui/app/**`
-- `apps/*/ui/hooks/**`
-- `apps/*/ui/services/**`
+- `src/main/ipc/**`
+- `src/main/services/**`
+- `src/main/store/**`
+- `src/renderer/app/**`
+- `src/renderer/hooks/**`
+- `src/renderer/services/**`
 
-Other apps and the hub must not import them directly.
+Tests may import them directly for targeted coverage.
 
-## 4. Feature ownership stays inside the feature app
+## 4. Feature ownership stays inside `src`
 
-Feature-specific code must live inside its owning app boundary.
-
-For Promptizer, these belong under `apps/promptizer/**`:
+For Promptizer, these belong under `src/**`:
 
 - personas
 - providers
@@ -61,7 +58,7 @@ For Promptizer, these belong under `apps/promptizer/**`:
 
 ## 5. Shared means contract, not dumping ground
 
-Use `apps/*/shared/**` only for code that must cross process/layer boundaries inside that app, such as:
+Use `src/shared/**` only for code that must cross process/layer boundaries, such as:
 
 - domain value types
 - schema-validated payloads/results
@@ -70,35 +67,20 @@ Use `apps/*/shared/**` only for code that must cross process/layer boundaries in
 
 Do not put UI helpers, persistence implementations, service clients, or app-specific orchestration in `shared`.
 
-## 6. Main-process preload paths are app-owned
+## 6. Main-process preload
 
-The Electron host must not hardcode an app's preload implementation path.
-
-Use the app's public main API instead:
-
-```ts
-import { getPromptizerPreloadPath } from "../../apps/promptizer/main/index.js";
-```
+Keep a single preload implementation at `src/main/preload.ts`.
 
 ## 7. Boundary checks before merge
 
 Before merging structural changes, check for forbidden imports:
 
 ```bash
-rg "from ['\"].*apps/.*/(main/ipc|ui/app|ui/hooks|ui/services)" src apps
-rg 'src/(hooks|services|types)' apps
+rg "old-multi-app-path|old-hub-shell" .
 ```
 
 Any match should be justified as a composition-root exception or refactored behind a public entry point.
 
-## 8. When adding a new app
+## 8. Adding new feature areas
 
-A new app must start with explicit public surfaces:
-
-```txt
-apps/new-app/main/index.ts   # if it has main-process behavior
-apps/new-app/ui/index.ts     # if it has renderer UI
-apps/new-app/shared/**       # only if contracts/types cross layers
-```
-
-The hub may import only from those public surfaces.
+Add new Promptizer feature areas under the existing `src/main`, `src/renderer`, `src/shared`, or `src/spec` boundaries.

@@ -1,24 +1,22 @@
-# App Hub Layout
+# Promptizer App Layout
 
-Tags: renderer, hub, app-boundaries
+Tags: renderer, app-boundaries
 
 ## Summary
 
-The root renderer is now an app hub. Promptizer is isolated under `apps/promptizer`, and `src/ui/app/App.tsx` owns the app side menu plus active app selection.
+The root renderer now mounts Promptizer directly as a single app. The previous multi-app split was collapsed into `src`.
 
 ## Pointers
 
-- `src/ui/app/App.tsx`: hub shell, side app menu, and default Promptizer route.
-- `src/ui/app/App.module.css`: hub rail and app icon button states.
-- The Promptizer side menu item intentionally renders `/icon.svg`, matching the Promptizer header brand mark instead of using a generic lucide icon.
-- `apps/promptizer/ui/app/PromptizerApp.tsx`: Promptizer renderer root mounted by the hub.
-- `src/main/index.ts`: Electron window shell; imports Promptizer IPC from `apps/promptizer/main/ipc/register-handlers.ts`.
+- `src/renderer/main.tsx`: Vite renderer entry; mounts `PromptizerApp` directly.
+- `src/renderer/app/PromptizerApp.tsx`: Promptizer renderer root.
+- `src/main/index.ts`: Electron window shell; registers IPC from `src/main/ipc/register-handlers.ts`.
 
 ## Boundary
 
-- Keep app-specific renderer code under `apps/<app>/ui`.
-- Keep app-specific main-process code under `apps/<app>/main`.
-- Keep shared contracts that are specific to an app under `apps/<app>/shared`.
-- The hub should mount app roots and own cross-app navigation, but it should not import app internals beyond each app root component.
+- Keep renderer code under `src/renderer`.
+- Keep main-process code under `src/main`.
+- Keep renderer/main contracts under `src/shared`.
+- Keep built-in Persona and Provider specs under `src/spec`.
 
 Updated: 2026-06-09

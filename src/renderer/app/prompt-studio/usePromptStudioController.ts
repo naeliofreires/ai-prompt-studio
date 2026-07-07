@@ -29,6 +29,7 @@ export function usePromptStudioController(): PromptStudioScreenProps {
     error: rolesError,
   } = useRoles();
   const apiKeySettings = useApiKeyRepository();
+  const { configuredProviderIds, isConfigured } = apiKeySettings;
   const [view, setView] = useState<PromptizerView>("studio");
   const [activeRole, setActiveRole] = useState<string>("");
   const [personaActionError, setPersonaActionError] = useState("");
@@ -65,8 +66,8 @@ export function usePromptStudioController(): PromptStudioScreenProps {
   }, [activeRole, roles]);
 
   const configuredProviders = useMemo(
-    () => providersConfig.filter((entry) => apiKeySettings.configuredProviderIds.includes(entry.id)),
-    [apiKeySettings.configuredProviderIds],
+    () => providersConfig.filter((entry) => configuredProviderIds.includes(entry.id)),
+    [configuredProviderIds],
   );
 
   const selectedProvider = useMemo(
@@ -78,7 +79,7 @@ export function usePromptStudioController(): PromptStudioScreenProps {
     [configuredProviders, provider],
   );
 
-  const keyMissing = !apiKeySettings.isConfigured(provider);
+  const keyMissing = !isConfigured(provider);
 
   useEffect(() => {
     const firstConfiguredProvider = configuredProviders[0];
@@ -88,11 +89,11 @@ export function usePromptStudioController(): PromptStudioScreenProps {
       return;
     }
 
-    if (!apiKeySettings.isConfigured(provider)) {
+    if (!isConfigured(provider)) {
       setProvider(firstConfiguredProvider.id);
       setModel(modelForProvider(firstConfiguredProvider.id) ?? "");
     }
-  }, [apiKeySettings.isConfigured, configuredProviders, provider]);
+  }, [configuredProviders, isConfigured, provider]);
 
   const {
     inputIdea,

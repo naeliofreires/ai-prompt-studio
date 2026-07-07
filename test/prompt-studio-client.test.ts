@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { GeneratePromptPayload } from "../apps/promptizer/shared";
-import { promptStudioClient } from "../apps/promptizer/ui/api/prompt-studio-client";
+import type { GeneratePromptPayload } from "../src/shared";
+import { promptStudioClient } from "../src/renderer/api/prompt-studio-client";
 import { setAiPromptStudioBridge } from "./helpers/ai-prompt-studio-bridge";
 
 describe("promptStudioClient", () => {
