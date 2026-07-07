@@ -1,5 +1,5 @@
-import { PromptStudioScreen } from "./PromptStudioScreen";
-import { usePromptStudioController } from "./usePromptStudioController";
+import { PromptStudioScreen } from "./prompt-studio/PromptStudioScreen";
+import { usePromptStudioController } from "./prompt-studio/usePromptStudioController";
 
 export function PromptizerApp() {
   const promptStudio = usePromptStudioController();

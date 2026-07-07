@@ -4,14 +4,14 @@ import { apiKeyRepository } from "../api/api-key-repository";
 
 export function useApiKeyRepository() {
   const [keys, setKeysState] = useState<Partial<Record<ProviderId, string>>>({});
-  const [, setMainConfiguredProviders] = useState<ProviderId[]>([]);
+  const [configuredProviderIds, setConfiguredProviderIds] = useState<ProviderId[]>([]);
   const [hydrated, setHydrated] = useState(false);
 
   const refresh = useCallback(async () => {
     const k = apiKeyRepository.getKeys();
     setKeysState(k);
     await apiKeyRepository.refreshConfiguredProviders();
-    setMainConfiguredProviders(apiKeyRepository.getMainConfiguredProviders());
+    setConfiguredProviderIds(apiKeyRepository.configuredProviderIds());
   }, []);
 
   useEffect(() => {
@@ -42,8 +42,9 @@ export function useApiKeyRepository() {
     (patch: Partial<Record<ProviderId, string>>) => {
       apiKeyRepository.setKeys(patch);
       setKeysState(apiKeyRepository.getKeys());
+      setConfiguredProviderIds(apiKeyRepository.configuredProviderIds());
       void apiKeyRepository.refreshConfiguredProviders().then(() => {
-        setMainConfiguredProviders(apiKeyRepository.getMainConfiguredProviders());
+        setConfiguredProviderIds(apiKeyRepository.configuredProviderIds());
       });
     },
     [],
@@ -53,8 +54,9 @@ export function useApiKeyRepository() {
     (id: ProviderId) => {
       apiKeyRepository.clearProvider(id);
       setKeysState(apiKeyRepository.getKeys());
+      setConfiguredProviderIds(apiKeyRepository.configuredProviderIds());
       void apiKeyRepository.refreshConfiguredProviders().then(() => {
-        setMainConfiguredProviders(apiKeyRepository.getMainConfiguredProviders());
+        setConfiguredProviderIds(apiKeyRepository.configuredProviderIds());
       });
     },
     [],
@@ -63,8 +65,9 @@ export function useApiKeyRepository() {
   const clearAll = useCallback(() => {
     apiKeyRepository.clearAll();
     setKeysState({});
+    setConfiguredProviderIds(apiKeyRepository.configuredProviderIds());
     void apiKeyRepository.refreshConfiguredProviders().then(() => {
-      setMainConfiguredProviders(apiKeyRepository.getMainConfiguredProviders());
+      setConfiguredProviderIds(apiKeyRepository.configuredProviderIds());
     });
   }, []);
 
@@ -74,5 +77,6 @@ export function useApiKeyRepository() {
     clearProvider,
     clearAll,
     isConfigured,
+    configuredProviderIds,
   };
 }

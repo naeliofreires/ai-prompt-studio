@@ -19,3 +19,7 @@ _Avoid_: Default role, starter profile
 **Provider**:
 An external model vendor or compatible runtime used by Promptizer to generate refined prompts.
 _Avoid_: Model backend, LLM service
+
+**Prompt Studio**:
+The main workspace where a user selects a Persona and Provider, writes the source prompt, attaches context, and receives the refined prompt.
+_Avoid_: Editor, playground, workspace

@@ -1,90 +1,10 @@
-import { ComposerPanel } from "../components/ComposerPanel";
-import { OutputPanel } from "../components/OutputPanel";
-import { PersonaPanel } from "../components/PersonaPanel";
-import { PersonasPage } from "../components/PersonasPage";
-import SettingsModal from "../components/SettingsModal";
-import type { PromtizerResponse } from "../types/api";
-import type { GenerationEvaluation, GenerationUsage } from "../types/generation";
-import type { Role } from "../types/role";
-import type { GeneratePromptPayload, Provider, ProviderId } from "../../shared";
-import styles from "./App.module.scss";
-
-type PromptAttachment = NonNullable<GeneratePromptPayload["attachments"]>[number];
-
-export type PromptizerView = "studio" | "personas";
-
-interface PersonaPanelGroup {
-  roles: Role[];
-  activeRole: string;
-  isLoading: boolean;
-  loadError: string;
-  actionError: string;
-  onSelect: (id: string) => void;
-  onManagePersonas: () => void;
-}
-
-interface ComposerPanelGroup {
-  inputIdea: string;
-  onInputChange: (value: string) => void;
-  provider: ProviderId;
-  model: string;
-  providers: Provider[];
-  selectedProvider: Provider;
-  isGenerating: boolean;
-  keyMissing: boolean;
-  disabledReason: string;
-  onProviderChange: (providerId: ProviderId) => void;
-  onModelChange: (model: string) => void;
-  onGenerate: () => void;
-  onOpenSettings: () => void;
-  promptAttachments: PromptAttachment[];
-  onPromptAttachmentsChange: (attachments: PromptAttachment[]) => void;
-  onRemovePromptAttachment: (index: number) => void;
-}
-
-interface OutputPanelGroup {
-  outputPrompt: string;
-  promtizerResponse: PromtizerResponse | null;
-  outputIsError: boolean;
-  generationError: string;
-  isGenerating: boolean;
-  isCopied: boolean;
-  usage: GenerationUsage | null;
-  evaluation: GenerationEvaluation | null;
-  onCopy: () => void;
-}
-
-interface SettingsModalGroup {
-  open: boolean;
-  providers: Provider[];
-  keys: Partial<Record<ProviderId, string>>;
-  onClose: () => void;
-  onSave: () => void;
-  onSaveKeys: (patch: Partial<Record<ProviderId, string>>) => void;
-  onClearProvider: (id: ProviderId) => void;
-  onClearAll: () => void;
-}
-
-export interface PromptStudioScreenProps {
-  view: PromptizerView;
-  onShowStudio: () => void;
-  onShowPersonas: () => void;
-  persona: PersonaPanelGroup;
-  composer: ComposerPanelGroup;
-  output: OutputPanelGroup;
-  personasPage: {
-    roles: Role[];
-    activeRole: string;
-    isLoading: boolean;
-    loadError: string;
-    actionError: string;
-    onSelect: (id: string) => void;
-    onCreate: (title: string, description: string) => Promise<unknown>;
-    onUpdate: (id: string, patch: { title: string; description: string }) => Promise<unknown>;
-    onDelete: (id: string) => Promise<boolean>;
-  };
-  settingsModal: SettingsModalGroup;
-}
+import { ComposerPanel } from "../../components/ComposerPanel";
+import { OutputPanel } from "../../components/OutputPanel";
+import { PersonaPanel } from "../../components/PersonaPanel";
+import { PersonasPage } from "../../components/PersonasPage";
+import SettingsModal from "../../components/SettingsModal";
+import styles from "./PromptStudioScreen.module.scss";
+import type { PromptStudioScreenProps } from "./PromptStudio.types";
 
 export function PromptStudioScreen({
   view,

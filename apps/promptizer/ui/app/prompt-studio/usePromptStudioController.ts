@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { PROVIDERS, type ProviderId } from "../../shared";
-import { getErrorMessage } from "../../shared/utils/error";
-import { useApiKeyRepository } from "../hooks/useApiKeyRepository";
-import { useCopyWithFeedback } from "../hooks/useCopyWithFeedback";
-import { usePromptGeneration } from "../hooks/usePromptGeneration";
-import { useRoles } from "../hooks/useRoles";
-import { formatPromtizerResponse } from "../utils/formatPromtizerResponse";
-import type { PromptStudioScreenProps, PromptizerView } from "./PromptStudioScreen";
+import { PROVIDERS, type ProviderId } from "../../../shared";
+import { getErrorMessage } from "../../../shared/utils/error";
+import { useApiKeyRepository } from "../../hooks/useApiKeyRepository";
+import { useCopyWithFeedback } from "../../hooks/useCopyWithFeedback";
+import { usePromptGeneration } from "../../hooks/usePromptGeneration";
+import { useRoles } from "../../hooks/useRoles";
+import { formatPromtizerResponse } from "../../utils/formatPromtizerResponse";
+import type { PromptStudioScreenProps, PromptizerView } from "./PromptStudio.types";
 
 const providersConfig = PROVIDERS;
 
@@ -65,8 +65,8 @@ export function usePromptStudioController(): PromptStudioScreenProps {
   }, [activeRole, roles]);
 
   const configuredProviders = useMemo(
-    () => providersConfig.filter((entry) => apiKeySettings.isConfigured(entry.id)),
-    [apiKeySettings.isConfigured],
+    () => providersConfig.filter((entry) => apiKeySettings.configuredProviderIds.includes(entry.id)),
+    [apiKeySettings.configuredProviderIds],
   );
 
   const selectedProvider = useMemo(
@@ -140,6 +140,22 @@ export function usePromptStudioController(): PromptStudioScreenProps {
     setView("personas");
   }
 
+  function handleSelectPersona(id: string) {
+    setActiveRole(id);
+  }
+
+  function handleModelChange(nextModel: string) {
+    setModel(nextModel);
+  }
+
+  function handleOpenSettings() {
+    setIsSettingsModalOpen(true);
+  }
+
+  function handleCloseSettings() {
+    setIsSettingsModalOpen(false);
+  }
+
   async function handleCreateRole(title: string, description: string) {
     setPersonaActionError("");
 
@@ -197,7 +213,7 @@ export function usePromptStudioController(): PromptStudioScreenProps {
       isLoading,
       loadError: rolesError,
       actionError: personaActionError,
-      onSelect: setActiveRole,
+      onSelect: handleSelectPersona,
       onManagePersonas: handleShowPersonas,
     },
     composer: {
@@ -211,9 +227,9 @@ export function usePromptStudioController(): PromptStudioScreenProps {
       keyMissing,
       disabledReason: personaGuardMessage,
       onProviderChange: handleProviderChange,
-      onModelChange: setModel,
+      onModelChange: handleModelChange,
       onGenerate: handleGenerate,
-      onOpenSettings: () => setIsSettingsModalOpen(true),
+      onOpenSettings: handleOpenSettings,
       promptAttachments,
       onPromptAttachmentsChange: setPromptAttachments,
       onRemovePromptAttachment: handleRemovePromptAttachment,
@@ -235,7 +251,7 @@ export function usePromptStudioController(): PromptStudioScreenProps {
       isLoading,
       loadError: rolesError,
       actionError: personaActionError,
-      onSelect: setActiveRole,
+      onSelect: handleSelectPersona,
       onCreate: handleCreateRole,
       onUpdate: handleSavePersona,
       onDelete: handleDeleteRole,
@@ -244,8 +260,8 @@ export function usePromptStudioController(): PromptStudioScreenProps {
       open: isSettingsModalOpen,
       providers: providersConfig,
       keys: apiKeySettings.keys,
-      onClose: () => setIsSettingsModalOpen(false),
-      onSave: () => setIsSettingsModalOpen(false),
+      onClose: handleCloseSettings,
+      onSave: handleCloseSettings,
       onSaveKeys: apiKeySettings.saveKeys,
       onClearProvider: apiKeySettings.clearProvider,
       onClearAll: apiKeySettings.clearAll,
