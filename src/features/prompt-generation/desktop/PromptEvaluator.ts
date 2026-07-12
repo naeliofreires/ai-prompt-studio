@@ -1,22 +1,19 @@
 import { promptEvaluationSchema, type PromptEvaluation } from "../contract/prompt-evaluation.js";
-import { getErrorMessage } from "../../../shared/lib/error.js";
-import { logger } from "../../../platform/electron/logger.js";
-import { resolveLanguageModel } from "../../providers/desktop/provider-registry.js";
 import type { GenerateTextFn } from "./LLMAdapter.js";
+import type { LanguageModelV3 } from "@ai-sdk/provider";
 
-export interface PromptEvaluatorOptions {
+interface PromptEvaluatorOptions {
   generateText: GenerateTextFn;
+  languageModel: LanguageModelV3;
 }
 
 export interface PromptEvaluatorInput {
   rawInput: string;
   refinedPrompt: string;
-  providerId: string;
-  model: string;
 }
 
 export interface PromptEvaluator {
-  evaluate(input: PromptEvaluatorInput): Promise<PromptEvaluation | null>;
+  evaluate(input: PromptEvaluatorInput): Promise<PromptEvaluation>;
 }
 
 const evaluationSystemPrompt = [
@@ -36,24 +33,17 @@ function parsePromptEvaluation(text: string): PromptEvaluation {
 }
 
 export function PromptEvaluator(options: PromptEvaluatorOptions): PromptEvaluator {
-  const { generateText } = options;
+  const { generateText, languageModel } = options;
 
   return {
-    evaluate: async (input: PromptEvaluatorInput): Promise<PromptEvaluation | null> => {
-      try {
-        const model = resolveLanguageModel(input.providerId, input.model);
-        const result = await generateText({
-          model,
-          system: evaluationSystemPrompt,
-          prompt: buildEvaluationPrompt(input),
-        });
+    evaluate: async (input: PromptEvaluatorInput): Promise<PromptEvaluation> => {
+      const result = await generateText({
+        model: languageModel,
+        system: evaluationSystemPrompt,
+        prompt: buildEvaluationPrompt(input),
+      });
 
-        return parsePromptEvaluation(result.text);
-      } catch (err) {
-        const message = getErrorMessage(err, "Prompt evaluation failed.");
-        logger.warn("prompt evaluation skipped", message);
-        return null;
-      }
+      return parsePromptEvaluation(result.text);
     },
   };
 }

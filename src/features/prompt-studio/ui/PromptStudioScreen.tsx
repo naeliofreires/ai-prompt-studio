@@ -29,10 +29,13 @@ export function PromptStudioScreen({ composer, output, settingsModal }: PromptSt
               selectedProvider={composer.selectedProvider}
               isGenerating={composer.isGenerating}
               keyMissing={composer.keyMissing}
+              disabledReason={composer.disabledReason}
+              allowModelSelectionWhileDisabled={composer.allowModelSelectionWhileDisabled}
               onProviderChange={composer.onProviderChange}
               onModelChange={composer.onModelChange}
               onGenerate={composer.onGenerate}
               onOpenSettings={composer.onOpenSettings}
+              onRecoverSession={composer.onRecoverSession}
               promptAttachments={composer.promptAttachments}
               onPromptAttachmentsChange={composer.onPromptAttachmentsChange}
               onRemovePromptAttachment={composer.onRemovePromptAttachment}
@@ -49,6 +52,7 @@ export function PromptStudioScreen({ composer, output, settingsModal }: PromptSt
               isCopied={output.isCopied}
               usage={output.usage}
               evaluation={output.evaluation}
+              evaluationWarning={output.evaluationWarning}
               onCopy={output.onCopy}
             />
           </section>

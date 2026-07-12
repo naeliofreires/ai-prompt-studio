@@ -45,6 +45,7 @@ export const generatePromptIpcResultSchema = z.discriminatedUnion("ok", [
     prompt: z.string(),
     tokensUsed: z.number().optional(),
     evaluation: promptEvaluationSchema.optional(),
+    evaluationWarning: z.string().optional(),
   }),
   z.object({ ok: z.literal(false), message: z.string() }),
 ]);

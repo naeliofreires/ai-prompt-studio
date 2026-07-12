@@ -17,10 +17,12 @@ export interface ComposerPanelProps {
   isGenerating: boolean;
   keyMissing: boolean;
   disabledReason?: string;
+  allowModelSelectionWhileDisabled?: boolean;
   onProviderChange: (providerId: ProviderId) => void;
   onModelChange: (model: string) => void;
   onGenerate: () => void;
   onOpenSettings: () => void;
+  onRecoverSession?: () => void;
   promptAttachments?: PromptAttachment[];
   onPromptAttachmentsChange?: (attachments: PromptAttachment[]) => void;
   onRemovePromptAttachment?: (index: number) => void;
@@ -61,6 +63,7 @@ function ComposerControls({
   providers,
   isGenerating,
   disabledReason,
+  allowModelSelectionWhileDisabled,
   onProviderChange,
   onModelChange,
   onGenerate,
@@ -71,6 +74,7 @@ function ComposerControls({
   providers: Provider[];
   isGenerating: boolean;
   disabledReason?: string;
+  allowModelSelectionWhileDisabled?: boolean;
   onProviderChange: (providerId: ProviderId) => void;
   onModelChange: (model: string) => void;
   onGenerate: () => void;
@@ -88,7 +92,7 @@ function ComposerControls({
             value={provider}
             onChange={(event) => onProviderChange(event.target.value as ProviderId)}
             className={styles.select}
-            disabled={providers.length === 0}
+            disabled={providers.length === 0 || Boolean(disabledReason)}
           >
             {providers.length > 0 ? (
               providers.map((entry) => (
@@ -108,7 +112,10 @@ function ComposerControls({
             value={model}
             onChange={(event) => onModelChange(event.target.value)}
             className={styles.select}
-            disabled={availableModels.length === 0}
+            disabled={
+              availableModels.length === 0 ||
+              (Boolean(disabledReason) && !allowModelSelectionWhileDisabled)
+            }
           >
             {availableModels.length > 0 ? (
               availableModels.map((entry) => (
@@ -147,10 +154,12 @@ export function ComposerPanel({
   isGenerating,
   keyMissing,
   disabledReason,
+  allowModelSelectionWhileDisabled,
   onProviderChange,
   onModelChange,
   onGenerate,
   onOpenSettings,
+  onRecoverSession,
   promptAttachments = [],
   onPromptAttachmentsChange,
   onRemovePromptAttachment,
@@ -209,7 +218,12 @@ export function ComposerPanel({
 
       {disabledReason && (
         <div className={styles.disabledWarning} role="status">
-          {disabledReason}
+          <span>{disabledReason}</span>
+          {onRecoverSession && (
+            <button type="button" className={styles.keyWarningCta} onClick={onRecoverSession}>
+              Recover session
+            </button>
+          )}
         </div>
       )}
 
@@ -282,6 +296,7 @@ export function ComposerPanel({
         providers={providers}
         isGenerating={isGenerating}
         disabledReason={disabledReason}
+        allowModelSelectionWhileDisabled={allowModelSelectionWhileDisabled}
         onProviderChange={onProviderChange}
         onModelChange={onModelChange}
         onGenerate={onGenerate}

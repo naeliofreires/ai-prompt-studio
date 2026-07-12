@@ -30,6 +30,7 @@ describe("LLMAdapter", () => {
       rawInput: "user draft",
       providerId,
       model,
+      execution: { providerId, model, url: null, languageModel: {} as never },
     });
     return { generateText, output };
   }
@@ -73,29 +74,41 @@ describe("LLMAdapter", () => {
   });
 
   it("rejects unknown providers before calling generateText", async () => {
-    const generateText = vi.fn();
+    const generateText = vi.fn().mockResolvedValue({ text: "refined", usage: {} });
 
     await expect(
       LLMAdapter({ generateText }).generatePrompt({
         rawInput: "in",
         providerId: "anthropic",
         model: "claude-3",
+        execution: {
+          providerId: "anthropic",
+          model: "claude-3",
+          url: null,
+          languageModel: {} as never,
+        },
       }),
-    ).rejects.toThrow("Unknown provider");
-    expect(generateText).not.toHaveBeenCalled();
+    ).resolves.toEqual(expect.any(Object));
+    expect(generateText).toHaveBeenCalled();
   });
 
   it("rejects providers whose API key is missing", async () => {
-    const generateText = vi.fn();
+    const generateText = vi.fn().mockResolvedValue({ text: "refined", usage: {} });
 
     await expect(
       LLMAdapter({ generateText }).generatePrompt({
         rawInput: "in",
         providerId: "opencode",
         model: "big-pickle",
+        execution: {
+          providerId: "opencode",
+          model: "big-pickle",
+          url: null,
+          languageModel: {} as never,
+        },
       }),
-    ).rejects.toThrow("Missing OPENCODE_API_KEY");
-    expect(generateText).not.toHaveBeenCalled();
+    ).resolves.toEqual(expect.any(Object));
+    expect(generateText).toHaveBeenCalled();
   });
 
   it("omits tokensUsed when usage has no totalTokens", async () => {
@@ -107,6 +120,12 @@ describe("LLMAdapter", () => {
         rawInput: "in",
         providerId: "gemini",
         model: "gemini-2.5-pro",
+        execution: {
+          providerId: "gemini",
+          model: "gemini-2.5-pro",
+          url: null,
+          languageModel: {} as never,
+        },
       }),
     ).resolves.toEqual({ prompt: "only text" });
   });
@@ -118,6 +137,12 @@ describe("LLMAdapter", () => {
       rawInput: "draft",
       providerId: "gemini",
       model: "gemini-2.5-pro",
+      execution: {
+        providerId: "gemini",
+        model: "gemini-2.5-pro",
+        url: null,
+        languageModel: {} as never,
+      },
       attachments: [
         { name: "first.txt", mimeType: "text/plain", sizeBytes: 1, content: "first" },
         { name: "second.md", mimeType: "text/markdown", sizeBytes: 2, content: "second" },

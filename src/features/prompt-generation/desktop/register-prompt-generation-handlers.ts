@@ -9,6 +9,8 @@ import { logger } from "../../../platform/electron/logger.js";
 import { generateRefinedPrompt } from "./generate-refined-prompt.js";
 import { LLMAdapter, type GenerateTextFn } from "./LLMAdapter.js";
 import { PromptEvaluator } from "./PromptEvaluator.js";
+import { resolvePromptStudioExecution } from "../../providers/desktop/provider-registry.js";
+import { getPromptStudioSession } from "../../prompt-studio/desktop/session-store.js";
 
 function zodIssuesToMessage(err: ZodError): string {
   return err.issues.map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`).join("; ");
@@ -19,9 +21,6 @@ export function registerPromptGenerationHandlers({
 }: {
   generateText: GenerateTextFn;
 }): void {
-  const llmAdapter = LLMAdapter({ generateText });
-  const promptEvaluator = PromptEvaluator({ generateText });
-
   ipcMain.handle(promptGenerationIpcChannels.generatePrompt, async (_event, payload) => {
     logger.info("generatePrompt received", {
       providerId: payload.providerId,
@@ -37,10 +36,28 @@ export function registerPromptGenerationHandlers({
       throw err;
     }
 
-    const result = await generateRefinedPrompt(parsed, {
-      llmAdapter,
-      promptEvaluator,
-    });
+    let execution;
+    try {
+      execution = resolvePromptStudioExecution(getPromptStudioSession());
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Could not resolve the saved Prompt Studio session.";
+      logger.warn("generatePrompt session validation failed", message);
+      return generatePromptIpcResultSchema.parse({ ok: false, message });
+    }
+
+    const result = await generateRefinedPrompt(
+      { ...parsed, providerId: execution.providerId, model: execution.model },
+      {
+        llmAdapter: LLMAdapter({
+          generateText,
+          languageModel: execution.languageModel,
+          providerId: execution.providerId,
+          model: execution.model,
+        }),
+        promptEvaluator: PromptEvaluator({ generateText, languageModel: execution.languageModel }),
+      },
+    );
     return generatePromptIpcResultSchema.parse(result);
   });
 }

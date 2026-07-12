@@ -2,7 +2,6 @@ import type { LanguageModelV3 } from "@ai-sdk/provider";
 import type { GeneratePromptInput, GeneratePromptOutput, LlmAdapter } from "../contract/llm.js";
 import { logger } from "../../../platform/electron/logger.js";
 import { buildRefinementSystemPrompt } from "./build-refinement-system-prompt.js";
-import { resolveLanguageModel } from "../../providers/desktop/provider-registry.js";
 
 type GenerateTextFnResponse = Promise<{
   text: string;
@@ -17,8 +16,11 @@ export type GenerateTextFn = (args: {
   prompt: string;
 }) => GenerateTextFnResponse;
 
-export interface LLMAdapterOptions {
+interface LLMAdapterOptions {
   generateText: GenerateTextFn;
+  languageModel: LanguageModelV3;
+  providerId: string;
+  model: string;
 }
 
 function buildPrompt(input: GeneratePromptInput): string {
@@ -42,21 +44,19 @@ function buildPrompt(input: GeneratePromptInput): string {
 }
 
 export function LLMAdapter(options: LLMAdapterOptions): LlmAdapter {
-  const { generateText } = options;
+  const { generateText, languageModel, providerId, model } = options;
 
   return {
     generatePrompt: async (input: GeneratePromptInput): Promise<GeneratePromptOutput> => {
       const prompt = buildPrompt(input);
 
       const system = buildRefinementSystemPrompt();
-      const model = resolveLanguageModel(input.providerId, input.model);
-
       logger.info("generatePrompt provider request", {
-        providerId: input.providerId,
-        model: input.model,
+        providerId,
+        model,
         attachmentCount: input.attachments?.length ?? 0,
       });
-      const result = await generateText({ model, system, prompt });
+      const result = await generateText({ model: languageModel, system, prompt });
 
       const tokensUsed = result.usage.totalTokens;
 

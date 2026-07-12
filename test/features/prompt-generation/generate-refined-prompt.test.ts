@@ -14,7 +14,7 @@ describe("generateRefinedPrompt", () => {
     const result = await generateRefinedPrompt(payload, { llmAdapter: { generatePrompt } });
 
     expect(result).toEqual({ ok: true, prompt: "refined output", tokensUsed: 100 });
-    expect(generatePrompt).toHaveBeenCalledWith(payload);
+    expect(generatePrompt).toHaveBeenCalledWith({ ...payload, attachments: undefined });
   });
 
   it("evaluates and saves successful generations without deprecated fields", async () => {
@@ -29,7 +29,16 @@ describe("generateRefinedPrompt", () => {
       savePromptSession,
     });
 
-    expect(evaluate).toHaveBeenCalledWith({ ...payload, refinedPrompt: "refined output" });
-    expect(savePromptSession).toHaveBeenCalledWith({ ...payload, generatedPrompt: "refined output", evaluation });
+    expect(evaluate).toHaveBeenCalledWith({
+      rawInput: payload.rawInput,
+      refinedPrompt: "refined output",
+    });
+    expect(savePromptSession).toHaveBeenCalledWith({
+      rawInput: payload.rawInput,
+      providerId: payload.providerId,
+      model: payload.model,
+      generatedPrompt: "refined output",
+      evaluation,
+    });
   });
 });

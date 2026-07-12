@@ -34,6 +34,7 @@ export function usePromptGeneration({
   const [promtizerResponse, setPromtizerResponse] = useState<PromtizerResponse | null>(null);
   const [usage, setUsage] = useState<GenerationUsage | null>(null);
   const [evaluation, setEvaluation] = useState<GenerationEvaluation | null>(null);
+  const [evaluationWarning, setEvaluationWarning] = useState("");
   const [generationError, setGenerationError] = useState("");
   const [promptAttachments, setPromptAttachments] = useState<PromptAttachments>([]);
 
@@ -45,6 +46,7 @@ export function usePromptGeneration({
       setPromtizerResponse(null);
       setUsage(null);
       setEvaluation(null);
+      setEvaluationWarning("");
       setGenerationError("Enter an idea before refining the prompt.");
       return;
     }
@@ -67,6 +69,7 @@ export function usePromptGeneration({
     setPromtizerResponse(null);
     setUsage(null);
     setEvaluation(null);
+    setEvaluationWarning("");
     setGenerationError("");
 
     try {
@@ -95,6 +98,7 @@ export function usePromptGeneration({
         tokensUsed: result.tokensUsed,
       });
       setEvaluation(result.evaluation ?? null);
+      setEvaluationWarning(result.evaluationWarning ?? "");
     } catch (err) {
       setGenerationError(getErrorMessage(err, "Could not generate the prompt."));
     } finally {
@@ -121,6 +125,7 @@ export function usePromptGeneration({
     promtizerResponse,
     usage,
     evaluation,
+    evaluationWarning,
     generationError,
     handleGenerate,
   };

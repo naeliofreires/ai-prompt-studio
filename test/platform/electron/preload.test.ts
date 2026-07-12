@@ -1,11 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { promptGenerationIpcChannels, type GeneratePromptPayload } from "../../../src/features/prompt-generation/contract/ipc";
+import {
+  promptGenerationIpcChannels,
+  type GeneratePromptPayload,
+} from "../../../src/features/prompt-generation/contract/ipc";
 import { providerIpcChannels } from "../../../src/features/providers/contract/ipc";
 
 const mocks = vi.hoisted(() => {
   let exposedApi: any = null;
   return {
-    exposeInMainWorld: vi.fn((_key: string, api: any) => { exposedApi = api; }),
+    exposeInMainWorld: vi.fn((_key: string, api: any) => {
+      exposedApi = api;
+    }),
     exposedApi: () => exposedApi,
     invoke: vi.fn(),
   };
@@ -25,11 +30,18 @@ describe("preload bridge", () => {
   it("exposes generation and provider APIs without deprecated CRUD", async () => {
     await import("../../../src/main/preload");
     const api = mocks.exposedApi();
-    const payload: GeneratePromptPayload = { rawInput: "Refine this prompt.", providerId: "gemini", model: "gemini-2.5-pro" };
+    const payload: GeneratePromptPayload = {
+      rawInput: "Refine this prompt.",
+      providerId: "gemini",
+      model: "gemini-2.5-pro",
+    };
 
     await api.promptGeneration.generatePrompt(payload);
-    expect(mocks.invoke).toHaveBeenLastCalledWith(promptGenerationIpcChannels.generatePrompt, payload);
-    expect(Object.keys(api).sort()).toEqual(["promptGeneration", "providers"]);
+    expect(mocks.invoke).toHaveBeenLastCalledWith(
+      promptGenerationIpcChannels.generatePrompt,
+      payload,
+    );
+    expect(Object.keys(api).sort()).toEqual(["promptGeneration", "promptStudio", "providers"]);
     await api.providers.clearAllApiKeys();
     expect(mocks.invoke).toHaveBeenLastCalledWith(providerIpcChannels.clearAllApiKeys);
   });

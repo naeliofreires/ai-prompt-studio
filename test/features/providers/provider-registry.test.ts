@@ -14,8 +14,11 @@ const { chat, chatModel, createOpenAI, createOpenAICompatible } = vi.hoisted(() 
 vi.mock("@ai-sdk/openai", () => ({ createOpenAI }));
 vi.mock("@ai-sdk/openai-compatible", () => ({ createOpenAICompatible }));
 
-import { resolveLanguageModel } from "../../../src/features/providers/desktop/provider-registry";
-import { clearAllApiKeys, setApiKeys } from "../../../src/features/providers/desktop/api-key-manager";
+import { resolvePromptStudioExecution } from "../../../src/features/providers/desktop/provider-registry";
+import {
+  clearAllApiKeys,
+  setApiKeys,
+} from "../../../src/features/providers/desktop/api-key-manager";
 
 const baseUrlKeys = [
   "OPENCODE_ZEN_BASE_URL",
@@ -49,35 +52,47 @@ describe("provider-registry", () => {
     }
   });
 
-  it("uses OPENCODE_ZEN_BASE_URL before the legacy OPENCODE_BASE_URL", () => {
+  it("uses the saved session URL instead of environment overrides", () => {
     process.env.OPENCODE_ZEN_BASE_URL = "https://zen.example/v1";
     process.env.OPENCODE_BASE_URL = "https://legacy.example/v1";
 
-    resolveLanguageModel("opencode", "big-pickle");
+    resolvePromptStudioExecution({
+      providerId: "opencode",
+      model: "big-pickle",
+      url: "https://saved.example/v1",
+    });
 
     expect(createOpenAICompatible).toHaveBeenCalledWith(
-      expect.objectContaining({ baseURL: "https://zen.example/v1" }),
+      expect.objectContaining({ baseURL: "https://saved.example/v1" }),
     );
   });
 
-  it("continues to support OPENCODE_BASE_URL", () => {
+  it("uses the saved URL for OpenCode when no environment override is present", () => {
     process.env.OPENCODE_BASE_URL = "https://legacy.example/v1";
 
-    resolveLanguageModel("opencode", "big-pickle");
+    resolvePromptStudioExecution({
+      providerId: "opencode",
+      model: "big-pickle",
+      url: "http://localhost:8080/v1",
+    });
 
     expect(createOpenAICompatible).toHaveBeenCalledWith(
-      expect.objectContaining({ baseURL: "https://legacy.example/v1" }),
+      expect.objectContaining({ baseURL: "http://localhost:8080/v1" }),
     );
   });
 
-  it("does not apply the OpenCode Zen override to other providers", () => {
+  it("uses the saved URL for other providers", () => {
     process.env.DEEPSEEK_ZEN_BASE_URL = "https://zen.example/v1";
     process.env.DEEPSEEK_BASE_URL = "https://deepseek.example/v1";
 
-    resolveLanguageModel("deepseek", "deepseek-chat");
+    resolvePromptStudioExecution({
+      providerId: "deepseek",
+      model: "deepseek-reasoner",
+      url: "https://saved.deepseek.example/v1",
+    });
 
     expect(createOpenAI).toHaveBeenCalledWith(
-      expect.objectContaining({ baseURL: "https://deepseek.example/v1" }),
+      expect.objectContaining({ baseURL: "https://saved.deepseek.example/v1" }),
     );
   });
 });

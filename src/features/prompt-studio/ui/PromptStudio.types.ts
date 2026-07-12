@@ -17,10 +17,13 @@ export interface PromptStudioComposerState {
   selectedProvider: Provider;
   isGenerating: boolean;
   keyMissing: boolean;
+  disabledReason?: string;
+  allowModelSelectionWhileDisabled?: boolean;
   onProviderChange: (providerId: ProviderId) => void;
   onModelChange: (model: string) => void;
   onGenerate: () => void;
   onOpenSettings: () => void;
+  onRecoverSession?: () => void;
   promptAttachments: PromptAttachment[];
   onPromptAttachmentsChange: (attachments: PromptAttachment[]) => void;
   onRemovePromptAttachment: (index: number) => void;
@@ -35,6 +38,7 @@ export interface PromptStudioOutputState {
   isCopied: boolean;
   usage: GenerationUsage | null;
   evaluation: GenerationEvaluation | null;
+  evaluationWarning: string;
   onCopy: () => void;
 }
 

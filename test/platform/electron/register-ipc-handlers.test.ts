@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => {
   const handlers = new Map<string, IpcHandler>();
 
   return {
-    app: { isPackaged: false },
+    app: { isPackaged: false, getName: () => "Promptizer Test" },
     generateText: vi.fn(),
     handlers,
     ipcMain: {
@@ -28,6 +28,10 @@ vi.mock("ai", () => ({
   generateText: mocks.generateText,
 }));
 
+vi.mock("../../../src/features/prompt-studio/desktop/session-store.js", () => ({
+  getPromptStudioSession: () => ({ providerId: "gemini", model: "gemini-2.5-pro", url: null }),
+}));
+
 describe("registerIpcHandlers", () => {
   const prevGemini = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
@@ -44,7 +48,7 @@ describe("registerIpcHandlers", () => {
     else process.env.GOOGLE_GENERATIVE_AI_API_KEY = prevGemini;
   });
 
-  it('11. forwards markdown attachments from IPC payload to LLM generation ', () => {
+  it("11. forwards markdown attachments from IPC payload to LLM generation ", () => {
     const attachments = [
       {
         name: "notes.md",
@@ -92,7 +96,7 @@ describe("registerIpcHandlers", () => {
       });
   });
 
-  it('13. forwards prompt attachments from IPC payload to LLM generation ', () => {
+  it("13. forwards prompt attachments from IPC payload to LLM generation ", () => {
     const evaluation = {
       score: 4,
       summary: "Clear prompt with a focused goal.",

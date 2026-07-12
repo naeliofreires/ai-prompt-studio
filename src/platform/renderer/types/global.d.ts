@@ -6,6 +6,10 @@ import type {
   ListConfiguredApiKeysResult,
   SetApiKeysPayload,
 } from "../../../features/providers/contract/ipc";
+import type {
+  GetPromptStudioSessionResult,
+  SavePromptStudioSessionPayload,
+} from "../../../features/prompt-studio/contract/ipc";
 
 declare global {
   interface Window {
@@ -17,6 +21,13 @@ declare global {
       };
       promptGeneration: {
         generatePrompt: (payload: GeneratePromptPayload) => Promise<GeneratePromptIpcResult>;
+      };
+      promptStudio: {
+        getSession: () => Promise<GetPromptStudioSessionResult>;
+        saveSession: (
+          session: SavePromptStudioSessionPayload,
+        ) => Promise<GetPromptStudioSessionResult>;
+        recoverSession: () => Promise<GetPromptStudioSessionResult>;
       };
     };
   }

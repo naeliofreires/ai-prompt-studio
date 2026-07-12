@@ -16,6 +16,7 @@ export interface OutputPanelProps {
   isCopied: boolean;
   usage: GenerationUsage | null;
   evaluation: GenerationEvaluation | null;
+  evaluationWarning: string;
   onCopy: () => void;
 }
 
@@ -37,6 +38,7 @@ export function OutputPanel({
   isCopied,
   usage,
   evaluation,
+  evaluationWarning,
   onCopy,
 }: OutputPanelProps) {
   const [isEvaluationOpen, setIsEvaluationOpen] = useState(false);
@@ -148,6 +150,7 @@ export function OutputPanel({
           </section>
         </div>
       )}
+      {evaluationWarning && <p className={styles.evaluationWarning}>{evaluationWarning}</p>}
     </>
   );
 }

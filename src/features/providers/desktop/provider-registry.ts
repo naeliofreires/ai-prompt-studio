@@ -3,15 +3,31 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { PROVIDERS, type ProviderId } from "../contract/provider.js";
+import type { PromptStudioSession } from "../../prompt-studio/contract/session.js";
 import { getApiKey } from "./api-key-manager.js";
 
-export function resolveLanguageModel(providerId: string, model: string): LanguageModelV3 {
-  const provider = PROVIDERS.find((p) => p.id === providerId);
+interface PromptStudioExecution {
+  readonly providerId: ProviderId;
+  readonly model: string;
+  readonly url: string | null;
+  readonly languageModel: LanguageModelV3;
+}
+
+export function resolvePromptStudioExecution(session: PromptStudioSession): PromptStudioExecution {
+  const provider = PROVIDERS.find((p) => p.id === session.providerId);
   if (!provider) {
-    throw new Error(`Unknown provider: ${providerId}`);
+    throw new Error(`Unknown provider: ${session.providerId}`);
+  }
+  if (!provider.models.includes(session.model)) {
+    throw new Error(`Model "${session.model}" is not available for ${provider.provider}.`);
+  }
+  if (provider.defaultBaseUrl && !session.url) {
+    throw new Error(
+      `${provider.provider} requires a saved URL. Recover the Prompt Studio session to restore its default URL.`,
+    );
   }
 
-  const apiKey = getApiKey(providerId as ProviderId);
+  const apiKey = getApiKey(session.providerId);
   if (!apiKey) {
     const envKeys = provider.envKeys ?? [];
     const envKeyHint = envKeys.length > 0 ? envKeys[0] : "API key";
@@ -20,20 +36,15 @@ export function resolveLanguageModel(providerId: string, model: string): Languag
     );
   }
 
-  const providerBaseUrl = process.env[`${providerId.toUpperCase()}_BASE_URL`]?.trim();
-  const baseUrl = provider.defaultBaseUrl
-    ? (providerId === "opencode" && process.env.OPENCODE_ZEN_BASE_URL?.trim()) ||
-      providerBaseUrl ||
-      provider.defaultBaseUrl
-    : undefined;
+  const baseUrl = session.url ?? undefined;
 
   let languageModel: LanguageModelV3;
 
   switch (provider.sdkType) {
     case "google": {
-      const google = createGoogleGenerativeAI({ apiKey });
-      const m = google.chat(model);
-      if (!m) throw new Error(`Unsupported ${provider.provider} model: ${model}`);
+      const google = createGoogleGenerativeAI({ apiKey, baseURL: baseUrl });
+      const m = google.chat(session.model);
+      if (!m) throw new Error(`Unsupported ${provider.provider} model: ${session.model}`);
       languageModel = m;
       break;
     }
@@ -41,10 +52,10 @@ export function resolveLanguageModel(providerId: string, model: string): Languag
       const client = createOpenAI({
         baseURL: baseUrl,
         apiKey,
-        name: providerId,
+        name: session.providerId,
       });
-      const m = client.chat(model);
-      if (!m) throw new Error(`Unsupported ${provider.provider} model: ${model}`);
+      const m = client.chat(session.model);
+      if (!m) throw new Error(`Unsupported ${provider.provider} model: ${session.model}`);
       languageModel = m;
       break;
     }
@@ -52,10 +63,10 @@ export function resolveLanguageModel(providerId: string, model: string): Languag
       const client = createOpenAICompatible({
         baseURL: baseUrl!,
         apiKey,
-        name: providerId,
+        name: session.providerId,
       });
-      const m = client.chatModel(model);
-      if (!m) throw new Error(`Unsupported ${provider.provider} model: ${model}`);
+      const m = client.chatModel(session.model);
+      if (!m) throw new Error(`Unsupported ${provider.provider} model: ${session.model}`);
       languageModel = m;
       break;
     }
@@ -65,5 +76,10 @@ export function resolveLanguageModel(providerId: string, model: string): Languag
       );
   }
 
-  return languageModel;
+  return Object.freeze({
+    providerId: session.providerId,
+    model: session.model,
+    url: session.url,
+    languageModel,
+  });
 }

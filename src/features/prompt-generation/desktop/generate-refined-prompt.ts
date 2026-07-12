@@ -25,6 +25,7 @@ export type GenerateRefinedPromptResult =
       prompt: string;
       tokensUsed?: number;
       evaluation?: PromptEvaluation;
+      evaluationWarning?: string;
     }
   | {
       ok: false;
@@ -34,12 +35,10 @@ export type GenerateRefinedPromptResult =
 export interface PromptEvaluatorInput {
   rawInput: string;
   refinedPrompt: string;
-  providerId: ProviderId;
-  model: string;
 }
 
 export interface PromptEvaluator {
-  evaluate(input: PromptEvaluatorInput): Promise<PromptEvaluation | null>;
+  evaluate(input: PromptEvaluatorInput): Promise<PromptEvaluation>;
 }
 
 export interface GenerateRefinedPromptDependencies {
@@ -66,15 +65,18 @@ export async function generateRefinedPrompt(
       ...(out.tokensUsed !== undefined ? { tokensUsed: out.tokensUsed } : {}),
     };
 
-    const evaluation = await evaluatePromptIfAvailable(input, out.prompt, dependencies);
-    if (evaluation) {
-      result.evaluation = evaluation;
+    const evaluationResult = await evaluatePromptIfAvailable(input, out.prompt, dependencies);
+    if (evaluationResult.evaluation) {
+      result.evaluation = evaluationResult.evaluation;
+    }
+    if (evaluationResult.warning) {
+      result.evaluationWarning = evaluationResult.warning;
     }
 
     await savePromptSessionIfAvailable(
       input,
       out.prompt,
-      result.evaluation,
+      evaluationResult.evaluation,
       out.tokensUsed,
       dependencies,
     );
@@ -122,23 +124,21 @@ async function evaluatePromptIfAvailable(
   input: GenerateRefinedPromptInput,
   refinedPrompt: string,
   dependencies: GenerateRefinedPromptDependencies,
-): Promise<PromptEvaluation | undefined> {
+): Promise<{ evaluation?: PromptEvaluation; warning?: string }> {
   if (!dependencies.promptEvaluator) {
-    return undefined;
+    return {};
   }
 
   try {
     const evaluation = await dependencies.promptEvaluator.evaluate({
       rawInput: input.rawInput,
       refinedPrompt,
-      providerId: input.providerId,
-      model: input.model,
     });
 
-    return evaluation ?? undefined;
+    return { evaluation };
   } catch (err) {
     const message = getErrorMessage(err, "Prompt evaluation failed.");
     logger.warn("prompt evaluation skipped", message);
-    return undefined;
+    return { warning: `Prompt refined, but evaluation was unavailable: ${message}` };
   }
 }

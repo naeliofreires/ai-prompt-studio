@@ -4,57 +4,87 @@ import { useApiKeyRepository } from "../../providers/ui/useApiKeyRepository";
 import { useCopyWithFeedback } from "../../prompt-generation/ui/hooks/useCopyWithFeedback";
 import { usePromptGeneration } from "../../prompt-generation/ui/hooks/usePromptGeneration";
 import { formatPromtizerResponse } from "../../prompt-generation/ui/utils/formatPromtizerResponse";
+import {
+  getAiPromptStudioBridge,
+  hasBridgeMethod,
+} from "../../../platform/renderer/api/electron-bridge";
+import { createPromptStudioSession, type PromptStudioSession } from "../contract/session";
 import type { PromptStudioScreenProps } from "./PromptStudio.types";
 
 const providersConfig = PROVIDERS;
 
-function modelForProvider(providerId: ProviderId): string | undefined {
-  const entry = providersConfig.find((provider) => provider.id === providerId);
-  if (!entry || entry.models.length === 0) {
-    return undefined;
-  }
-
-  return entry.models[0];
-}
-
 export function usePromptStudioViewModel(): PromptStudioScreenProps {
   const apiKeySettings = useApiKeyRepository();
-  const { configuredProviderIds, isConfigured } = apiKeySettings;
-  const [provider, setProvider] = useState<ProviderId>("gemini");
-  const [model, setModel] = useState("gemini-2.5-pro");
+  const { isConfigured } = apiKeySettings;
+  const [session, setSession] = useState<PromptStudioSession>(() => createPromptStudioSession());
+  const [sessionLoading, setSessionLoading] = useState(true);
+  const [sessionSaving, setSessionSaving] = useState(false);
+  const [sessionError, setSessionError] = useState("");
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+
+  const { providerId: provider, model } = session;
 
   const { isCopied, copyText, resetCopied } = useCopyWithFeedback();
 
-  const configuredProviders = useMemo(
-    () => providersConfig.filter((entry) => configuredProviderIds.includes(entry.id)),
-    [configuredProviderIds],
-  );
-
   const selectedProvider = useMemo(
-    () =>
-      configuredProviders.find((entry) => entry.id === provider) ??
-      configuredProviders[0] ??
-      providersConfig.find((entry) => entry.id === provider) ??
-      providersConfig[0],
-    [configuredProviders, provider],
+    () => providersConfig.find((entry) => entry.id === provider) ?? providersConfig[0],
+    [provider],
   );
 
   const keyMissing = !isConfigured(provider);
+  const modelIsValid = selectedProvider.models.includes(model);
 
   useEffect(() => {
-    const firstConfiguredProvider = configuredProviders[0];
+    let active = true;
+    const bridge = getAiPromptStudioBridge();
+    const getSession = hasBridgeMethod(bridge?.promptStudio, "getSession")
+      ? bridge.promptStudio.getSession()
+      : Promise.reject(
+          new Error("Prompt Studio sessions are only available in the Electron desktop app."),
+        );
 
-    if (!firstConfiguredProvider) {
-      setModel("");
-      return;
-    }
+    void getSession
+      .then((savedSession) => {
+        if (active) setSession(savedSession);
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          setSessionError(
+            error instanceof Error ? error.message : "Could not load the Prompt Studio session.",
+          );
+        }
+      })
+      .finally(() => {
+        if (active) setSessionLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
-    if (!isConfigured(provider)) {
-      setProvider(firstConfiguredProvider.id);
-      setModel(modelForProvider(firstConfiguredProvider.id) ?? "");
-    }
-  }, [configuredProviders, isConfigured, provider]);
+  function persistSession(nextSession: PromptStudioSession) {
+    setSessionError("");
+    setSessionSaving(true);
+    const bridge = getAiPromptStudioBridge();
+    const saveSession = hasBridgeMethod(bridge?.promptStudio, "saveSession")
+      ? bridge.promptStudio.saveSession(nextSession)
+      : Promise.reject(
+          new Error("Prompt Studio sessions are only available in the Electron desktop app."),
+        );
+
+    void saveSession
+      .then((savedSession) => {
+        setSession(savedSession);
+      })
+      .catch((error: unknown) => {
+        setSessionError(
+          error instanceof Error ? error.message : "Could not save the Prompt Studio session.",
+        );
+      })
+      .finally(() => {
+        setSessionSaving(false);
+      });
+  }
 
   const {
     inputIdea,
@@ -64,6 +94,7 @@ export function usePromptStudioViewModel(): PromptStudioScreenProps {
     promtizerResponse,
     usage,
     evaluation,
+    evaluationWarning,
     generationError,
     promptAttachments,
     setPromptAttachments,
@@ -79,8 +110,29 @@ export function usePromptStudioViewModel(): PromptStudioScreenProps {
   const outputIsError = Boolean(generationError && !outputPrompt);
 
   function handleProviderChange(nextProvider: ProviderId) {
-    setProvider(nextProvider);
-    setModel(modelForProvider(nextProvider) ?? "");
+    persistSession(createPromptStudioSession(nextProvider));
+  }
+
+  function handleRecoverSession() {
+    setSessionError("");
+    setSessionSaving(true);
+    const bridge = getAiPromptStudioBridge();
+    const recoverSession = hasBridgeMethod(bridge?.promptStudio, "recoverSession")
+      ? bridge.promptStudio.recoverSession()
+      : Promise.reject(
+          new Error(
+            "Prompt Studio session recovery is only available in the Electron desktop app.",
+          ),
+        );
+
+    void recoverSession
+      .then((savedSession) => setSession(savedSession))
+      .catch((error: unknown) => {
+        setSessionError(
+          error instanceof Error ? error.message : "Could not recover the Prompt Studio session.",
+        );
+      })
+      .finally(() => setSessionSaving(false));
   }
 
   async function handleCopyOutput() {
@@ -94,7 +146,11 @@ export function usePromptStudioViewModel(): PromptStudioScreenProps {
   }
 
   function handleModelChange(nextModel: string) {
-    setModel(nextModel);
+    if (!selectedProvider.models.includes(nextModel)) {
+      setSessionError(`Model "${nextModel}" is not available for ${selectedProvider.provider}.`);
+      return;
+    }
+    persistSession({ ...session, model: nextModel });
   }
 
   function handleOpenSettings() {
@@ -111,14 +167,25 @@ export function usePromptStudioViewModel(): PromptStudioScreenProps {
       onInputChange: setInputIdea,
       provider,
       model,
-      providers: configuredProviders,
+      providers: providersConfig,
       selectedProvider,
       isGenerating,
       keyMissing,
+      disabledReason: sessionLoading
+        ? "Loading Prompt Studio session."
+        : sessionSaving
+          ? "Saving Prompt Studio session."
+          : sessionError ||
+            (!modelIsValid
+              ? `Model "${model}" is no longer available for ${selectedProvider.provider}. Select an available model to continue.`
+              : undefined),
+      allowModelSelectionWhileDisabled: !sessionLoading && !sessionSaving && !modelIsValid,
       onProviderChange: handleProviderChange,
       onModelChange: handleModelChange,
       onGenerate: handleGenerate,
       onOpenSettings: handleOpenSettings,
+      onRecoverSession:
+        sessionError && !sessionLoading && !sessionSaving ? handleRecoverSession : undefined,
       promptAttachments,
       onPromptAttachmentsChange: setPromptAttachments,
       onRemovePromptAttachment: handleRemovePromptAttachment,
@@ -132,6 +199,7 @@ export function usePromptStudioViewModel(): PromptStudioScreenProps {
       isCopied,
       usage,
       evaluation,
+      evaluationWarning,
       onCopy: handleCopyOutput,
     },
     settingsModal: {
