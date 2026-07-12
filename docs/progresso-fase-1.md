@@ -15,9 +15,9 @@ Ao mesmo tempo, a maior parte dos fluxos funcionais da Fase 1 ainda não está i
 | Setup Electron + React + Vite | Concluído | Estrutura base pronta e scripts de dev/build/test definidos |
 | Tipos e contratos compartilhados | Concluído | Domínio e schemas de IPC já existem |
 | Segurança básica Electron | Concluído | `contextIsolation` ativo e `nodeIntegration` desabilitado |
-| Interface inicial com personas | Parcial | Tabs e formulário existem, mas ainda sem fluxo real de negócio |
+| Interface inicial de configuração | Parcial | Formulário existe, mas ainda sem fluxo real de negócio |
 | Adapter de LLM | Não iniciado | Ainda não há integração real com provider |
-| Prompt Engine | Não iniciado | Não existe composição real de prompt por persona |
+| Prompt Engine | Não iniciado | Não existe composição real de prompt com instruções configuráveis |
 | Evaluator com nota e feedback | Não iniciado | Apenas contrato definido |
 | Histórico local | Removido do escopo atual | IPC e contrato de listagem foram retirados |
 | Favoritos | Removido do escopo atual | Idem |
@@ -35,7 +35,6 @@ Ao mesmo tempo, a maior parte dos fluxos funcionais da Fase 1 ainda não está i
 
 Já existem as entidades centrais previstas na tech spec:
 
-- `Persona` em [src/shared/domain/persona.ts](/Users/naeliofreires/Developer/Promptizer/src/shared/domain/persona.ts)
 - `LlmProviderOption` em [src/shared/domain/provider.ts](/Users/naeliofreires/Developer/Promptizer/src/shared/domain/provider.ts)
 - `PromptSession` em [src/shared/domain/prompt-session.ts](/Users/naeliofreires/Developer/Promptizer/src/shared/domain/prompt-session.ts)
 - contratos de `LLM` e `IPC` em [src/shared](/Users/naeliofreires/Developer/Promptizer/src/shared)
@@ -54,7 +53,7 @@ Isso cobre uma parte importante do que a tech spec pede para segurança e separa
 
 A interface Promptizer atual em [src/renderer/app/PromptizerApp.tsx](/Users/naeliofreires/Developer/Promptizer/src/renderer/app/PromptizerApp.tsx) já possui:
 
-- tabs de personas;
+- configuração de refinamento;
 - seleção de provider;
 - input de modelo;
 - textarea para ideia bruta;
@@ -79,7 +78,7 @@ Resultado atual dos testes:
 O botão da UI chama o preload corretamente, mas o handler ainda retorna uma resposta mock:
 
 - mensagem fixa de "Prompt generation is not implemented yet"
-- ecoando persona, provider, model e input
+- ecoando configuração, provider, model e input
 
 Isso significa que o fluxo existe tecnicamente, mas ainda sem lógica real de transformação.
 
@@ -96,7 +95,7 @@ A UI atual comprova a fundação visual da aplicação, mas ainda faltam element
 
 ### Backend de negócio
 
-- `Prompt Engine` real com composição por persona
+- `Prompt Engine` real com composição por instruções configuráveis
 - adapter de LLM funcional para pelo menos um provider
 - evaluator real com score e sugestões
 - armazenamento persistente local (`electron-store` ou equivalente), quando voltar ao escopo
@@ -142,7 +141,7 @@ Esses números são uma estimativa qualitativa para acompanhamento interno, não
 ## Próximas prioridades recomendadas
 
 1. Implementar um provider real via `LlmAdapter`
-2. Criar o `Prompt Engine` para compor o contexto da persona
+2. Criar o `Prompt Engine` para compor instruções de refinamento
 3. Exibir score e feedback na UI
 4. Adicionar testes de integração para IPC e fluxo principal
 

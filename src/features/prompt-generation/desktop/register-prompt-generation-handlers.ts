@@ -6,7 +6,6 @@ import {
   promptGenerationIpcChannels,
 } from "../contract/ipc.js";
 import { logger } from "../../../platform/electron/logger.js";
-import { resolvePersonaContext } from "../../personas/desktop/resolve-persona-context.js";
 import { generateRefinedPrompt } from "./generate-refined-prompt.js";
 import { LLMAdapter, type GenerateTextFn } from "./LLMAdapter.js";
 import { PromptEvaluator } from "./PromptEvaluator.js";
@@ -25,7 +24,6 @@ export function registerPromptGenerationHandlers({
 
   ipcMain.handle(promptGenerationIpcChannels.generatePrompt, async (_event, payload) => {
     logger.info("generatePrompt received", {
-      personaId: payload.personaId,
       providerId: payload.providerId,
     });
     let parsed;
@@ -40,7 +38,6 @@ export function registerPromptGenerationHandlers({
     }
 
     const result = await generateRefinedPrompt(parsed, {
-      resolvePersonaContext,
       llmAdapter,
       promptEvaluator,
     });

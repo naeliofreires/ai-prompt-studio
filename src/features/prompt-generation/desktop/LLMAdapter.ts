@@ -46,10 +46,9 @@ export function LLMAdapter(options: LLMAdapterOptions): LlmAdapter {
 
   return {
     generatePrompt: async (input: GeneratePromptInput): Promise<GeneratePromptOutput> => {
-      const personaContext = input.personaContext;
       const prompt = buildPrompt(input);
 
-      const system = buildRefinementSystemPrompt({ personaContext });
+      const system = buildRefinementSystemPrompt();
       const model = resolveLanguageModel(input.providerId, input.model);
 
       logger.info("generatePrompt provider request", {

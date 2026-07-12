@@ -5,7 +5,6 @@ import {
   type UsePromptGenerationArgs,
 } from "../../../src/features/prompt-generation/ui/hooks/usePromptGeneration";
 import type { PromtizerResponse } from "../../../src/features/prompt-generation/ui/types/api";
-import type { Role } from "../../../src/features/personas/ui/role";
 
 const geminiProvider = {
   id: "gemini" as const,
@@ -13,16 +12,8 @@ const geminiProvider = {
   models: ["gemini-2.5-pro"],
 };
 
-const builtinRole: Role = {
-  id: "architect",
-  title: "Architect",
-  description: "You are a software architect.",
-  source: "builtin",
-};
-
 function baseArgs(overrides: Partial<UsePromptGenerationArgs> = {}) {
   return {
-    selectedRole: builtinRole,
     provider: "gemini" as const,
     model: "gemini-2.5-pro",
     keyMissing: false,
@@ -98,30 +89,6 @@ describe("usePromptGeneration", () => {
     expect(generatePrompt).not.toHaveBeenCalled();
     expect(result.current.isGenerating).toBe(false);
     expect(result.current.generationError).toMatch(/API key/i);
-  });
-
-  it("does not leave isGenerating true when persona is missing", async () => {
-    const generatePrompt = vi.fn();
-    const { result } = renderHook(() =>
-      usePromptGeneration(
-        baseArgs({
-          selectedRole: undefined,
-          generatePrompt,
-        }),
-      ),
-    );
-
-    act(() => {
-      result.current.setInputIdea("Build a todo app");
-    });
-
-    await act(async () => {
-      await result.current.handleGenerate();
-    });
-
-    expect(generatePrompt).not.toHaveBeenCalled();
-    expect(result.current.isGenerating).toBe(false);
-    expect(result.current.generationError).toMatch(/persona/i);
   });
 
   it("clears isGenerating after ok: false result", async () => {
@@ -294,15 +261,12 @@ describe("usePromptGeneration", () => {
     return act(async () => {
       await result.current.handleGenerate();
     }).then(() => {
-      expect(generatePrompt).toHaveBeenCalledWith(
-        expect.objectContaining({
-          rawInput: "Build a todo app",
-          personaId: "architect",
-          providerId: "gemini",
-          model: "gemini-2.5-pro",
-          attachments,
-        }),
-      );
+      expect(generatePrompt).toHaveBeenCalledWith({
+        rawInput: "Build a todo app",
+        providerId: "gemini",
+        model: "gemini-2.5-pro",
+        attachments,
+      });
     });
   });
 
@@ -424,7 +388,6 @@ describe("usePromptGeneration", () => {
       expect(generatePrompt).toHaveBeenCalledWith(
         expect.objectContaining({
           rawInput: "Build a todo app",
-          personaId: "architect",
           providerId: "gemini",
           model: "gemini-2.5-pro",
           attachments,

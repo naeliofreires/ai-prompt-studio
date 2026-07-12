@@ -287,86 +287,6 @@ flowchart TB
           </div>
         </article>
 
-        <!-- Candidate 4: Unify persona resolution -->
-        <article class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <div class="px-6 pt-6 pb-4 space-y-3">
-            <h2 class="text-xl font-serif text-slate-800">Unify the persona resolution module</h2>
-            <div class="flex flex-wrap gap-2">
-              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">Worth exploring</span>
-              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">ports &amp; adapters</span>
-            </div>
-            <div class="font-mono text-xs text-slate-500 space-y-0.5">
-              <div>ui/api/persona-client.ts</div>
-              <div>ui/api/custom-persona-local-repository.ts</div>
-              <div>ui/hooks/useRoles.ts</div>
-              <div>main/store/custom-personas-store.ts</div>
-              <div>main/utils/resolve-persona-context.ts</div>
-              <div>shared/domain/persona.ts</div>
-              <div>shared/domain/custom-persona.ts</div>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 divide-x divide-slate-100 bg-slate-50/50">
-            <div class="p-5 space-y-2">
-              <p class="text-xs uppercase tracking-wider text-slate-400 font-medium">Before — two parallel resolution paths</p>
-              <div class="rounded-lg border border-slate-200 bg-white p-4">
-                <pre class="mermaid">
-flowchart LR
-                  subgraph UI["Renderer"]
-                    A[spec/personas.json] --> B[shared/persona.ts]
-                    C[persona-client.ts] --> D{strategy}
-                    D -->|IPC| E[custom-personas-store.ts]
-                    D -->|local| F[custom-persona-local-repo.ts]
-                    D -->|unavail| G[reject]
-                    B --> H[useRoles.ts]
-                    C --> H
-                    H --> I["roles[]"]
-                  end
-                  subgraph Main
-                    E --> J[resolve-persona-context.ts]
-                    B --> J
-                    J --> K["context string"]
-                  end
-                  style D fill:#fbbf24,stroke:#d97706
-                  style F fill:#dc2626,stroke:#dc2626,color:#fff
-                  style H fill:#f1f5f9,stroke:#94a3b8
-                </pre>
-              </div>
-            </div>
-            <div class="p-5 space-y-2">
-              <p class="text-xs uppercase tracking-wider text-slate-400 font-medium">After — one resolution module per layer</p>
-              <div class="rounded-lg border border-slate-200 bg-white p-4">
-                <pre class="mermaid">
-flowchart LR
-                  subgraph shared
-                    A["PersonaRegistry"] --> B["resolvePersona(id)"]
-                  end
-                  subgraph UI["Renderer"]
-                    B --> C["useRoles()"]
-                    C --> D["roles[]"]
-                  end
-                  subgraph Main
-                    B --> E["resolve-persona-context"]
-                  end
-                  style A fill:#0f172a,color:#e2e8f0,stroke:#334155
-                  style B fill:#10b981,stroke:#10b981
-                </pre>
-              </div>
-            </div>
-          </div>
-
-          <div class="px-6 py-4 space-y-3 border-t border-slate-100">
-            <p class="text-sm text-slate-700"><strong>Problem:</strong> Two separate resolution paths — the renderer merges built-in and custom personas through a strategy client with 3 implementations; the main process resolves context through a separate utility that bridges into the store. `custom-persona-local-repository.ts` duplicates the main store's CRUD logic for browser mode. Understanding "how does a persona get resolved?" requires bouncing across 7 files.</p>
-            <p class="text-sm text-slate-700"><strong>Solution:</strong> The existing `PersonaClient` interface is a good seam with two real adapters (IPC + localStorage). Delete `custom-persona-local-repository.ts` by moving its localStorage implementation into the client itself. Let `useRoles` consume the client directly instead of importing built-in personas separately. The main process resolver becomes a thin wrapper over the same client.</p>
-            <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
-              <li><strong>locality:</strong> persona resolution bugs in one module per layer</li>
-              <li><strong>leverage:</strong> one interface to resolve any persona by ID</li>
-              <li><strong>tests:</strong> swap adapter, assert on resolved persona</li>
-              <li>delete duplicated localStorage CRUD (91 lines)</li>
-            </ul>
-          </div>
-        </article>
-
         <!-- Candidate 5: Dead code cleanup -->
         <article class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div class="px-6 pt-6 pb-4 space-y-3">
@@ -402,7 +322,7 @@ flowchart LR
             <a href="#" onclick="document.getElementById('candidates').scrollIntoView({behavior:'smooth'}); return false;" class="text-emerald-400 underline underline-offset-2 hover:text-emerald-300">Open the IPC handler composition root for injection</a>
           </p>
           <p class="text-sm text-slate-400 leading-relaxed">
-            This is the highest-leverage change. The IPC handlers are the composition root of the entire main process — every main-process feature flows through them. Right now they are untestable without module mocking because adapters are baked at module scope. Opening this seam gives you testability across the entire main-process surface (prompt generation, evaluation, session saving, persona CRUD, key management) with a single structural change. It also unblocks meaningful tests for <code class="text-emerald-400/80">generate-refined-prompt.ts</code>, which is already well-structured with injected dependencies but can't be exercised through its actual call path. Two adapters (production Vercel AI SDK, in-memory test fake) justify the seam.
+            This is the highest-leverage change. The IPC handlers are the composition root of the entire main process — every main-process feature flows through them. Right now they are untestable without module mocking because adapters are baked at module scope. Opening this seam gives you testability across the entire main-process surface (prompt generation, evaluation, session saving, configuration management, key management) with a single structural change. It also unblocks meaningful tests for <code class="text-emerald-400/80">generate-refined-prompt.ts</code>, which is already well-structured with injected dependencies but can't be exercised through its actual call path. Two adapters (production Vercel AI SDK, in-memory test fake) justify the seam.
           </p>
         </div>
       </section>

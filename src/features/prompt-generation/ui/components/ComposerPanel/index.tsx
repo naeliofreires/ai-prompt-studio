@@ -208,7 +208,7 @@ export function ComposerPanel({
       )}
 
       {disabledReason && (
-        <div className={styles.personaWarning} role="status">
+        <div className={styles.disabledWarning} role="status">
           {disabledReason}
         </div>
       )}

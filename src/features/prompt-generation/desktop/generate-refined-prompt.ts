@@ -14,7 +14,6 @@ export interface GenerateRefinedPromptAttachment {
 
 export interface GenerateRefinedPromptInput {
   rawInput: string;
-  personaId: string;
   providerId: ProviderId;
   model: string;
   attachments?: GenerateRefinedPromptAttachment[];
@@ -33,7 +32,6 @@ export type GenerateRefinedPromptResult =
     };
 
 export interface PromptEvaluatorInput {
-  personaContext: string;
   rawInput: string;
   refinedPrompt: string;
   providerId: ProviderId;
@@ -45,7 +43,6 @@ export interface PromptEvaluator {
 }
 
 export interface GenerateRefinedPromptDependencies {
-  resolvePersonaContext: (personaId: string) => string | null;
   llmAdapter: LlmAdapter;
   promptEvaluator?: PromptEvaluator;
   savePromptSession?: (input: SavePromptSessionInput) => unknown | Promise<unknown>;
@@ -55,20 +52,8 @@ export async function generateRefinedPrompt(
   input: GenerateRefinedPromptInput,
   dependencies: GenerateRefinedPromptDependencies,
 ): Promise<GenerateRefinedPromptResult> {
-  const personaContext = dependencies.resolvePersonaContext(input.personaId);
-  if (!personaContext) {
-    logger.warn("generatePrompt unknown persona", input.personaId);
-    return {
-      ok: false,
-      message: "Unknown persona. Create or select a persona before generating.",
-    };
-  }
-
-  logger.debug("generatePrompt resolved persona", { personaId: input.personaId });
-
   try {
     const out = await dependencies.llmAdapter.generatePrompt({
-      personaContext,
       rawInput: input.rawInput,
       providerId: input.providerId,
       model: input.model,
@@ -81,12 +66,7 @@ export async function generateRefinedPrompt(
       ...(out.tokensUsed !== undefined ? { tokensUsed: out.tokensUsed } : {}),
     };
 
-    const evaluation = await evaluatePromptIfAvailable(
-      input,
-      personaContext,
-      out.prompt,
-      dependencies,
-    );
+    const evaluation = await evaluatePromptIfAvailable(input, out.prompt, dependencies);
     if (evaluation) {
       result.evaluation = evaluation;
     }
@@ -126,7 +106,6 @@ async function savePromptSessionIfAvailable(
   try {
     await dependencies.savePromptSession({
       rawInput: input.rawInput,
-      personaId: input.personaId,
       providerId: input.providerId,
       model: input.model,
       generatedPrompt,
@@ -141,7 +120,6 @@ async function savePromptSessionIfAvailable(
 
 async function evaluatePromptIfAvailable(
   input: GenerateRefinedPromptInput,
-  personaContext: string,
   refinedPrompt: string,
   dependencies: GenerateRefinedPromptDependencies,
 ): Promise<PromptEvaluation | undefined> {
@@ -151,7 +129,6 @@ async function evaluatePromptIfAvailable(
 
   try {
     const evaluation = await dependencies.promptEvaluator.evaluate({
-      personaContext,
       rawInput: input.rawInput,
       refinedPrompt,
       providerId: input.providerId,

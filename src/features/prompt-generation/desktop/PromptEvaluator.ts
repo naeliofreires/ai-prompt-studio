@@ -9,7 +9,6 @@ export interface PromptEvaluatorOptions {
 }
 
 export interface PromptEvaluatorInput {
-  personaContext: string;
   rawInput: string;
   refinedPrompt: string;
   providerId: string;
@@ -29,16 +28,7 @@ const evaluationSystemPrompt = [
 ].join("\n");
 
 function buildEvaluationPrompt(input: PromptEvaluatorInput): string {
-  return [
-    "Persona context:",
-    input.personaContext,
-    "",
-    "Original idea:",
-    input.rawInput,
-    "",
-    "Refined prompt:",
-    input.refinedPrompt,
-  ].join("\n");
+  return ["Original idea:", input.rawInput, "", "Refined prompt:", input.refinedPrompt].join("\n");
 }
 
 function parsePromptEvaluation(text: string): PromptEvaluation {

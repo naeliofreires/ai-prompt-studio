@@ -6,13 +6,11 @@ import { promptStudioClient } from "../api/prompt-studio-client";
 import { validatePromtizerResponse } from "../services/promtizer";
 import type { PromtizerResponse } from "../types/api";
 import type { GenerationEvaluation, GenerationUsage } from "../types/generation";
-import type { Role } from "../../../personas/ui/role";
 
 export type GeneratePromptFn = (payload: GeneratePromptPayload) => Promise<GeneratePromptIpcResult>;
 type PromptAttachments = NonNullable<GeneratePromptPayload["attachments"]>;
 
 export interface UsePromptGenerationArgs {
-  selectedRole: Role | undefined;
   provider: ProviderId;
   model: string;
   keyMissing: boolean;
@@ -23,7 +21,6 @@ export interface UsePromptGenerationArgs {
 }
 
 export function usePromptGeneration({
-  selectedRole,
   provider,
   model,
   keyMissing,
@@ -64,11 +61,6 @@ export function usePromptGeneration({
       return;
     }
 
-    if (!selectedRole) {
-      setGenerationError("Select a persona before refining the prompt.");
-      return;
-    }
-
     onGenerateStart?.();
     setIsGenerating(true);
     setOutputPrompt("");
@@ -80,7 +72,6 @@ export function usePromptGeneration({
     try {
       const payload: GeneratePromptPayload = {
         rawInput,
-        personaId: selectedRole.id,
         providerId: provider,
         model,
       };
@@ -118,7 +109,6 @@ export function usePromptGeneration({
     promptAttachments,
     provider,
     selectedProvider.provider,
-    selectedRole,
   ]);
 
   return {

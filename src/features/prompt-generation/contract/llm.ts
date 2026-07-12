@@ -6,7 +6,6 @@ export interface GeneratePromptAttachment {
 }
 
 export interface GeneratePromptInput {
-  personaContext: string;
   rawInput: string;
   providerId: string;
   model: string;

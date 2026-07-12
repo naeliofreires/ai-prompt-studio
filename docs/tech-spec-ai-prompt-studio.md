@@ -9,7 +9,7 @@ Definir a arquitetura técnica, os módulos, os contratos principais e o plano d
 Incluído na Fase 1:
 
 - Aplicativo desktop para macOS com Electron + React.
-- Interface com tabs de personas.
+- Interface de configuração de refinamento.
 - Transformação de texto bruto em prompt refinado.
 - Integração inicial com uma LLM principal via Adapter.
 - Avaliação do prompt com nota de 0 a 5 e feedback textual.
@@ -18,7 +18,7 @@ Fora do escopo da Fase 1:
 
 - Sincronização em nuvem.
 - Colaboração multiusuário.
-- Marketplace de personas.
+- Marketplace de configurações prontas.
 - Telemetria avançada e analytics.
 - Suporte completo multi-plataforma com empacotamento para Windows/Linux.
 
@@ -28,7 +28,7 @@ Fora do escopo da Fase 1:
 - A UI deve ser desacoplada da lógica de integração com LLMs.
 - A troca entre provedores de IA deve ocorrer sem alterar a camada de interface.
 - O sistema de avaliação deve produzir nota estruturada e recomendações legíveis.
-- O design deve suportar expansão futura para novos provedores, personas e fluxos.
+- O design deve suportar expansão futura para novos provedores, configurações e fluxos.
 
 ## 4. Arquitetura Proposta
 
@@ -48,7 +48,7 @@ Fora do escopo da Fase 1:
 - **UI Components**
   Componentes React para tabs, seletor de modelo, editor de entrada, painel de saída e rating.
 - **Prompt Engine**
-  Monta o prompt final combinando persona, instrução base, texto do usuário e metadados de execução.
+  Monta o prompt final combinando instruções de refinamento, texto do usuário e metadados de execução.
 - **LLM Adapter**
   Expõe uma interface única para múltiplos provedores.
 - **Evaluator**
@@ -86,7 +86,7 @@ src/
     app/
     components/
     features/
-      personas/
+      refinement-config/
       prompt-editor/
       evaluation/
     hooks/
@@ -102,16 +102,11 @@ src/
 
 ## 7. Entidades de domínio
 
-### 7.1. Persona
+### 7.1. Configuração de refinamento
 
 ```ts
-type PersonaId = "frontend" | "backend" | "uiux" | "general";
-
-interface Persona {
-  id: PersonaId;
-  name: string;
-  description: string;
-  systemContext: string;
+interface RefinementConfig {
+  instructions?: string;
 }
 ```
 
@@ -134,7 +129,7 @@ interface LlmProviderOption {
 interface PromptSession {
   id: string;
   rawInput: string;
-  personaId: PersonaId;
+  refinementConfig?: RefinementConfig;
   providerId: ProviderId;
   model: string;
   generatedPrompt: string;
@@ -150,7 +145,7 @@ interface PromptSession {
 
 ```ts
 interface GeneratePromptInput {
-  personaContext: string;
+  refinementInstructions?: string;
   rawInput: string;
 }
 
@@ -178,10 +173,10 @@ interface PromptEvaluation {
 
 ### 9.1. Geração de prompt
 
-1. UI coleta `persona`, `provider`, `rawInput`.
+1. UI coleta a configuração de refinamento, `provider` e `rawInput`.
 2. Renderer envia comando via IPC ao processo principal.
 3. Application service chama `PromptEngine`.
-4. `PromptEngine` resolve o contexto da persona.
+4. `PromptEngine` monta as instruções de refinamento.
 5. `LlmAdapter` do provider selecionado gera o prompt refinado.
 6. `Evaluator` executa a análise do prompt gerado.
 7. UI renderiza prompt, score e feedback.
@@ -207,7 +202,7 @@ window.aiPromptStudio = {
 
 ### Opção recomendada para Fase 1
 
-Usar `electron-store` com versionamento simples de schema, suficiente para preferências básicas, como última persona e último provider selecionado (quando essa camada for introduzida).
+Usar `electron-store` com versionamento simples de schema, suficiente para preferências básicas, como últimas instruções e último provider selecionado (quando essa camada for introduzida).
 
 ### Evolução futura
 
@@ -261,7 +256,7 @@ Regras:
 
 ## 14. UX funcional
 
-- Tabs fixas no topo para personas.
+- Controles de configuração de refinamento próximos ao editor.
 - Seletor de provider/modelo próximo ao input.
 - Área de entrada com suporte a texto livre.
 - Área de saída com destaque visual e botão de copiar.
@@ -284,7 +279,7 @@ Regras:
 
 ### Unitários
 
-- Prompt Engine monta corretamente o contexto por persona.
+- Prompt Engine monta corretamente as instruções de refinamento.
 - Adapters respeitam a interface comum.
 - Evaluator normaliza score e parsing.
 
@@ -295,7 +290,7 @@ Regras:
 
 ### UI
 
-- Troca de tabs atualiza contexto selecionado.
+- Alterar a configuração atualiza as instruções enviadas.
 - Botão de copiar funciona.
 
 ## 17. Roadmap de implementação
@@ -305,12 +300,12 @@ Regras:
 - Setup Electron + React + TypeScript + Vite.
 - Configuração de IPC seguro.
 - Estrutura base de módulos e pastas.
-- Tabs de personas e editor principal.
+- Configuração de refinamento e editor principal.
 
 ### Sprint 2
 
 - Implementação do primeiro adapter de LLM.
-- Prompt Engine com templates de persona.
+- Prompt Engine com instruções configuráveis.
 - Fluxo de geração fim a fim.
 
 ### Sprint 3
@@ -337,7 +332,7 @@ Regras:
 
 ## 19. Critérios de aceite da Fase 1
 
-- Usuário consegue selecionar uma persona e um provider.
+- Usuário consegue configurar instruções e selecionar um provider.
 - Usuário consegue inserir uma ideia e gerar um prompt refinado.
 - Sistema exibe nota de 0 a 5 e sugestões de melhoria.
 - Usuário consegue copiar o prompt final.

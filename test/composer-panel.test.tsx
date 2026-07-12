@@ -35,7 +35,7 @@ describe("ComposerPanel", () => {
     expect(onOpenSettings).toHaveBeenCalledTimes(1);
   });
 
-  it("disables generate and shows persona guidance when persona state blocks generation", () => {
+  it("disables generate and shows guidance when generation is unavailable", () => {
     const onGenerate = vi.fn();
 
     render(
@@ -48,7 +48,7 @@ describe("ComposerPanel", () => {
         selectedProvider={geminiProvider}
         isGenerating={false}
         keyMissing={false}
-        disabledReason="Create or select a persona before generating."
+        disabledReason="Configure a provider before generating."
         onProviderChange={vi.fn()}
         onModelChange={vi.fn()}
         onGenerate={onGenerate}
@@ -56,7 +56,7 @@ describe("ComposerPanel", () => {
       />,
     );
 
-    expect(screen.getByText("Create or select a persona before generating.")).toBeInTheDocument();
+    expect(screen.getByText("Configure a provider before generating.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /refine prompt/i })).toBeDisabled();
 
     fireEvent.click(screen.getByRole("button", { name: /refine prompt/i }));

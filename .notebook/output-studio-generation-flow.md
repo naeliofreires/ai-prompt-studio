@@ -6,9 +6,9 @@ Entry: `src/features/prompt-studio/ui/usePromptStudioViewModel.ts` delegates gen
 
 Flow: renderer → `promptStudioClient.generatePrompt()` → `window.aiPromptStudio.promptGeneration.generatePrompt()` → `src/platform/electron/preload.ts` → `src/platform/electron/register-handlers.ts` → `src/features/prompt-generation/desktop/register-prompt-generation-handlers.ts` → `generateRefinedPrompt()` → `LLMAdapter()`.
 
-- The renderer sends `rawInput`, `personaId`, `providerId`, `model`, and optional attachments.
+- The renderer sends `rawInput`, `providerId`, `model`, and optional attachments.
 - The result contains either an error message or the generated prompt, optional token usage, and optional evaluation.
-- Prompt-generation IPC validates its payload and resolves the selected Custom Persona through `resolvePersonaContext`.
+- Prompt-generation IPC validates its payload before generation.
 - `LLMAdapter` calls the Vercel AI SDK; evaluation is best-effort and does not make a successful generation fail.
 - API keys come from the Settings runtime store first, then development environment variables in the Electron main process.
 - Prompt sessions are **not registered or persisted in the current desktop handler**. The optional session-save dependency exists in the use case but is not supplied by `registerPromptGenerationHandlers`.

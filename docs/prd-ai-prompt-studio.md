@@ -2,7 +2,7 @@
 
 ## 1. Visão Geral
 
-Um aplicativo desktop para macOS focado em transformar ideias brutas em prompts de alta performance, utilizando personas especializadas e suporte a múltiplos modelos de linguagem (LLMs). O objetivo é centralizar a criação, refinamento e gestão de prompts em um fluxo de trabalho profissional.
+Um aplicativo desktop para macOS focado em transformar ideias brutas em prompts de alta performance, com instruções de refinamento configuráveis e suporte a múltiplos modelos de linguagem (LLMs). O objetivo é centralizar a criação, refinamento e gestão de prompts em um fluxo de trabalho profissional.
 
 ## 2. Objetivos Principais
 
@@ -20,14 +20,9 @@ Um aplicativo desktop para macOS focado em transformar ideias brutas em prompts 
 
 ## 4. Requisitos Funcionais
 
-### 4.1. Core: Sistema de Personas (Tabs)
+### 4.1. Core: Configuração de Refinamento
 
-O app deve possuir abas específicas que injetam contextos de especialistas automaticamente:
-
-- **Frontend Expert:** Foco em React, Next.js, HTML/CSS e performance.
-- **Backend Expert:** Foco em arquitetura, segurança e APIs.
-- **UI/UX Expert:** Foco em acessibilidade, usabilidade e design systems.
-- **General:** Para prompts diversos.
+O app deve permitir configurar instruções adicionais para orientar a geração do prompt.
 
 ### 4.2. Gestão de Prompts
 
@@ -47,7 +42,7 @@ O app deve possuir abas específicas que injetam contextos de especialistas auto
 | Módulo | Responsabilidade |
 | --- | --- |
 | **LLM Adapter** | Interface comum para lidar com diferentes APIs (Gemini, Codex, etc). |
-| **Prompt Engine** | Lógica de transformação baseada nas personas (Tabs). |
+| **Prompt Engine** | Lógica de transformação baseada em instruções configuráveis. |
 | **Storage Module** | Persistência local de históricos e favoritos. |
 | **Evaluator** | Lógica de integração com a IA de avaliação e scoring. |
 | **UI Components** | Componentes React modulares (Tabs, Cards, Inputs). |

@@ -1,20 +1,18 @@
 # Promptizer
 
-Promptizer is a local Electron app for turning rough ideas into structured, paste-ready LLM prompts. It lets you manage personas, choose a provider/model, enter API keys, refine an idea, and copy the result.
+Promptizer is a local Electron app for turning rough ideas into structured, paste-ready LLM prompts. It lets you choose a provider/model, enter API keys, refine an idea, and copy the result.
 
 The app is local-first and currently packaged for unsigned local releases.
 
 ## Features
 
 - Electron desktop shell with a React + TypeScript renderer.
-- Editable personas with title and description fields.
-- A dedicated Personas page for listing, creating, editing, deleting, and selecting personas.
 - Provider/model selection from `src/spec/providers.json`.
 - Provider adapters for Google Gemini, GLM, DeepSeek, and OpenCode Zen through the Vercel AI SDK.
 - API key Settings UI with development `.env` fallback in the Electron main process.
 - Prompt refinement through a validated IPC bridge.
 - Structured output rendering, copy feedback, token usage, and prompt evaluation when available.
-- Vitest coverage for core UI, IPC, provider, persona, and generation flows.
+- Vitest coverage for core UI, IPC, provider, and generation flows.
 
 ## Stack
 
@@ -22,7 +20,7 @@ The app is local-first and currently packaged for unsigned local releases.
 - **Renderer:** React 19, TypeScript, Vite
 - **LLM access:** Vercel AI SDK
 - **Validation:** Zod
-- **Storage:** `electron-store` for desktop personas, `localStorage` for renderer API keys and browser-mode persona fallback
+- **Storage:** `localStorage` for renderer API keys
 - **Tests:** Vitest, React Testing Library, jsdom
 - **Styling:** CSS Modules and SCSS modules
 
@@ -37,7 +35,7 @@ src/
   platform/electron/     Electron host, handler composition, preload, and logging
   platform/renderer/     Renderer bootstrap, bridge access, storage, and shared UI shell
   shared/lib/            Runtime-neutral helpers
-  spec/                  Provider/model options and Seed Persona spec
+  spec/                  Provider/model options
   main/, renderer/       Compatibility entry-point shims to platform roots
 test/         Vitest test suite
 docs/         Product and technical planning docs
@@ -129,9 +127,9 @@ API keys saved in Settings are stored in renderer `localStorage` and mirrored in
 
 ## How Generation Works
 
-1. `features/prompt-studio/ui` validates the selected Persona, Provider/model, API key, and raw input.
+1. `features/prompt-studio/ui` validates the selected Provider/model, API key, and raw input.
 2. `features/prompt-generation/ui/api/prompt-studio-client.ts` sends the request through the namespaced preload bridge.
-3. `platform/electron/register-handlers.ts` composes the feature handlers; `features/prompt-generation/desktop/register-prompt-generation-handlers.ts` validates the IPC payload and resolves the selected Custom Persona.
+3. `platform/electron/register-handlers.ts` composes the feature handlers; `features/prompt-generation/desktop/register-prompt-generation-handlers.ts` validates the IPC payload.
 4. `features/prompt-generation/desktop/LLMAdapter.ts` builds the refinement system prompt and calls `generateText`.
 5. The renderer displays the structured response, usage, and evaluation data when available.
 
@@ -145,12 +143,6 @@ The refinement instruction and its exact JSON response schema live in `src/featu
 2. Ensure `src/features/providers/desktop/provider-registry.ts` supports its `sdkType`.
 3. Document the environment variable in `.env.example`.
 4. Add focused tests for provider resolution and request behavior.
-
-### Change persona behavior
-
-- Editable Personas are stored through `src/features/personas/desktop/custom-personas-store.ts` and the browser fallback client in `src/features/personas/ui/persona-client.ts`.
-- Keep persona fields limited to `label` and `role` unless the UI, IPC contracts, and tests are updated together.
-- Prompt generation resolves Personas from the editable Persona store.
 
 Feature contracts live under `src/features/<feature>/contract`; update the relevant contract first when behavior crosses the process boundary. Keep them independent of UI, desktop, and platform code.
 

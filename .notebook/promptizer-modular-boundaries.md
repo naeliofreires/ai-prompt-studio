@@ -13,12 +13,11 @@ Promptizer should remain one bounded context for now. The current pressure is be
 - `src/features/<feature>/contract`: stable feature schemas, types, and IPC channel definitions.
 - `src/platform/electron`: Electron host, handler composition, logging, and the single preload implementation.
 - `src/platform/renderer`: renderer bootstrap, the namespaced bridge client, browser storage, and shared renderer shell components.
-- `src/shared/lib`: small runtime-neutral helpers; `src/spec`: declarative Provider and Seed Persona data.
+- `src/shared/lib`: small runtime-neutral helpers; `src/spec`: declarative Provider data.
 - `src/main/index.ts`, `src/main/preload.ts`, and `src/renderer/main.tsx` are entry-point shims to the platform composition roots.
 
 ## Implemented Feature Slices
 
-- Personas: `features/personas/ui`, `features/personas/desktop`, and `features/personas/contract` isolate screens and clients from custom Persona persistence and IPC.
 - Providers: `features/providers/ui`, `features/providers/desktop`, and `features/providers/contract` isolate Settings from API-key runtime management and Provider resolution.
 - Prompt generation: `features/prompt-generation/ui`, `features/prompt-generation/desktop`, and `features/prompt-generation/contract` isolate generation panels from LLM adapters and generation IPC.
 - Prompt Studio: `features/prompt-studio/ui` composes the renderer-facing feature slices.
@@ -30,7 +29,7 @@ Promptizer should remain one bounded context for now. The current pressure is be
 - Renderer code reaches Electron only through the single `window.aiPromptStudio` bridge, namespaced by capability.
 - Main-process stores own persistence details. Renderer code uses IPC clients or browser-mode fallback repositories, not desktop stores.
 - Keep `shared/lib` runtime-neutral; do not move Electron APIs, Provider SDK integration, persistence, or UI helpers there.
-- Logs should identify operations and routing metadata without printing raw prompts, system prompts, API keys, or Persona text.
+- Logs should identify operations and routing metadata without printing raw prompts, system prompts, or API keys.
 - Before splitting a sub-unit into a package, look for real pressure: different language, change cadence, SLO, ownership, consistency boundary, or repeated integration pain.
 
 Updated: 2026-07-12

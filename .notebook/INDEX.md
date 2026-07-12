@@ -9,4 +9,3 @@
 - [Prompt Studio app composition](prompt-studio-app-composition.md) - Current composition root, view model, and screen boundary.
 - [Promptizer modular boundaries](promptizer-modular-boundaries.md) - Bounded context, sub-units, and shared public surface rules.
 - [Settings modal](settings-modal.md) - Provider-key modal and repository boundary.
-- [Persona roles flow](persona-roles-flow.md) - Custom Persona loading and bridge fallback policy.

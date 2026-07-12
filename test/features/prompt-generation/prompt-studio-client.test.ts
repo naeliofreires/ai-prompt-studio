@@ -19,7 +19,6 @@ describe("promptStudioClient", () => {
 
     const payload: GeneratePromptPayload = {
       rawInput: "Refine this idea",
-      personaId: "frontend",
       providerId: "gemini",
       model: "gemini-2.5-pro",
       attachments: [

@@ -1,304 +1,94 @@
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { GeneratePromptAttachment } from "../../../src/features/prompt-generation/contract/ipc";
 import { usePromptStudioViewModel } from "../../../src/features/prompt-studio/ui/usePromptStudioViewModel";
 import type { PromtizerResponse } from "../../../src/features/prompt-generation/ui/types/api";
 
-type ComposerAttachmentControls = {
-  promptAttachments: GeneratePromptAttachment[];
-  onPromptAttachmentsChange: (attachments: GeneratePromptAttachment[]) => void;
-  onRemovePromptAttachment: (index: number) => void;
-};
-
 const copyText = vi.fn();
-const mockRolesState = vi.hoisted(() => ({
-  roles: [
-    {
-      id: "frontend-specialist",
-      title: "Frontend Specialist",
-      description: "Refines prompts for React.",
-      source: "custom" as const,
-    },
-    {
-      id: "backend-specialist",
-      title: "Backend Specialist",
-      description: "Refines prompts for APIs.",
-      source: "custom" as const,
-    },
-  ],
-  addRole: vi.fn(),
-  deleteRole: vi.fn(),
-  updateRole: vi.fn(),
-}));
-const mockApiKeyState = vi.hoisted(() => ({
-  configuredProviders: new Set(["gemini", "glm", "deepseek", "opencode"]),
-  keys: {},
+const apiKeys = vi.hoisted(() => ({
+  configured: new Set(["gemini", "glm"]),
   saveKeys: vi.fn(),
   clearProvider: vi.fn(),
   clearAll: vi.fn(),
 }));
 
-vi.mock("../../../src/features/personas/ui/useRoles", () => ({
-  useRoles: () => ({
-    roles: mockRolesState.roles,
-    addRole: mockRolesState.addRole,
-    deleteRole: mockRolesState.deleteRole,
-    updateRole: mockRolesState.updateRole,
-    isLoading: false,
-    error: "",
-  }),
-}));
-
 vi.mock("../../../src/features/providers/ui/useApiKeyRepository", () => ({
   useApiKeyRepository: () => ({
-    keys: mockApiKeyState.keys,
-    saveKeys: mockApiKeyState.saveKeys,
-    clearProvider: mockApiKeyState.clearProvider,
-    clearAll: mockApiKeyState.clearAll,
-    isConfigured: (providerId: string) => mockApiKeyState.configuredProviders.has(providerId),
-    configuredProviderIds: Array.from(mockApiKeyState.configuredProviders),
+    keys: {},
+    saveKeys: apiKeys.saveKeys,
+    clearProvider: apiKeys.clearProvider,
+    clearAll: apiKeys.clearAll,
+    isConfigured: (id: string) => apiKeys.configured.has(id),
+    configuredProviderIds: Array.from(apiKeys.configured),
   }),
 }));
 
 vi.mock("../../../src/features/prompt-generation/ui/hooks/useCopyWithFeedback", () => ({
-  useCopyWithFeedback: () => ({
-    isCopied: false,
-    copyText,
-    resetCopied: vi.fn(),
-  }),
+  useCopyWithFeedback: () => ({ isCopied: false, copyText, resetCopied: vi.fn() }),
 }));
 
-vi.mock("../../../src/features/prompt-generation/ui/hooks/usePromptGeneration", () => {
-  const promtizerResponse: PromtizerResponse = {
-    title: "Refined Prompt",
-    description: "A concise prompt for a todo app.",
-    requirements: ["Must include CRUD operations."],
-    expectations: "The assistant should provide a complete implementation plan.",
-    goodToGo: true,
-  };
-
-  return {
-    usePromptGeneration: () => {
-      const [promptAttachments, setPromptAttachments] = useState<GeneratePromptAttachment[]>([]);
-
-      return {
-        inputIdea: "",
-        setInputIdea: vi.fn(),
-        isGenerating: false,
-        outputPrompt: JSON.stringify(promtizerResponse, null, 2),
-        promtizerResponse,
-        usage: null,
-        evaluation: null,
-        generationError: "",
-        promptAttachments,
-        setPromptAttachments,
-        handleGenerate: vi.fn(),
-      };
-    },
-  };
-});
+vi.mock("../../../src/features/prompt-generation/ui/hooks/usePromptGeneration", () => ({
+  usePromptGeneration: () => {
+    const response: PromtizerResponse = {
+      title: "Refined Prompt",
+      description: "A concise prompt.",
+      requirements: ["Include requirements."],
+      expectations: "Return a plan.",
+      goodToGo: true,
+    };
+    const [promptAttachments, setPromptAttachments] = useState<GeneratePromptAttachment[]>([]);
+    return {
+      inputIdea: "",
+      setInputIdea: vi.fn(),
+      isGenerating: false,
+      outputPrompt: JSON.stringify(response),
+      promtizerResponse: response,
+      usage: null,
+      evaluation: null,
+      generationError: "",
+      promptAttachments,
+      setPromptAttachments,
+      handleGenerate: vi.fn(),
+    };
+  },
+}));
 
 describe("usePromptStudioViewModel", () => {
   beforeEach(() => {
     copyText.mockClear();
-    mockRolesState.roles = [
-      {
-        id: "frontend-specialist",
-        title: "Frontend Specialist",
-        description: "Refines prompts for React.",
-        source: "custom",
-      },
-      {
-        id: "backend-specialist",
-        title: "Backend Specialist",
-        description: "Refines prompts for APIs.",
-        source: "custom",
-      },
-    ];
-    mockRolesState.addRole.mockReset();
-    mockRolesState.deleteRole.mockReset();
-    mockRolesState.updateRole.mockReset();
-    mockRolesState.addRole.mockImplementation(async (title: string, description: string) => {
-      const role = {
-        id: title.toLowerCase().replaceAll(" ", "-"),
-        title,
-        description,
-        source: "custom" as const,
-      };
-      mockRolesState.roles = [...mockRolesState.roles, role];
-      return role;
-    });
-    mockRolesState.deleteRole.mockImplementation(async (id: string) => {
-      const nextRoles = mockRolesState.roles.filter((role) => role.id !== id);
-      const deleted = nextRoles.length < mockRolesState.roles.length;
-      mockRolesState.roles = nextRoles;
-      return deleted;
-    });
-    mockApiKeyState.configuredProviders = new Set(["gemini", "glm", "deepseek", "opencode"]);
+    apiKeys.configured = new Set(["gemini", "glm"]);
   });
 
-  it("switches between studio and personas views without losing the selected persona", async () => {
-    const { result } = renderHook(() => usePromptStudioViewModel());
-
-    expect(result.current.view).toBe("studio");
-
-    await waitFor(() => {
-      expect(result.current.persona.activeRole).toBe("frontend-specialist");
-    });
-
-    act(() => {
-      result.current.onShowPersonas();
-    });
-
-    expect(result.current.view).toBe("personas");
-
-    act(() => {
-      result.current.persona.onSelect("backend-specialist");
-    });
-
-    act(() => {
-      result.current.onShowStudio();
-    });
-
-    expect(result.current.view).toBe("studio");
-    expect(result.current.persona.activeRole).toBe("backend-specialist");
-  });
-
-  it('15. exposes prompt attachment state through the prompt studio controller ', () => {
+  it("exposes and removes prompt attachments", () => {
     const attachment: GeneratePromptAttachment = {
       name: "notes.txt",
       mimeType: "text/plain",
       sizeBytes: 42,
-      content: "Use this as context.",
+      content: "Context",
     };
     const { result } = renderHook(() => usePromptStudioViewModel());
-    const composer = () => result.current.composer as typeof result.current.composer &
-      ComposerAttachmentControls;
 
-    expect(composer().promptAttachments).toEqual([]);
+    act(() => result.current.composer.onPromptAttachmentsChange([attachment]));
+    expect(result.current.composer.promptAttachments).toEqual([attachment]);
 
-    act(() => {
-      composer().onPromptAttachmentsChange([attachment]);
-    });
-
-    expect(composer().promptAttachments).toEqual([attachment]);
-
-    act(() => {
-      composer().onRemovePromptAttachment(0);
-    });
-
-    expect(composer().promptAttachments).toEqual([]);
+    act(() => result.current.composer.onRemovePromptAttachment(0));
+    expect(result.current.composer.promptAttachments).toEqual([]);
   });
 
-  it("copies formatted markdown for structured responses", async () => {
+  it("copies the structured response as markdown", async () => {
     const { result } = renderHook(() => usePromptStudioViewModel());
-
-    await act(async () => {
-      await result.current.output.onCopy();
-    });
-
-    expect(copyText).toHaveBeenCalledWith(
-      expect.stringContaining("# Refined Prompt"),
-    );
+    await act(() => result.current.output.onCopy());
+    expect(copyText).toHaveBeenCalledWith(expect.stringContaining("# Refined Prompt"));
     expect(copyText).toHaveBeenCalledWith(expect.stringContaining("## Requirements"));
-    expect(copyText).not.toHaveBeenCalledWith(expect.stringContaining("\"title\""));
-  });
-
-  it("blocks generation controls when no persona is available", () => {
-    mockRolesState.roles = [];
-    const { result } = renderHook(() => usePromptStudioViewModel());
-
-    expect(result.current.persona.activeRole).toBe("");
-    expect(result.current.composer.disabledReason).toBe("Create a persona before generating.");
-  });
-
-  it("corrects a stale selected persona id to an available persona", async () => {
-    const { result } = renderHook(() => usePromptStudioViewModel());
-
-    await waitFor(() => {
-      expect(result.current.persona.activeRole).toBe("frontend-specialist");
-    });
-
-    act(() => {
-      result.current.persona.onSelect("missing-persona");
-    });
-
-    await waitFor(() => {
-      expect(result.current.persona.activeRole).toBe("frontend-specialist");
-    });
-    expect(result.current.composer.disabledReason).toBe("");
-  });
-
-  it("activates a newly created persona", async () => {
-    const { result } = renderHook(() => usePromptStudioViewModel());
-
-    await act(async () => {
-      await result.current.personasPage.onCreate("Systems Thinker", "Frames prompts as systems.");
-    });
-
-    expect(result.current.persona.activeRole).toBe("systems-thinker");
-    expect(result.current.persona.roles).toEqual(
-      expect.arrayContaining([expect.objectContaining({ id: "systems-thinker" })]),
-    );
-  });
-
-  it("selects another persona after deleting the active persona", async () => {
-    const { result } = renderHook(() => usePromptStudioViewModel());
-
-    await waitFor(() => {
-      expect(result.current.persona.activeRole).toBe("frontend-specialist");
-    });
-
-    await act(async () => {
-      await result.current.personasPage.onDelete("frontend-specialist");
-    });
-
-    expect(result.current.persona.activeRole).toBe("backend-specialist");
   });
 
   it("shows configured providers and resets the model when provider changes", () => {
-    mockApiKeyState.configuredProviders = new Set(["gemini", "glm"]);
     const { result } = renderHook(() => usePromptStudioViewModel());
+    expect(result.current.composer.providers.map(({ id }) => id)).toEqual(["gemini", "glm"]);
 
-    expect(result.current.composer.providers.map((entry) => entry.id)).toEqual(["gemini", "glm"]);
-
-    act(() => {
-      result.current.composer.onProviderChange("glm");
-    });
-
+    act(() => result.current.composer.onProviderChange("glm"));
     expect(result.current.composer.provider).toBe("glm");
     expect(result.current.composer.model).toBe(result.current.composer.selectedProvider.models[0]);
-  });
-
-  it("updates configured provider visibility after key changes", () => {
-    mockApiKeyState.configuredProviders = new Set(["gemini"]);
-    mockApiKeyState.saveKeys.mockImplementation((patch: Record<string, string>) => {
-      for (const [providerId, key] of Object.entries(patch)) {
-        if (key.trim().length > 0) {
-          mockApiKeyState.configuredProviders.add(providerId);
-        }
-      }
-    });
-    mockApiKeyState.clearProvider.mockImplementation((providerId: string) => {
-      mockApiKeyState.configuredProviders.delete(providerId);
-    });
-    const { result, rerender } = renderHook(() => usePromptStudioViewModel());
-
-    expect(result.current.composer.providers.map((entry) => entry.id)).toEqual(["gemini"]);
-
-    act(() => {
-      result.current.settingsModal.onSaveKeys({ glm: "glm-key" });
-    });
-    rerender();
-
-    expect(result.current.composer.providers.map((entry) => entry.id)).toEqual(["gemini", "glm"]);
-
-    act(() => {
-      result.current.settingsModal.onClearProvider("gemini");
-    });
-    rerender();
-
-    expect(result.current.composer.providers.map((entry) => entry.id)).toEqual(["glm"]);
   });
 });

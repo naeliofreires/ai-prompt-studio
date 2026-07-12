@@ -24,20 +24,6 @@ vi.mock("electron", () => ({
   ipcMain: mocks.ipcMain,
 }));
 
-vi.mock("electron-store", () => ({
-  default: class MockStore {
-    private values = new Map<string, unknown>([["customPersonas", []]]);
-
-    get(key: string): unknown {
-      return this.values.get(key);
-    }
-
-    set(key: string, value: unknown): void {
-      this.values.set(key, value);
-    }
-  },
-}));
-
 vi.mock("ai", () => ({
   generateText: mocks.generateText,
 }));
@@ -86,7 +72,6 @@ describe("registerIpcHandlers", () => {
           handler(
             {},
             {
-              personaId: "11111111-1111-4111-8111-111111111111",
               providerId: "gemini",
               model: "gemini-2.5-pro",
               rawInput: "Refine this prompt.",
@@ -128,7 +113,6 @@ describe("registerIpcHandlers", () => {
       handler(
         {},
         {
-          personaId: "11111111-1111-4111-8111-111111111111",
           providerId: "gemini",
           model: "gemini-2.5-pro",
           rawInput: "Refine this prompt.",

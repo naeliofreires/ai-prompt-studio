@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { personaSelectionIdSchema } from "../../personas/contract/ipc.js";
 import { PROVIDER_IDS } from "../../providers/contract/provider.js";
 import { promptEvaluationSchema } from "./prompt-evaluation.js";
 
@@ -21,7 +20,6 @@ const maxPromptAttachmentTotalSizeBytes = 1024 * 1024;
 export const generatePromptPayloadSchema = z
   .object({
     rawInput: z.string().trim().min(1),
-    personaId: personaSelectionIdSchema,
     providerId: z.enum(PROVIDER_IDS),
     model: z.string().trim().min(1),
     attachments: z.array(generatePromptTextAttachmentSchema).max(5).optional(),

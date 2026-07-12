@@ -7,7 +7,6 @@ describe("Promptizer app", () => {
     render(<PromptizerApp />);
 
     expect(screen.getByRole("heading", { name: /AI Prompt Studio/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Persona Matrix" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Raw Signal" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /^Settings$/i }));

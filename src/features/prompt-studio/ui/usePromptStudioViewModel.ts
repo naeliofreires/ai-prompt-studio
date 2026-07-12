@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { PROVIDERS, type ProviderId } from "../../providers/contract/provider";
-import { getErrorMessage } from "../../../shared/lib/error";
 import { useApiKeyRepository } from "../../providers/ui/useApiKeyRepository";
 import { useCopyWithFeedback } from "../../prompt-generation/ui/hooks/useCopyWithFeedback";
 import { usePromptGeneration } from "../../prompt-generation/ui/hooks/usePromptGeneration";
-import { useRoles } from "../../personas/ui/useRoles";
 import { formatPromtizerResponse } from "../../prompt-generation/ui/utils/formatPromtizerResponse";
-import type { PromptStudioScreenProps, PromptizerView } from "./PromptStudio.types";
+import type { PromptStudioScreenProps } from "./PromptStudio.types";
 
 const providersConfig = PROVIDERS;
 
@@ -20,43 +18,13 @@ function modelForProvider(providerId: ProviderId): string | undefined {
 }
 
 export function usePromptStudioViewModel(): PromptStudioScreenProps {
-  const { roles, addRole, deleteRole, updateRole, isLoading, error: rolesError } = useRoles();
   const apiKeySettings = useApiKeyRepository();
   const { configuredProviderIds, isConfigured } = apiKeySettings;
-  const [view, setView] = useState<PromptizerView>("studio");
-  const [activeRole, setActiveRole] = useState<string>("");
-  const [personaActionError, setPersonaActionError] = useState("");
   const [provider, setProvider] = useState<ProviderId>("gemini");
   const [model, setModel] = useState("gemini-2.5-pro");
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   const { isCopied, copyText, resetCopied } = useCopyWithFeedback();
-
-  const selectedRole = useMemo(
-    () => roles.find((role) => role.id === activeRole),
-    [activeRole, roles],
-  );
-  const personaGuardMessage = useMemo(() => {
-    if (isLoading) return "";
-    if (roles.length === 0) return "Create a persona before generating.";
-    if (!selectedRole) return "Select a persona before generating.";
-    return "";
-  }, [isLoading, roles.length, selectedRole]);
-
-  useEffect(() => {
-    if (roles.length === 0) {
-      if (activeRole !== "") {
-        setActiveRole("");
-      }
-
-      return;
-    }
-
-    const hasActiveRole = roles.some((role) => role.id === activeRole);
-    if (!hasActiveRole) {
-      setActiveRole(roles[0]?.id ?? "");
-    }
-  }, [activeRole, roles]);
 
   const configuredProviders = useMemo(
     () => providersConfig.filter((entry) => configuredProviderIds.includes(entry.id)),
@@ -101,7 +69,6 @@ export function usePromptStudioViewModel(): PromptStudioScreenProps {
     setPromptAttachments,
     handleGenerate,
   } = usePromptGeneration({
-    selectedRole,
     provider,
     model,
     keyMissing,
@@ -126,18 +93,6 @@ export function usePromptStudioViewModel(): PromptStudioScreenProps {
     );
   }
 
-  function handleShowStudio() {
-    setView("studio");
-  }
-
-  function handleShowPersonas() {
-    setView("personas");
-  }
-
-  function handleSelectPersona(id: string) {
-    setActiveRole(id);
-  }
-
   function handleModelChange(nextModel: string) {
     setModel(nextModel);
   }
@@ -150,66 +105,7 @@ export function usePromptStudioViewModel(): PromptStudioScreenProps {
     setIsSettingsModalOpen(false);
   }
 
-  async function handleCreateRole(title: string, description: string) {
-    setPersonaActionError("");
-
-    try {
-      const role = await addRole(title, description);
-      setActiveRole(role.id);
-      return role;
-    } catch (err) {
-      setPersonaActionError(getErrorMessage(err, "Could not create the custom persona."));
-      throw err;
-    }
-  }
-
-  async function handleDeleteRole(id: string) {
-    setPersonaActionError("");
-
-    try {
-      const deleted = await deleteRole(id);
-      if (!deleted) {
-        setPersonaActionError("Could not delete the custom persona.");
-        return false;
-      }
-
-      if (activeRole === id) {
-        const nextRole = roles.find((role) => role.id !== id);
-        setActiveRole(nextRole?.id ?? "");
-      }
-
-      return true;
-    } catch (err) {
-      setPersonaActionError(getErrorMessage(err, "Could not delete the custom persona."));
-      throw err;
-    }
-  }
-
-  async function handleSavePersona(id: string, patch: { title: string; description: string }) {
-    setPersonaActionError("");
-
-    try {
-      await updateRole(id, patch);
-      return;
-    } catch (err) {
-      setPersonaActionError(getErrorMessage(err, "Could not save the persona."));
-      throw err;
-    }
-  }
-
   return {
-    view,
-    onShowStudio: handleShowStudio,
-    onShowPersonas: handleShowPersonas,
-    persona: {
-      roles,
-      activeRole,
-      isLoading,
-      loadError: rolesError,
-      actionError: personaActionError,
-      onSelect: handleSelectPersona,
-      onManagePersonas: handleShowPersonas,
-    },
     composer: {
       inputIdea,
       onInputChange: setInputIdea,
@@ -219,7 +115,6 @@ export function usePromptStudioViewModel(): PromptStudioScreenProps {
       selectedProvider,
       isGenerating,
       keyMissing,
-      disabledReason: personaGuardMessage,
       onProviderChange: handleProviderChange,
       onModelChange: handleModelChange,
       onGenerate: handleGenerate,
@@ -238,17 +133,6 @@ export function usePromptStudioViewModel(): PromptStudioScreenProps {
       usage,
       evaluation,
       onCopy: handleCopyOutput,
-    },
-    personasPage: {
-      roles,
-      activeRole,
-      isLoading,
-      loadError: rolesError,
-      actionError: personaActionError,
-      onSelect: handleSelectPersona,
-      onCreate: handleCreateRole,
-      onUpdate: handleSavePersona,
-      onDelete: handleDeleteRole,
     },
     settingsModal: {
       open: isSettingsModalOpen,

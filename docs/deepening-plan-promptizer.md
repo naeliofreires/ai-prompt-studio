@@ -66,7 +66,7 @@ With injection in place, write a test that:
 - Creates a fake `generateText` that returns a canned JSON response
 - Calls the registered handler with a valid payload
 - Asserts the result matches `generatePromptIpcResultSchema.parse({ ok: true, ... })`
-- Tests the `ok: false` path (unknown persona, validation error)
+- Tests the `ok: false` path (unknown configuration, validation error)
 
 ### Verification
 
@@ -284,62 +284,6 @@ Restore deleted files. Revert `providers.json`, `provider.ts`, `api-key-manager.
 ### Open question
 
 Should the registry live in `shared/` (cross-process metadata) or `main/` (since model resolution uses AI SDK, which is main-only)? Recommended split: metadata in `shared/`, model resolution in `main/`, both behind the same conceptual interface.
-
----
-
-## Candidate 4 — Unify the persona resolution module
-
-**Strength:** Worth exploring | **Category:** ports & adapters
-
-### Context
-
-Persona resolution has two parallel paths:
-- **Renderer:** `useRoles.ts` imports built-in `PERSONAS` directly from shared, merges with custom personas from `personaClient.ts`, which has 3 strategy implementations (IPC, localStorage, unavailable)
-- **Main process:** `resolve-persona-context.ts` imports built-in personas from shared, falls back to `findCustomPersona()` from the store
-
-`custom-persona-local-repository.ts` (91 lines) duplicates the CRUD logic of `main/store/custom-personas-store.ts` for browser mode. Understanding "how does a persona get resolved?" requires bouncing across 7 files.
-
-The existing `PersonaClient` interface is a good seam with two real adapters (IPC for Electron, localStorage for browser). The problem is not the seam — it's the duplication and the parallel resolution paths.
-
-### Files
-
-| File | Role | Change type |
-|------|------|-------------|
-| `ui/api/persona-client.ts` | Strategy client | Edit — inline localStorage adapter, delete separate file |
-| `ui/api/custom-persona-local-repository.ts` | localStorage CRUD | Delete (absorbed into client) |
-| `ui/hooks/useRoles.ts` | Role merging hook | Edit — consume client directly |
-| `main/utils/resolve-persona-context.ts` | Context resolution | Keep (different layer, different concern) |
-
-### Tasks
-
-#### Task 4.1 — Inline localStorage adapter into `persona-client.ts`
-
-Move the localStorage CRUD from `custom-persona-local-repository.ts` into `persona-client.ts` as a private `localPersonaClient` implementation (it already has one, but it delegates to the separate file). The localStorage read/write logic becomes a private detail of the client module.
-
-#### Task 4.2 — Delete `custom-persona-local-repository.ts`
-
-Its 91 lines are now inside `persona-client.ts`. No other file imports from it (only `persona-client.ts` did).
-
-#### Task 4.3 — Simplify `useRoles.ts` resolution
-
-Currently `useRoles` imports `PERSONAS` directly and constructs `BUILTIN_ROLES` separately. Consider having the persona client also resolve built-in personas, so the hook only calls one source. This is optional — the current pattern (merging two lists) is clear, and the built-in personas are static. The main win is deleting the duplicated CRUD.
-
-#### Task 4.4 — Consider unifying resolution path for main process
-
-`resolve-persona-context.ts` in main currently imports `findCustomPersona` from the store directly. It could instead use the same pattern as the renderer: resolve built-in first, then fall back to custom. This is already what it does — the difference is that it bridges directly to the store rather than going through an IPC client. Since it's in the same process as the store, this is appropriate. No change needed here unless you want to unify the pattern for consistency.
-
-### Verification
-
-- [ ] `personaClient.listCustomPersonas()` works in browser mode (localStorage)
-- [ ] `personaClient.listCustomPersonas()` works in Electron mode (IPC)
-- [ ] `useRoles()` returns merged built-in + custom roles
-- [ ] CRUD operations (create, update, delete) work in both modes
-- [ ] `custom-persona-local-repository.ts` deleted
-- [ ] No import of `custom-persona-local-repository` anywhere
-
-### Rollback
-
-Restore `custom-persona-local-repository.ts`. Revert `persona-client.ts` to delegate to the separate file.
 
 ---
 

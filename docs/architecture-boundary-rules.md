@@ -14,7 +14,7 @@ src/
     electron/  Electron host, preload, handler composition, and logging
     renderer/  renderer bootstrap, bridge access, browser storage, and shared UI shell
   shared/lib/  small runtime-neutral utilities
-  spec/        built-in Provider and Seed Persona data
+  spec/        built-in Provider data
 ```
 
 `src/main/index.ts`, `src/main/preload.ts`, and `src/renderer/main.tsx` are compatibility entry-point shims. They only delegate to `platform/electron/main.ts`, `platform/electron/preload.ts`, and `platform/renderer/main.tsx`; implementation belongs in those platform locations.
@@ -35,13 +35,13 @@ src/
 - Renderer code must not access Electron APIs directly; it uses the renderer bridge.
 - Do not put persistence, Provider SDK integration, Electron APIs, or UI helpers in `shared/lib` or feature contracts.
 
-ESLint enforces the feature-layer import restrictions for relative imports, including paths such as `../../personas/desktop/...`.
+ESLint enforces the feature-layer import restrictions for relative imports.
 
 ## Electron boundary
 
 There is one preload implementation: `src/platform/electron/preload.ts`, reached through the `src/main/preload.ts` shim. It exposes one namespaced `window.aiPromptStudio` bridge. Feature UI calls that bridge through `src/platform/renderer/api/electron-bridge.ts`; IPC channel names and payloads live in feature `contract` modules.
 
-Keep the preload API narrow, namespaced by capability (`personas`, `providers`, and `promptGeneration`), and validate payloads in desktop handlers before invoking feature behavior.
+Keep the preload API narrow, namespaced by capability (`providers` and `promptGeneration`), and validate payloads in desktop handlers before invoking feature behavior.
 
 ## Adding a feature
 

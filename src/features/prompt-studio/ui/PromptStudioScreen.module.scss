@@ -85,41 +85,6 @@ $breakpoint-lg: 1024px;
   color: #ecfeff;
 }
 
-.viewSwitch {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.viewButton {
-  border: 1px solid rgba(103, 232, 249, 0.16);
-  background: rgba(34, 211, 238, 0.06);
-  padding: 0.55rem 0.8rem;
-  font-family: $font-monospace-stack;
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  color: rgba(207, 250, 254, 0.8);
-  cursor: pointer;
-  transition:
-    border-color 150ms ease,
-    background-color 150ms ease,
-    color 150ms ease,
-    box-shadow 150ms ease;
-
-  &:hover {
-    border-color: rgba(103, 232, 249, 0.36);
-    background: rgba(34, 211, 238, 0.12);
-  }
-}
-
-.viewButtonActive {
-  border-color: rgba(103, 232, 249, 0.46);
-  background: rgba(34, 211, 238, 0.18);
-  color: #ecfeff;
-  box-shadow: 0 0 18px rgba(34, 211, 238, 0.1);
-}
-
 .workspaceGrid {
   display: grid;
   gap: 1.25rem;
@@ -127,7 +92,7 @@ $breakpoint-lg: 1024px;
   @media (min-width: $breakpoint-lg) {
     flex: 1;
     min-height: 0;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

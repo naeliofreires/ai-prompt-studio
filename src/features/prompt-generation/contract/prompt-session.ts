@@ -9,7 +9,6 @@ export const promptSessionUsageSchema = z.object({
 export const promptSessionSchema = z.object({
   id: z.string().uuid(),
   rawInput: z.string().trim().min(1),
-  personaId: z.string().trim().min(1),
   providerId: z.enum(PROVIDER_IDS),
   model: z.string().trim().min(1),
   generatedPrompt: z.string().trim().min(1),
