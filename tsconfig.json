@@ -19,5 +19,14 @@
     "noFallthroughCasesInSwitch": true,
     "types": ["vite/client"]
   },
-  "include": ["src/renderer", "src/shared", "src/vite-env.d.ts", "vite.config.ts", "vitest.config.ts"]
+  "include": [
+    "src/renderer",
+    "src/platform/renderer",
+    "src/features/**/ui",
+    "src/features/**/contract",
+    "src/shared",
+    "src/vite-env.d.ts",
+    "vite.config.ts",
+    "vitest.config.ts"
+  ]
 }

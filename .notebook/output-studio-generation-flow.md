@@ -1,29 +1,18 @@
 # Output Studio Generation Flow
-> Renderer output calls Electron IPC; main process owns provider API access
 
-Entry: `src/renderer/app/usePromptStudioController.ts` delegates generation state to `src/renderer/hooks/usePromptGeneration.ts`
-Flow: renderer → `promptStudioClient.generatePrompt()` → `window.aiPromptStudio.generatePrompt()` → `src/main/preload.ts` → `src/main/ipc/register-handlers.ts` → `src/main/application/generate-refined-prompt.ts` → `src/main/services/LLMAdapter.ts` → optional `src/main/services/PromptEvaluator.ts` → optional snapshot save in `src/main/store/prompt-sessions-store.ts`
+> Renderer generation crosses the namespaced Electron bridge; desktop code owns provider access.
 
-Renderer:
-- Sends `rawInput`, `personaId`, `providerId`, `model`
-- Displays `GeneratePromptIpcResult.prompt`
-- Maps top-level `tokensUsed` from IPC into renderer `GenerationUsage` (`usage`), not evaluation
-- Maps optional `GeneratePromptIpcResult.evaluation` into renderer `GenerationEvaluation`
-- Shows token usage and optional prompt score/feedback separately in `OutputPanel`
+Entry: `src/features/prompt-studio/ui/usePromptStudioViewModel.ts` delegates generation state to `src/features/prompt-generation/ui/hooks/usePromptGeneration.ts`.
 
-Main:
-- `registerIpcHandlers()` validates with `generatePromptPayloadSchema`
-- `generateRefinedPrompt()` resolves persona context from `PERSONAS`
-- `LLMAdapter.generatePrompt()` calls Vercel AI SDK `generateText`
-- `PromptEvaluator.evaluate()` reuses the selected provider/model, asks for JSON, validates `score`, `summary`, and `suggestions`, and returns `null` when evaluation fails
-- Evaluation failure is best-effort: prompt generation can still return `ok: true` without `evaluation`
-- Successful generations are saved best-effort as `PromptSession` snapshots with raw input, persona, provider/model, output, optional usage/evaluation, `favorite`, and `createdAt`; no history/favorites UI consumes this yet
-- API keys resolve in main-process code: runtime keys from Settings take priority, then environment variables loaded from `.env` in dev mode.
+Flow: renderer → `promptStudioClient.generatePrompt()` → `window.aiPromptStudio.promptGeneration.generatePrompt()` → `src/platform/electron/preload.ts` → `src/platform/electron/register-handlers.ts` → `src/features/prompt-generation/desktop/register-prompt-generation-handlers.ts` → `generateRefinedPrompt()` → `LLMAdapter()`.
 
-Provider wiring:
-- Provider options come from `src/spec/providers.json`; the shared `PROVIDER_IDS` tuple drives IPC/storage validation.
-- `src/main/utils/resolve-language-model.ts` maps provider ids to AI SDK adapters. OpenCode Zen uses `@ai-sdk/openai-compatible` with default base URL `https://opencode.ai/zen/v1`, `OPENCODE_API_KEY`, optional `OPENCODE_ZEN_BASE_URL`, and models `big-pickle`, `minimax-m3-free`, and `north-mini-code-free`.
+- The renderer sends `rawInput`, `personaId`, `providerId`, `model`, and optional attachments.
+- The result contains either an error message or the generated prompt, optional token usage, and optional evaluation.
+- Prompt-generation IPC validates its payload and resolves the selected Custom Persona through `resolvePersonaContext`.
+- `LLMAdapter` calls the Vercel AI SDK; evaluation is best-effort and does not make a successful generation fail.
+- API keys come from the Settings runtime store first, then development environment variables in the Electron main process.
+- Prompt sessions are **not registered or persisted in the current desktop handler**. The optional session-save dependency exists in the use case but is not supplied by `registerPromptGenerationHandlers`.
 
-Contract: `src/shared/contracts/ipc.ts`
+Provider options come from `src/spec/providers.json`. OpenCode Zen uses `OPENCODE_API_KEY` and optional `OPENCODE_ZEN_BASE_URL`; `OPENCODE_BASE_URL` remains a legacy compatibility alias. Its default is `https://opencode.ai/zen/v1`.
 
-Updated: 2026-06-11
+Updated: 2026-07-12

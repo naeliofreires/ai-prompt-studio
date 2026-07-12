@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { LLMAdapter } from "../src/main/services/LLMAdapter.js";
+import { LLMAdapter } from "../src/features/prompt-generation/desktop/LLMAdapter.js";
 
 describe("LLMAdapter", () => {
   const prevGemini = process.env.GOOGLE_GENERATIVE_AI_API_KEY;

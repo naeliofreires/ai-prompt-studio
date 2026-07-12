@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatPromtizerResponse } from "../src/renderer/utils/formatPromtizerResponse";
+import { formatPromtizerResponse } from "../src/features/prompt-generation/ui/utils/formatPromtizerResponse";
 
 describe("formatPromtizerResponse", () => {
   it("formats structured response as readable markdown", () => {

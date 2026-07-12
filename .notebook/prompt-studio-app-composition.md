@@ -1,25 +1,12 @@
 # Prompt Studio App Composition
 
-Tags: renderer, react, composition, prompt-studio
+Tags: renderer, React, composition, prompt-studio
 
-## Summary
+`src/platform/renderer/main.tsx` mounts `PromptizerApp` from `src/features/prompt-studio/ui/PromptizerApp.tsx`. The app delegates state composition to `usePromptStudioViewModel.ts` and renders `PromptStudioScreen.tsx`.
 
-Promptizer uses a controller-hook pattern around the main Prompt Studio screen. The root renderer mounts it directly as the app entry.
+- `usePromptStudioViewModel.ts` composes Personas, provider/model selection, API-key configuration, generation, copy feedback, attachments, navigation, and Settings modal state.
+- `PromptStudioScreen.tsx` is presentational: it renders the Studio or Personas view and forwards grouped props to feature components.
+- `ComposerPanel` comes from `features/prompt-generation/ui`; `PersonaPanel` and `PersonasPage` from `features/personas/ui`; `SettingsModal` from `features/providers/ui`.
+- Keep cross-feature orchestration in the view model and feature persistence behind feature clients or repositories, not in presentational components.
 
-## Pointers
-
-- `src/renderer/main.tsx`: renderer entry; mounts `PromptizerApp` directly.
-- `src/renderer/app/PromptizerApp.tsx`: Promptizer composition root; runs app-level API key session sync and renders the studio screen.
-- `src/renderer/app/usePromptStudioController.ts`: composes roles, provider/model selection, generation, copy feedback, persona actions, and modal state into the `PromptStudioScreen` prop contract.
-- `src/renderer/app/PromptStudioScreen.tsx`: presentational layout; receives grouped view-model props and renders panels/modals.
-- `src/renderer/components/ComposerPanel/index.tsx`: owns the always-available Settings action in the `Raw Signal` panel header.
-
-## Boundary
-
-- Add cross-panel orchestration and shared UI state to `usePromptStudioController.ts`.
-- Keep `PromptStudioScreen.tsx` focused on layout and prop forwarding.
-- Keep individual panel components controlled by props instead of importing app stores directly.
-- Promptizer owns the app identity directly; use panel headers for local actions.
-- Prefer slots/compound components only when callers need to change the layout structure; this screen currently benefits more from a controller hook.
-
-Updated: 2026-06-09
+Updated: 2026-07-12

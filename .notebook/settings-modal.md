@@ -1,17 +1,15 @@
 # Settings Modal
-> Renderer settings UI; visual modal stays decoupled from the API key store
 
-Entry: `src/renderer/components/SettingsModal/index.tsx`
+> Renderer settings UI; the modal keeps drafts local while the provider-key repository owns persistence and bridge sync.
 
-Flow: `src/renderer/components/ComposerPanel/index.tsx` exposes the Settings action in the `Raw Signal` panel -> `src/renderer/app/usePromptStudioController.ts` opens modal -> `src/renderer/hooks/useApiKeySettings.ts` reads/writes the API key store -> `SettingsModal` receives `keys` and callbacks by props -> save closes modal.
+Entry: `src/features/prompt-studio/ui/PromptStudioScreen.tsx` renders `src/features/providers/ui/SettingsModal/index.tsx` from props supplied by `usePromptStudioViewModel.ts`.
 
-Composer model visibility: `src/renderer/app/usePromptStudioController.ts` filters the providers passed to `ComposerPanel` by `useApiKeySettings().isConfigured(...)`. The full `PROVIDERS` list still goes to `SettingsModal` so users can add keys for hidden providers.
+Flow: `ComposerPanel` opens the modal → `usePromptStudioViewModel` controls its visibility → `useApiKeyRepository` provides keys and save/clear callbacks → `SettingsModal` keeps only draft, visibility, and confirmation state.
 
-Boundary:
-- `src/renderer/components` should not import `src/renderer/store/api-key-store.ts` directly.
-- The modal may keep local draft/display state, but persistence and sync stay in hooks/store.
-- The renderer may receive configured-provider status from the main process, but never API key values from `.env`.
+- The Composer shows configured providers; the Settings modal receives all provider definitions so users can add a key for any provider.
+- The modal does not import a key store directly.
+- Provider definitions are `src/spec/providers.json`, exposed through `src/features/providers/contract/provider.ts`.
+- The namespaced bridge is `window.aiPromptStudio.providers`, with `listConfiguredApiKeys`, `setApiKeys`, and `clearAllApiKeys` exposed from `src/platform/electron/preload.ts`.
+- Environment keys are read only in the Electron main process; the renderer receives configured status, not `.env` values.
 
-Provider source: `src/shared/domain/provider.ts` -> `src/spec/providers.json`
-
-Updated: 2026-06-11
+Updated: 2026-07-12

@@ -30,10 +30,15 @@ The app is local-first and currently packaged for unsigned local releases.
 
 ```text
 src/
-  main/       Electron window shell, IPC handlers, provider registry, stores, preload bridge
-  renderer/   React app, panels, pages, hooks, renderer clients, and global styles
-  shared/     Domain types, Zod schemas, IPC contracts, registries
-  spec/       Provider/model options and seed Persona spec
+  features/
+    <feature>/ui/        Renderer components, hooks, and feature clients
+    <feature>/desktop/   Electron handlers, use cases, stores, and integrations
+    <feature>/contract/  Zod schemas, types, and IPC contracts
+  platform/electron/     Electron host, handler composition, preload, and logging
+  platform/renderer/     Renderer bootstrap, bridge access, storage, and shared UI shell
+  shared/lib/            Runtime-neutral helpers
+  spec/                  Provider/model options and Seed Persona spec
+  main/, renderer/       Compatibility entry-point shims to platform roots
 test/         Vitest test suite
 docs/         Product and technical planning docs
 scripts/      Build helper scripts
@@ -46,11 +51,11 @@ scripts/      Build helper scripts
 
 Supported providers:
 
-| Provider      | Models                                                | API key                          |
-| ------------- | ----------------------------------------------------- | -------------------------------- |
-| Google Gemini | `gemini-2.5-pro`                                      | `GOOGLE_GENERATIVE_AI_API_KEY`   |
-| GLM           | `glm-4.6`, `glm-4.7`, `glm-5`                         | `GLM_API_KEY` or `ZHIPU_API_KEY` |
-| DeepSeek      | `deepseek-reasoner`                                   | `DEEPSEEK_API_KEY`               |
+| Provider      | Models                                                  | API key                          |
+| ------------- | ------------------------------------------------------- | -------------------------------- |
+| Google Gemini | `gemini-2.5-pro`                                        | `GOOGLE_GENERATIVE_AI_API_KEY`   |
+| GLM           | `glm-4.6`, `glm-4.7`, `glm-5`                           | `GLM_API_KEY` or `ZHIPU_API_KEY` |
+| DeepSeek      | `deepseek-reasoner`                                     | `DEEPSEEK_API_KEY`               |
 | OpenCode Zen  | `big-pickle`, `minimax-m3-free`, `north-mini-code-free` | `OPENCODE_API_KEY`               |
 
 You can enter keys in Settings at runtime or set them in `.env` for local development.
@@ -96,7 +101,9 @@ The macOS build is ad-hoc signed for local use. Public distribution still needs 
 
 ## Configuration
 
-`src/main/index.ts` owns the Electron shell and loads `.env` only when Electron is not packaged. Runtime keys entered in Settings are synced from the renderer to the Electron main process through IPC.
+`src/platform/electron/main.ts` owns the Electron shell and loads `.env` only when Electron is not packaged. `src/main/index.ts` is its package entry-point shim. Runtime keys entered in Settings are synced from the renderer to the Electron main process through the preload bridge and IPC.
+
+The single preload implementation is `src/platform/electron/preload.ts` (reached by `src/main/preload.ts`). It exposes the namespaced `window.aiPromptStudio` bridge; renderer feature clients access it through `src/platform/renderer/api/electron-bridge.ts`.
 
 Supported environment variables:
 
@@ -109,6 +116,7 @@ DEEPSEEK_API_KEY=
 DEEPSEEK_BASE_URL=
 OPENCODE_API_KEY=
 OPENCODE_ZEN_BASE_URL=
+# Legacy compatibility alias: OPENCODE_BASE_URL=
 ```
 
 Default base URLs:
@@ -121,30 +129,30 @@ API keys saved in Settings are stored in renderer `localStorage` and mirrored in
 
 ## How Generation Works
 
-1. The renderer validates the selected persona, provider/model, API key, and raw input.
-2. `promptStudioClient` sends the request through the preload bridge.
-3. `register-handlers.ts` validates the IPC payload and resolves the selected editable persona.
-4. `LLMAdapter` builds the refinement system prompt and calls `generateText`.
+1. `features/prompt-studio/ui` validates the selected Persona, Provider/model, API key, and raw input.
+2. `features/prompt-generation/ui/api/prompt-studio-client.ts` sends the request through the namespaced preload bridge.
+3. `platform/electron/register-handlers.ts` composes the feature handlers; `features/prompt-generation/desktop/register-prompt-generation-handlers.ts` validates the IPC payload and resolves the selected Custom Persona.
+4. `features/prompt-generation/desktop/LLMAdapter.ts` builds the refinement system prompt and calls `generateText`.
 5. The renderer displays the structured response, usage, and evaluation data when available.
 
-The refinement instruction lives in `src/main/services/prompt-instructions.ts`; the human-facing copy is mirrored in `docs/prompt-instructions.md`.
+The refinement instruction and its exact JSON response schema live in `src/features/prompt-generation/desktop/prompt-instructions.ts`; `docs/prompt-instructions.md` is its human-readable counterpart.
 
 ## Extending Promptizer
 
 ### Add a provider
 
 1. Add the provider to `src/spec/providers.json`.
-2. Ensure `src/main/services/provider-registry.ts` supports its `sdkType`.
+2. Ensure `src/features/providers/desktop/provider-registry.ts` supports its `sdkType`.
 3. Document the environment variable in `.env.example`.
 4. Add focused tests for provider resolution and request behavior.
 
 ### Change persona behavior
 
-- Editable personas are stored through the custom persona store and browser fallback client.
+- Editable Personas are stored through `src/features/personas/desktop/custom-personas-store.ts` and the browser fallback client in `src/features/personas/ui/persona-client.ts`.
 - Keep persona fields limited to `label` and `role` unless the UI, IPC contracts, and tests are updated together.
-- Prompt generation resolves personas from the editable persona store.
+- Prompt generation resolves Personas from the editable Persona store.
 
-Shared renderer/main contracts live under `src/shared`; update them first when behavior crosses the process boundary.
+Feature contracts live under `src/features/<feature>/contract`; update the relevant contract first when behavior crosses the process boundary. Keep them independent of UI, desktop, and platform code.
 
 ## Documentation
 

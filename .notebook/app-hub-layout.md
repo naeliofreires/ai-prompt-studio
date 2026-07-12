@@ -2,21 +2,14 @@
 
 Tags: renderer, app-boundaries
 
-## Summary
+The renderer entry is `src/platform/renderer/main.tsx`, which mounts the Prompt Studio feature. Electron host code is under `src/platform/electron`, and product behavior is organized by feature.
 
-The root renderer now mounts Promptizer directly as a single app. The previous multi-app split was collapsed into `src`.
+- `src/features/prompt-studio/ui/PromptizerApp.tsx`: renderer composition root.
+- `src/platform/electron/main.ts`: Electron shell.
+- `src/platform/electron/register-handlers.ts`: composes feature IPC handlers.
+- `src/platform/electron/preload.ts`: exposes the namespaced `window.aiPromptStudio` bridge.
+- `src/features/<feature>/ui`, `desktop`, and `contract`: renderer UI, Electron-side behavior, and cross-boundary contracts.
+- `src/spec`: provider definitions and other product specifications.
+- `src/main` and `src/renderer` are compatibility entry-point shims; new implementation code belongs under `src/platform` or the relevant feature.
 
-## Pointers
-
-- `src/renderer/main.tsx`: Vite renderer entry; mounts `PromptizerApp` directly.
-- `src/renderer/app/PromptizerApp.tsx`: Promptizer renderer root.
-- `src/main/index.ts`: Electron window shell; registers IPC from `src/main/ipc/register-handlers.ts`.
-
-## Boundary
-
-- Keep renderer code under `src/renderer`.
-- Keep main-process code under `src/main`.
-- Keep renderer/main contracts under `src/shared`.
-- Keep built-in Persona and Provider specs under `src/spec`.
-
-Updated: 2026-06-09
+Updated: 2026-07-12

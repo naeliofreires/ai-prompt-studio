@@ -15,5 +15,13 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "include": ["src/main/**/*.ts", "src/shared/**/*.ts", "src/spec/personas.json", "src/spec/providers.json"]
+  "include": [
+    "src/main/**/*.ts",
+    "src/platform/electron/**/*.ts",
+    "src/features/**/desktop/**/*.ts",
+    "src/features/**/contract/**/*.ts",
+    "src/shared/**/*.ts",
+    "src/spec/personas.json",
+    "src/spec/providers.json"
+  ]
 }

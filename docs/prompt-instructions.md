@@ -1,15 +1,17 @@
 # Prompt instructions
 
-This file is the **human-editable source** for system prompts and other instruction text used by the main process (e.g. `LLMAdapter`). Runtime code loads strings from [`src/main/services/prompt-instructions.ts`](../src/main/services/prompt-instructions.ts); when you change instruction text here, update that module so behavior stays in sync.
+This document is the human-readable counterpart of [`src/features/prompt-generation/desktop/prompt-instructions.ts`](../src/features/prompt-generation/desktop/prompt-instructions.ts). Keep the wording and JSON schema below synchronized with `REFINEMENT_INSTRUCTIONS`.
 
-## Conventions
+## Refinement instructions
 
-- Use one `##` section per instruction, with a stable **slug-style** heading (e.g. `refinement_prompt`, `summarize_context`).
-- Put the **full instruction body** in plain paragraphs under the heading (no code fences unless the model must see literal markdown).
-- Prefer short, imperative copy the model can follow as a system message.
+Your task is to refine the user's rough idea into a structured Promtizer result. Output only valid JSON with this exact schema and no markdown fences, preamble, or extra fields:
 
----
+```json
+{"title":"string","description":"string","requirements":["string"],"expectations":"string","goodToGo":boolean}
+```
 
-## refinement_prompt
-
-Your task is to refine the user's rough idea into a single, clear, actionable prompt they can paste into an LLM. Output only the refined prompt text, without preamble or explanation.
+- `title` is the headline of the result.
+- `description` is the detailed explanation of the output.
+- `requirements` lists the specific requirements addressed.
+- `expectations` tells the user what they should anticipate.
+- `goodToGo` is `true` only when the result is final and ready; otherwise `false`.

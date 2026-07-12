@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { stabilizeStreamingMarkdown } from "../src/renderer/markdown/stabilizeStreamingMarkdown";
+import { stabilizeStreamingMarkdown } from "../src/features/prompt-generation/ui/markdown/stabilizeStreamingMarkdown";
 
 describe("stabilizeStreamingMarkdown", () => {
   it("returns the source unchanged when not streaming", () => {

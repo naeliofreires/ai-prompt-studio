@@ -1,19 +1,13 @@
 # Persona Roles Flow
 
-Tags: renderer, shared, ipc, personas
+Tags: renderer, IPC, personas
 
-## Summary
+Custom Personas are represented by `src/features/personas/contract/custom-persona.ts` and loaded by `src/features/personas/ui/useRoles.ts` through `personaClient`.
 
-Promptizer has a canonical built-in persona registry in `src/spec/personas.json`, validated by `src/shared/domain/persona.ts`, plus custom personas stored by the main process.
+- `src/features/personas/contract/ipc.ts` defines Custom Persona IPC payloads and results.
+- `src/features/personas/ui/persona-client.ts` uses `window.aiPromptStudio.personas` when all Persona bridge methods are available.
+- `src/platform/electron/preload.ts` exposes `personas.listCustomPersonas`, `createCustomPersona`, `updateCustomPersona`, and `deleteCustomPersona`.
+- `src/features/personas/desktop/register-persona-handlers.ts` registers the desktop handlers, and `resolve-persona-context.ts` resolves a Custom Persona for generation.
+- Without the Electron prompt bridge, the renderer uses browser storage and creates Seed Personas once. If the prompt bridge exists but the Persona bridge is incomplete, the client is unavailable rather than falling back to browser storage.
 
-## Pointers
-
-- `src/shared/domain/persona.ts`: imports and validates `src/spec/personas.json`, then exports `PERSONAS` and `PERSONA_IDS`.
-- `src/shared/contracts/ipc.ts`: accepts built-in persona IDs and UUID custom persona IDs.
-- `src/main/ipc/register-handlers.ts`: validates persona IPC payloads and delegates prompt generation to the application layer.
-- `src/main/utils/resolve-persona-context.ts`: resolves built-in personas from `PERSONAS` first, then custom personas from `custom-personas-store`.
-- `src/renderer/hooks/useRoles.ts`: maps `PERSONAS` into the renderer role tab shape and appends custom personas returned by `personaClient`.
-
-## Gotcha
-
-Renderer fallback custom personas are only for browser-mode/dev rendering when the Electron bridge is absent. In the desktop app, custom personas should round-trip through IPC so prompt generation and role tabs read from the same main-process store.
+Updated: 2026-07-12

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { ComposerPanel } from "../src/renderer/components/ComposerPanel";
-import type { Provider } from "../src/shared";
+import { ComposerPanel } from "../src/features/prompt-generation/ui/components/ComposerPanel";
+import type { Provider } from "../src/features/providers/contract/provider";
 
 const geminiProvider = {
   id: "gemini",
